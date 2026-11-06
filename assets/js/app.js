@@ -372,7 +372,9 @@
                 '</div></fieldset><div class="col-12"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-copy me-1"></i>Duplicar horários</button></div>' +
                 '</div></form></div></div>'
             : '';
+        const bulkDemandForm = route === 'demandas' ? renderBulkDemandForm() : '';
         return pageHeader(spec.title, spec.icon, descriptionFor(route)) +
+            bulkDemandForm +
             '<div class="card mb-4"><div class="card-header">' + (isEditing ? 'Editar registro' : 'Novo registro') + '</div><div class="card-body">' +
             '<form id="record-form" data-route="' + route + '"><div class="row g-3">' + fields + '</div>' +
             '<div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (isEditing ? 'Salvar alterações' : 'Salvar') + '</button>' +
@@ -384,6 +386,69 @@
             spec.columns.map(function (column) { return '<th>' + h(column[1]) + '</th>'; }).join('') + '<th class="text-end">Ações</th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-inbox"></i>Nenhum registro. Use o formulário acima para começar.</div></td></tr>') +
             '</tbody></table></div></div>';
+    }
+
+    function renderBulkDemandForm() {
+        const classes = readRecords(KEYS.turmas).slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const classOptions = classes.length
+            ? classes.map(function (turma) {
+                return '<label class="form-check"><input class="form-check-input" type="checkbox" name="turma_ids" value="' + h(turma.id) + '">' +
+                    '<span class="form-check-label">' + h(turma.nome || ('Turma ' + turma.id)) + '</span></label>';
+            }).join('')
+            : '<p class="text-muted mb-0">Cadastre turmas antes de criar demandas em lote.</p>';
+        const disciplineOptions = fieldOptions(specs.demandas.fields.find(function (field) { return field.name === 'disciplina_id'; }));
+        return '<div class="card mb-4"><div class="card-header">Aplicar a várias turmas</div><div class="card-body">' +
+            '<p class="text-muted">Selecione as turmas que terão a mesma disciplina e quantidade de aulas semanais.</p>' +
+            '<form id="bulk-demand-form"><fieldset class="mb-3"><legend class="form-label">Turmas</legend>' +
+            '<div class="d-flex justify-content-end mb-2"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-demand-classes">Marcar/desmarcar todas</button></div>' +
+            '<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-2">' + classOptions + '</div></fieldset>' +
+            '<div class="row g-3"><div class="col-md-4"><label class="form-label" for="bulk-demand-discipline">Disciplina *</label>' +
+            '<select class="form-select" id="bulk-demand-discipline" name="disciplina_id" required><option value="">Selecione</option>' +
+            disciplineOptions.map(function (option) { return '<option value="' + h(option[0]) + '">' + h(option[1]) + '</option>'; }).join('') +
+            '</select></div><div class="col-md-4"><label class="form-label" for="bulk-demand-lessons">Aulas por semana *</label>' +
+            '<input class="form-control" id="bulk-demand-lessons" name="aulas_semanais" type="number" min="1" step="1" value="1" required></div>' +
+            '<div class="col-md-4"><label class="form-label" for="bulk-demand-semester">Semestre letivo</label>' +
+            '<input class="form-control" id="bulk-demand-semester" name="semestre_letivo" value="' + h(getSemester()) + '" placeholder="AAAA/1"></div>' +
+            '<div class="col-12"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-square me-1"></i>Gerar demandas para as turmas</button></div>' +
+            '</div></form></div></div>';
+    }
+
+    function submitBulkDemand(form) {
+        const turmaIds = Array.from(form.querySelectorAll('input[name="turma_ids"]:checked')).map(function (input) { return Number(input.value); });
+        const disciplinaId = Number(form.elements.namedItem('disciplina_id').value || 0);
+        const aulasSemanais = Number(form.elements.namedItem('aulas_semanais').value || 0);
+        const semestre = String(form.elements.namedItem('semestre_letivo').value || '').trim();
+        if (!turmaIds.length) throw new Error('Selecione pelo menos uma turma.');
+        if (!disciplinaId || !findById(KEYS.disciplinas, disciplinaId)) throw new Error('Selecione uma disciplina válida.');
+        if (!Number.isInteger(aulasSemanais) || aulasSemanais < 1) throw new Error('Informe ao menos uma aula por semana.');
+
+        const records = readRecords(KEYS.demandas);
+        const additions = [];
+        let skipped = 0;
+        turmaIds.forEach(function (turmaId) {
+            const duplicate = records.some(function (row) {
+                return String(row.turma_id) === String(turmaId) &&
+                    String(row.disciplina_id) === String(disciplinaId) &&
+                    semesterMatches(row) && String(row.semestre_letivo || '') === semestre;
+            });
+            if (duplicate) {
+                skipped += 1;
+                return;
+            }
+            additions.push({
+                id: nextId(records.concat(additions)),
+                turma_id: turmaId,
+                disciplina_id: disciplinaId,
+                aulas_semanais: aulasSemanais,
+                semestre_letivo: semestre
+            });
+        });
+        if (!additions.length) throw new Error('As turmas selecionadas já têm essa demanda neste semestre. Edite os registros existentes para alterar a quantidade.');
+        saveRecords(KEYS.demandas, records.concat(additions), specs.demandas.module);
+        render();
+        notify(additions.length + ' demanda(s) criada(s).' + (skipped ? ' ' + skipped + ' turma(s) ignorada(s) por já possuir essa demanda.' : ''), 'success');
     }
 
     function copySchedule(form) {
@@ -1065,7 +1130,11 @@
         try {
             if (action === 'export-backup') exportBackup();
             else if (action === 'pick-backup') document.getElementById('backup-file').click();
-            else if (action === 'edit') {
+            else if (action === 'toggle-demand-classes') {
+                const checkboxes = Array.from(document.querySelectorAll('#bulk-demand-form input[name="turma_ids"]'));
+                const shouldCheck = checkboxes.some(function (checkbox) { return !checkbox.checked; });
+                checkboxes.forEach(function (checkbox) { checkbox.checked = shouldCheck; });
+            } else if (action === 'edit') {
                 const route = (window.location.hash.replace(/^#\/?/, '').split('/')[0] || '');
                 const record = findById(specs[route].key, button.dataset.id);
                 if (!record) throw new Error('O registro não foi encontrado.');
@@ -1152,6 +1221,9 @@
             if (form.id === 'record-form') {
                 event.preventDefault();
                 submitRecord(form);
+            } else if (form.id === 'bulk-demand-form') {
+                event.preventDefault();
+                submitBulkDemand(form);
             } else if (form.id === 'copy-schedule-form') {
                 event.preventDefault();
                 copySchedule(form);
