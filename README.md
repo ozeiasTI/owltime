@@ -24,7 +24,7 @@ Configure os horários da escola manualmente ou duplique os períodos e interval
 
 ### 📚 Grade escolar
 
-Monte e ajuste a grade oficial, consulte os horários por turma e acompanhe a distribuição das aulas.
+Gere uma proposta de grade automaticamente pelo QDP e acompanhe todas as turmas ao mesmo tempo. O Painel mostra a data e o resumo da última geração. Quando precisar corrigir ou complementar o resultado, abra **Ajustes manuais**: arraste uma aula para outro horário vazio ou clique nela para editar/excluir. Também é possível clicar em um horário vazio para adicionar aula. O formulário mostra as demandas restantes e a disponibilidade e carga do professor. Avisos de demanda, indisponibilidade, conflito e limites são orientativos e podem ser confirmados. Na Grade oficial, escolha uma turma ou professor para gerar uma versão organizada para impressão/Salvar como PDF. Recolha o menu lateral pelo botão hambúrguer para ampliar a área de trabalho. As disciplinas recebem cores automáticas, e os filtros de disciplina e turma podem ser combinados.
 
 ### 📊 Análises e relatórios
 
@@ -38,8 +38,12 @@ Use o bloco de notas para registrar lembretes. Exporte uma cópia dos seus dados
 
 1. Cadastre cursos, professores, disciplinas e turmas.
 2. Configure os horários, as demandas das turmas e a disponibilidade dos professores.
-3. Monte a grade e faça os ajustes necessários.
-4. Consulte as análises e mantenha seus dados organizados com backups.
+3. Na Grade oficial, gere a proposta automática pelo QDP.
+4. Consulte no Painel o resumo da última grade gerada.
+5. Se necessário, abra Ajustes manuais para arrastar aulas, adicionar, editar ou excluir aulas com as orientações de demanda e disponibilidade.
+6. Na Grade oficial, gere um PDF por turma ou professor usando a opção de impressão do navegador e escolhendo **Salvar como PDF**.
+7. Use os filtros por disciplina e turma para acompanhar a grade e compare a carga dos professores com os limites cadastrados.
+8. Consulte as análises e mantenha seus dados organizados com backups.
 
 ## Seus dados
 

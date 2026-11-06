@@ -14,10 +14,15 @@
 </head>
 <body>
     <header class="topbar">
-        <a class="brand" href="#/dashboard" aria-label="Owltime, início">
-            <img src="assets/img/logo.png" alt="" width="40" height="40">
-            <span>Owltime<small>Gestão escolar local</small></span>
-        </a>
+        <div class="topbar-brand-group">
+            <button type="button" class="btn btn-sm btn-outline-light sidebar-toggle" id="sidebar-toggle" data-action="toggle-sidebar" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu">
+                <i class="bi bi-list" aria-hidden="true"></i>
+            </button>
+            <a class="brand" href="#/dashboard" aria-label="Owltime, início">
+                <img src="assets/img/logo.png" alt="" width="40" height="40">
+                <span>Owltime<small>Gestão escolar local</small></span>
+            </a>
+        </div>
         <div class="topbar-right">
             <span class="local-badge"><i class="bi bi-shield-check"></i> Dados neste navegador</span>
             <button type="button" class="btn btn-sm btn-outline-light" data-action="export-backup">
@@ -26,8 +31,8 @@
         </div>
     </header>
 
-    <div class="app-layout">
-        <aside class="sidebar" aria-label="Navegação principal">
+    <div class="app-layout sidebar-collapsed">
+        <aside class="sidebar" id="main-sidebar" aria-label="Navegação principal" hidden>
             <div class="nav-group-label">Visão geral</div>
             <a class="side-link" href="#/dashboard" data-route="dashboard"><i class="bi bi-grid-1x2"></i> Painel</a>
 
@@ -43,7 +48,7 @@
 
             <div class="nav-group-label">Planejamento</div>
             <a class="side-link" href="#/grade" data-route="grade"><i class="bi bi-calendar3"></i> Grade oficial</a>
-            <a class="side-link" href="#/studio" data-route="studio"><i class="bi bi-bezier2"></i> Studio de análise</a>
+            <a class="side-link" href="#/ajustes" data-route="ajustes"><i class="bi bi-pencil-square"></i> Ajustes manuais</a>
             <a class="side-link" href="#/relatorios" data-route="relatorios"><i class="bi bi-bar-chart"></i> Relatórios</a>
             <a class="side-link" href="#/notas" data-route="notas"><i class="bi bi-journal-text"></i> Bloco de notas</a>
 
