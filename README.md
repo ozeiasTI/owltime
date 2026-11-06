@@ -20,7 +20,7 @@ Cadastre e consulte cursos, professores, disciplinas e turmas. Mantenha os dados
 
 ### 🗓️ Planejamento de horários
 
-Configure os horários da escola, informe as aulas necessárias para cada turma e registre os vínculos e a disponibilidade dos professores.
+Configure os horários da escola manualmente ou duplique os períodos e intervalos de um dia para outros dias. Informe as aulas necessárias para cada turma e registre os vínculos e a disponibilidade dos professores.
 
 ### 📚 Grade escolar
 

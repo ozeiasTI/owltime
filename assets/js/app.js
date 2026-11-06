@@ -359,17 +359,66 @@
                 '</div></td></tr>';
         }).join('');
         const emptyCols = spec.columns.length + 1;
+        const scheduleCopy = route === 'horarios'
+            ? '<div class="card mb-4"><div class="card-header">Duplicar horários de um dia</div><div class="card-body">' +
+                '<p class="text-muted">Copie todos os períodos, incluindo intervalos, para outros dias. Horários que coincidirem ou se sobrepuserem aos já cadastrados serão ignorados.</p>' +
+                '<form id="copy-schedule-form"><div class="row g-3 align-items-end">' +
+                '<div class="col-md-4"><label class="form-label" for="copy-schedule-source">Copiar horários de</label><select class="form-select" id="copy-schedule-source" name="source" required>' +
+                DAYS.map(function (day) { return '<option value="' + h(day) + '">' + h(day) + '</option>'; }).join('') +
+                '</select></div><fieldset class="col-md-8"><legend class="form-label">Duplicar para</legend><div class="d-flex flex-wrap gap-3">' +
+                DAYS.map(function (day) {
+                    return '<label class="form-check"><input class="form-check-input" type="checkbox" name="target" value="' + h(day) + '"><span class="form-check-label">' + h(day) + '</span></label>';
+                }).join('') +
+                '</div></fieldset><div class="col-12"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-copy me-1"></i>Duplicar horários</button></div>' +
+                '</div></form></div></div>'
+            : '';
         return pageHeader(spec.title, spec.icon, descriptionFor(route)) +
             '<div class="card mb-4"><div class="card-header">' + (isEditing ? 'Editar registro' : 'Novo registro') + '</div><div class="card-body">' +
             '<form id="record-form" data-route="' + route + '"><div class="row g-3">' + fields + '</div>' +
             '<div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (isEditing ? 'Salvar alterações' : 'Salvar') + '</button>' +
             (isEditing ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-edit">Cancelar</button>' : '') + '</div></form></div></div>' +
+            scheduleCopy +
             '<div class="card"><div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap"><strong>Registros (' + records.length + ')</strong>' +
             '<input id="table-search" class="form-control form-control-sm" style="max-width:260px" type="search" placeholder="Filtrar registros" aria-label="Filtrar registros"></div>' +
             '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr>' +
             spec.columns.map(function (column) { return '<th>' + h(column[1]) + '</th>'; }).join('') + '<th class="text-end">Ações</th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-inbox"></i>Nenhum registro. Use o formulário acima para começar.</div></td></tr>') +
             '</tbody></table></div></div>';
+    }
+
+    function copySchedule(form) {
+        const sourceDay = form.elements.namedItem('source').value;
+        const targetDays = Array.from(form.querySelectorAll('input[name="target"]:checked')).map(function (input) { return input.value; });
+        if (!targetDays.length) throw new Error('Selecione pelo menos um dia de destino.');
+        if (targetDays.includes(sourceDay)) throw new Error('O dia de origem não pode ser selecionado como destino.');
+
+        const records = readRecords(KEYS.horarios);
+        const sourceSlots = records.filter(function (slot) { return slot.dia_semana === sourceDay; });
+        if (!sourceSlots.length) throw new Error('Não há horários cadastrados no dia de origem.');
+
+        let id = nextId(records);
+        let copied = 0;
+        let skipped = 0;
+        const additions = [];
+        targetDays.forEach(function (day) {
+            const existing = records.filter(function (slot) { return slot.dia_semana === day; });
+            sourceSlots.forEach(function (source) {
+                const collision = existing.some(function (slot) {
+                    return source.hora_inicio < slot.hora_fim && source.hora_fim > slot.hora_inicio;
+                });
+                if (collision) {
+                    skipped += 1;
+                    return;
+                }
+                additions.push(Object.assign({}, source, { id: id, dia_semana: day }));
+                id += 1;
+                copied += 1;
+            });
+        });
+        if (!copied) throw new Error('Nenhum horário foi copiado: todos os períodos já existem ou conflitam com os dias selecionados.');
+        saveRecords(KEYS.horarios, records.concat(additions), specs.horarios.module);
+        render();
+        notify(copied + ' horário(s) duplicado(s).' + (skipped ? ' ' + skipped + ' período(s) ignorado(s) por já existir ou conflitar.' : ''), 'success');
     }
 
     function descriptionFor(route) {
@@ -1103,6 +1152,9 @@
             if (form.id === 'record-form') {
                 event.preventDefault();
                 submitRecord(form);
+            } else if (form.id === 'copy-schedule-form') {
+                event.preventDefault();
+                copySchedule(form);
             } else if (form.id === 'manual-assignment-form') {
                 event.preventDefault();
                 addManualAssignment(form);
