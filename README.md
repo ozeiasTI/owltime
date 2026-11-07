@@ -26,13 +26,13 @@ No cadastro do professor, informe também a área ou disciplina de ingresso no c
 
 ### 🗓️ Planejamento de horários
 
-Configure os horários da escola de segunda a domingo ou duplique os períodos e intervalos de um dia para outros dias. A tela de horários diferencia visualmente aulas e intervalos; no Painel, o quadro semanal compacto fica ao lado dos PRDs e das indisponibilidades do semestre. Sábado e domingo são opcionais: só aparecem na grade e participam da geração quando há períodos de aula cadastrados nesses dias. Cadastre demandas de uma turma por vez ou aplique a mesma disciplina e quantidade de aulas a várias turmas de uma vez; na lista, as disciplinas e as faixas de quantidade de aulas têm cores para facilitar a leitura.
+Configure os horários da escola de segunda a domingo ou duplique os períodos e intervalos de um dia para outros dias. A página de horários apresenta um resumo semanal por dia, duração dos períodos, indicadores e alertas de sobreposição; a tabela também oferece filtros por dia, tipo e faixa de horário. Sábado e domingo são opcionais: só aparecem na grade e participam da geração quando há períodos de aula cadastrados nesses dias. No Painel, consulte PRDs e indisponibilidades do semestre. Cadastros com quadro de registros têm filtros avançados específicos por tela, combináveis com a busca textual, e um botão para limpar todos os filtros. Em demandas, por exemplo, é possível filtrar por turma, semestre, disciplina e quantidade de aulas. Cadastre demandas de uma turma por vez ou aplique a mesma disciplina e quantidade de aulas a várias turmas de uma vez; as disciplinas e as faixas de quantidade de aulas têm cores para facilitar a leitura.
 
 Em **PRD e disponibilidade**, selecione semestre e curso para consultar os professores vinculados às disciplinas demandadas. Atribua ao professor um **Plano de Trabalho Docente (PRD)** em um dia da semana, destinado a atividades de ensino, pesquisa e extensão; o PRD bloqueia o dia inteiro na geração automática. O painel indica os professores com PRD e quem ainda não tem dia atribuído. Também é possível registrar indisponibilidades para o dia inteiro ou para horários de aula específicos do dia escolhido. PRDs que coincidam com aulas já presentes na grade precisam ser corrigidos antes de salvar.
 
 ### 📚 Grade escolar
 
-Gere uma proposta de grade automaticamente pelo QDP e acompanhe todas as turmas ao mesmo tempo. Uma nova geração substitui a proposta atual sem uma confirmação intermediária e mostra por sete segundos um resumo das aulas previstas, preenchidas e pendentes por turma e disciplina. Na visualização oficial, combine os filtros de turma, disciplina e professor; cada turma mostra apenas os períodos em que tem aulas alocadas. Em **Ajustes manuais**, os horários vazios continuam disponíveis para edição. O Painel mostra a data e o resumo da última geração. Quando precisar corrigir ou complementar o resultado, abra **Ajustes manuais**: arraste uma aula para outro horário vazio ou clique nela para editar/excluir. Também é possível clicar em um horário vazio para adicionar aula. O formulário mostra as demandas restantes e a disponibilidade e carga do professor. Avisos de demanda, indisponibilidade, conflito e limites são orientativos e podem ser confirmados. Na Grade oficial, escolha uma turma ou professor para gerar uma versão organizada para impressão/Salvar como PDF; também é possível gerar um PDF com todas as turmas. Recolha o menu lateral pelo botão hambúrguer para ampliar a área de trabalho. As disciplinas recebem cores automáticas.
+Gere uma proposta de grade automaticamente pelo QDP e acompanhe todas as turmas ao mesmo tempo. Uma nova geração substitui a proposta atual sem uma confirmação intermediária e mostra por sete segundos um resumo das aulas previstas, preenchidas e pendentes por turma e disciplina. Na visualização oficial, combine os filtros de turma, disciplina e professor; cada turma mostra apenas os períodos em que tem aulas alocadas. Em **Ajustes manuais**, os horários vazios continuam disponíveis para edição. O Painel mostra a data e o resumo da última geração. Quando precisar corrigir ou complementar o resultado, abra **Ajustes manuais**: arraste uma aula para outro horário vazio ou clique nela para editar/excluir. Também é possível clicar em um horário vazio para adicionar aula. O formulário mostra as demandas restantes e a disponibilidade e carga do professor. Avisos de demanda, indisponibilidade, conflito e limites são orientativos e podem ser confirmados. Na Grade oficial, selecione uma turma ou professor para baixar um PDF individual formatado, compartilhá-lo como arquivo pelo menu nativo do dispositivo, baixar o CSV individual ou compartilhar/copiar um resumo. Selecione **Todas as turmas** para compartilhar diretamente um único PDF com as grades de todas as turmas, cada uma em sua página. Se o navegador não aceitar compartilhamento de arquivos, o PDF é baixado para ser anexado manualmente. O menu **Ajuda → Compartilhamento de horários** leva a esses recursos. O Owltime não hospeda links públicos; para publicar online, é necessário um serviço externo. Recolha o menu lateral pelo botão hambúrguer para ampliar a área de trabalho. As disciplinas recebem cores automáticas.
 
 ### 📊 Análises e relatórios
 
@@ -40,22 +40,21 @@ Na página **Relatórios**, escolha o semestre para consultar indicadores e o ra
 
 ### 📝 Anotações e backups
 
-Use o bloco de notas para registrar lembretes. Exporte uma cópia dos seus dados e importe-a quando precisar restaurar suas informações.
+O bloco de notas organiza tarefas em um quadro de etapas (A fazer, Em andamento e Concluído), com prioridades, prazos, busca e alertas de vencimento. Exporte uma cópia dos seus dados e importe-a quando precisar restaurar suas informações.
 
 ## Comece por aqui
 
-1. Cadastre cursos, professores, disciplinas e turmas individualmente ou importe listas usando os modelos XLSX ou CSV disponíveis em cada cadastro.
-2. Configure os horários, as demandas das turmas e a disponibilidade dos professores.
-3. Na Grade oficial, gere a proposta automática pelo QDP.
-4. Consulte no Painel o resumo da última grade gerada.
-5. Se necessário, abra Ajustes manuais para arrastar aulas, adicionar, editar ou excluir aulas com as orientações de demanda e disponibilidade.
-6. Na Grade oficial, gere um PDF por turma ou professor usando a opção de impressão do navegador e escolhendo **Salvar como PDF**.
-7. Use os filtros por disciplina e turma para acompanhar a grade e compare a carga dos professores com os limites cadastrados.
-8. Consulte as análises e mantenha seus dados organizados com backups.
+1. Abra **Ajuda** e clique em **Iniciar tutorial**. O guia acompanha a navegação, pode ser arrastado ou minimizado, traz instruções detalhadas e valores fictícios copiáveis em cada página e conduz do cadastro inicial à geração da grade.
+2. Para os dados reais da escola, cadastre cursos, professores, disciplinas e turmas individualmente ou importe os modelos XLSX/CSV.
+3. Configure horários, demandas, vínculos e PRDs/disponibilidades no mesmo semestre.
+4. Gere a proposta pelo QDP, confira o resumo, faça ajustes se necessário e consulte os relatórios.
+5. Gere os PDFs e mantenha cópias de backup em local seguro.
 
 ## Seus dados
 
 O Owltime salva as informações neste navegador. Para não perder seus registros, use **Armazenamento e backup** e guarde uma cópia em um local seguro. Os dados não são sincronizados entre dispositivos.
+
+O tutorial não possui uma base de teste isolada: qualquer exemplo salvo é adicionado aos dados deste navegador. Faça um backup antes de iniciar e restaure-o ao terminar para remover os cadastros de demonstração. O tutorial não cria nem exclui registros automaticamente.
 
 ---
 
