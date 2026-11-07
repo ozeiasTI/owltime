@@ -18,6 +18,8 @@ O Owltime ajuda a reunir as principais informações da escola e transformá-las
 
 Cadastre e consulte cursos, professores, disciplinas e turmas. Mantenha os dados importantes reunidos e fáceis de encontrar.
 
+Nos cadastros de cursos, professores, disciplinas e turmas, baixe um modelo CSV, preencha uma linha por registro e envie o arquivo para revisar a importação. O sistema valida os dados e as referências a cursos antes de importar; registros duplicados são ignorados e os existentes não são substituídos. Para disciplinas e turmas vinculadas a cursos, informe o nome de um curso já cadastrado. Os arquivos CSV podem ser preenchidos em editores de planilhas, como Excel e Google Sheets.
+
 ### 🗓️ Planejamento de horários
 
 Configure os horários da escola manualmente ou duplique os períodos e intervalos de um dia para outros dias. Cadastre demandas de uma turma por vez ou aplique a mesma disciplina e quantidade de aulas a várias turmas de uma vez. Registre também os vínculos e a disponibilidade dos professores.
@@ -36,7 +38,7 @@ Use o bloco de notas para registrar lembretes. Exporte uma cópia dos seus dados
 
 ## Comece por aqui
 
-1. Cadastre cursos, professores, disciplinas e turmas.
+1. Cadastre cursos, professores, disciplinas e turmas individualmente ou importe listas usando os modelos CSV disponíveis em cada cadastro.
 2. Configure os horários, as demandas das turmas e a disponibilidade dos professores.
 3. Na Grade oficial, gere a proposta automática pelo QDP.
 4. Consulte no Painel o resumo da última grade gerada.

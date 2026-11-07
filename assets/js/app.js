@@ -25,7 +25,40 @@
     let gradeTurmaFilter = '';
     let pdfExportType = 'turma';
     let pdfExportId = '';
+    let catalogImport = null;
     let alertTimer = 0;
+    const catalogImportSchemas = {
+        cursos: {
+            filename: 'modelo_cursos.csv',
+            headers: ['Nome', 'Sigla', 'Status'],
+            aliases: { nome: ['nome'], sigla: ['sigla'], status: ['status'] }
+        },
+        professores: {
+            filename: 'modelo_professores.csv',
+            headers: ['Nome', 'Matrícula', 'E-mail', 'Telefone', 'Titulação', 'Carga semanal (aulas)', 'Limite de aulas por dia', 'Status'],
+            aliases: {
+                nome: ['nome'], matricula: ['matricula'], email: ['email', 'e_mail'],
+                telefone: ['telefone', 'celular'], titulacao: ['titulacao'],
+                carga_horaria_semanal: ['carga_semanal_aulas', 'carga_horaria_semanal', 'carga_semanal'],
+                limite_aulas_dia: ['limite_de_aulas_por_dia', 'limite_aulas_dia'], status: ['status']
+            }
+        },
+        disciplinas: {
+            filename: 'modelo_disciplinas.csv',
+            headers: ['Nome', 'Curso', 'Status'],
+            aliases: { nome: ['nome'], curso_nome: ['curso', 'curso_nome', 'nome_do_curso'], status: ['status'] }
+        },
+        turmas: {
+            filename: 'modelo_turmas.csv',
+            headers: ['Nome da turma', 'Curso', 'Ano letivo', 'Período/turno', 'Semestre letivo', 'Status'],
+            aliases: {
+                nome: ['nome_da_turma', 'nome', 'turma'],
+                curso_nome: ['curso', 'curso_nome', 'nome_do_curso'],
+                ano_letivo: ['ano_letivo', 'ano'], periodo: ['periodo_turno', 'periodo', 'turno'],
+                semestre_letivo: ['semestre_letivo', 'semestre'], status: ['status']
+            }
+        }
+    };
 
     function h(value) {
         return String(value == null ? '' : value)
@@ -357,6 +390,252 @@
         return '<div class="col-md-6"><label class="form-label" for="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</label>' + control + '</div>';
     }
 
+    function normalizeCatalogValue(value) {
+        return String(value == null ? '' : value).trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+    }
+
+    function parseDelimitedCsv(text, delimiter) {
+        const rows = [];
+        let row = [];
+        let field = '';
+        let quoted = false;
+        const source = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+        for (let index = 0; index < source.length; index += 1) {
+            const character = source[index];
+            if (quoted) {
+                if (character === '"' && source[index + 1] === '"') {
+                    field += '"';
+                    index += 1;
+                } else if (character === '"') {
+                    quoted = false;
+                } else {
+                    field += character;
+                }
+            } else if (character === '"' && !field) {
+                quoted = true;
+            } else if (character === delimiter) {
+                row.push(field);
+                field = '';
+            } else if (character === '\n') {
+                row.push(field);
+                rows.push(row);
+                row = [];
+                field = '';
+            } else {
+                field += character;
+            }
+        }
+        if (quoted) throw new Error('O CSV tem um campo entre aspas que não foi fechado.');
+        if (field || row.length) {
+            row.push(field);
+            rows.push(row);
+        }
+        return rows;
+    }
+
+    function catalogCsvRows(text, schema) {
+        const delimiters = [';', ',', '\t'];
+        const delimiter = delimiters.map(function (candidate) {
+            return { value: candidate, columns: parseDelimitedCsv(text, candidate)[0] || [] };
+        }).sort(function (a, b) { return b.columns.length - a.columns.length; })[0];
+        const rows = parseDelimitedCsv(text, delimiter.value);
+        if (!rows.length) throw new Error('O arquivo está vazio.');
+
+        const headerPositions = {};
+        const unknownHeaders = [];
+        rows[0].forEach(function (header, index) {
+            const normalized = normalizeCatalogValue(header).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+            const fieldName = Object.keys(schema.aliases).find(function (key) {
+                return schema.aliases[key].some(function (alias) { return normalized === alias; });
+            });
+            if (!fieldName) {
+                if (String(header).trim()) unknownHeaders.push(String(header).trim());
+                return;
+            }
+            if (headerPositions[fieldName] !== undefined) throw new Error('A coluna "' + header + '" aparece mais de uma vez.');
+            headerPositions[fieldName] = index;
+        });
+        if (headerPositions.nome === undefined) throw new Error('A planilha precisa ter uma coluna "Nome" ou "Nome da turma".');
+        if (unknownHeaders.length) throw new Error('Colunas não reconhecidas: ' + unknownHeaders.join(', ') + '. Use o modelo CSV deste cadastro.');
+
+        const dataRows = rows.slice(1).filter(function (values) {
+            return values.some(function (value) { return String(value).trim(); });
+        });
+        if (!dataRows.length) throw new Error('Nenhum registro preenchido foi encontrado abaixo do cabeçalho.');
+        if (dataRows.length > 5000) throw new Error('O arquivo excede o limite de 5.000 registros por importação.');
+        return dataRows.map(function (values, index) {
+            if (values.length !== rows[0].length) {
+                return { line: index + 2, message: 'A quantidade de colunas não corresponde ao cabeçalho. Confira separadores e campos entre aspas.' };
+            }
+            const fields = {};
+            Object.keys(headerPositions).forEach(function (fieldName) {
+                fields[fieldName] = String(values[headerPositions[fieldName]] == null ? '' : values[headerPositions[fieldName]]).trim();
+            });
+            return { line: index + 2, fields: fields };
+        });
+    }
+
+    function importStatus(value, active, inactive) {
+        if (!value) return active;
+        const normalized = normalizeCatalogValue(value);
+        if (normalized === normalizeCatalogValue(active)) return active;
+        if (normalized === normalizeCatalogValue(inactive)) return inactive;
+        throw new Error('Status inválido. Use "' + active + '" ou "' + inactive + '".');
+    }
+
+    function importInteger(value, label, defaultValue, min) {
+        if (!value) return defaultValue;
+        const number = Number(value.replace(',', '.'));
+        if (!Number.isInteger(number) || number < min) throw new Error(label + ' deve ser um número inteiro igual ou maior que ' + min + '.');
+        return number;
+    }
+
+    function importCatalogRecord(route, fields) {
+        const name = String(fields.nome || '').trim();
+        if (!name) throw new Error('O nome é obrigatório.');
+        if (route === 'cursos') {
+            return { nome: name, sigla: fields.sigla || '', status: importStatus(fields.status, 'Ativo', 'Inativo') };
+        }
+        if (route === 'professores') {
+            if (fields.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) throw new Error('E-mail inválido.');
+            return {
+                nome: name, matricula: fields.matricula || '', email: fields.email || '',
+                telefone: fields.telefone || '', titulacao: fields.titulacao || '',
+                carga_horaria_semanal: importInteger(fields.carga_horaria_semanal, 'Carga semanal', 40, 0),
+                limite_aulas_dia: importInteger(fields.limite_aulas_dia, 'Limite de aulas por dia', 5, 0),
+                status: importStatus(fields.status, 'Ativo', 'Inativo')
+            };
+        }
+        const courseName = String(fields.curso_nome || '').trim();
+        let course = null;
+        if (courseName) {
+            course = readRecords(KEYS.cursos).find(function (record) {
+                return normalizeCatalogValue(record.nome) === normalizeCatalogValue(courseName);
+            });
+            if (!course) throw new Error('O curso "' + courseName + '" não existe. Cadastre ou importe o curso antes.');
+        }
+        if (route === 'disciplinas') {
+            return {
+                nome: name, curso_id: course ? Number(course.id) : null,
+                curso_nome: course ? course.nome : '',
+                status: importStatus(fields.status, 'Ativa', 'Inativa')
+            };
+        }
+        const year = importInteger(fields.ano_letivo, 'Ano letivo', new Date().getFullYear(), 2000);
+        const semester = fields.semestre_letivo || getSemester();
+        if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+        return {
+            nome: name, curso_id: course ? Number(course.id) : null,
+            curso_nome: course ? course.nome : '', ano_letivo: year,
+            periodo: fields.periodo || '', semestre_letivo: semester,
+            status: importStatus(fields.status, 'Ativa', 'Inativa')
+        };
+    }
+
+    function catalogDuplicateReason(route, record, existing) {
+        const sameName = function (item) { return normalizeCatalogValue(item.nome) === normalizeCatalogValue(record.nome); };
+        if (route === 'professores') {
+            return existing.some(function (item) {
+                const sameRegistration = record.matricula && item.matricula &&
+                    normalizeCatalogValue(item.matricula) === normalizeCatalogValue(record.matricula);
+                return sameRegistration || (sameName(item) && (!record.matricula || !item.matricula));
+            }) ? 'Professor com matrícula já cadastrada ou nome equivalente sem matrícula.' : '';
+        }
+        return existing.some(function (item) {
+            if (!sameName(item)) return false;
+            if (route === 'disciplinas') return String(item.curso_id || '') === String(record.curso_id || '');
+            if (route === 'turmas') {
+                return String(item.ano_letivo || '') === String(record.ano_letivo) &&
+                    String(item.semestre_letivo || '') === String(record.semestre_letivo);
+            }
+            return true;
+        }) ? 'Registro equivalente já cadastrado.' : '';
+    }
+
+    function prepareCatalogImport(route, filename, text) {
+        const rows = catalogCsvRows(text, catalogImportSchemas[route]);
+        const existing = readRecords(specs[route].key);
+        const accepted = [];
+        const preview = rows.map(function (row) {
+            if (row.message) return { line: row.line, status: 'error', message: row.message };
+            try {
+                const record = importCatalogRecord(route, row.fields);
+                const duplicate = catalogDuplicateReason(route, record, existing.concat(accepted));
+                if (duplicate) return { line: row.line, record: record, status: 'duplicate', message: duplicate };
+                accepted.push(record);
+                return { line: row.line, record: record, status: 'valid', message: 'Pronto para importar.' };
+            } catch (error) {
+                return { line: row.line, status: 'error', message: error.message || 'Registro inválido.' };
+            }
+        });
+        catalogImport = { route: route, filename: filename, rows: preview, accepted: accepted };
+        render();
+    }
+
+    function renderCatalogImport(route) {
+        if (!catalogImport || catalogImport.route !== route) return '';
+        const rows = catalogImport.rows;
+        const validCount = catalogImport.accepted.length;
+        const errors = rows.filter(function (row) { return row.status === 'error'; }).length;
+        const duplicates = rows.filter(function (row) { return row.status === 'duplicate'; }).length;
+        const detailLabels = {
+            sigla: 'Sigla', matricula: 'Matrícula', email: 'E-mail', telefone: 'Telefone',
+            titulacao: 'Titulação', carga_horaria_semanal: 'Carga semanal',
+            limite_aulas_dia: 'Limite diário', curso_nome: 'Curso', ano_letivo: 'Ano letivo',
+            periodo: 'Período', semestre_letivo: 'Semestre', status: 'Status'
+        };
+        const visibleRows = rows.slice(0, 100).map(function (row) {
+            const name = row.record ? row.record.nome : '—';
+            const details = row.record ? Object.keys(row.record).filter(function (key) {
+                return key !== 'nome';
+            }).map(function (key) {
+                const value = row.record[key] == null || row.record[key] === '' ? '—' : row.record[key];
+                return '<span><strong>' + h(detailLabels[key] || key) + ':</strong> ' + h(value) + '</span>';
+            }).join(' · ') : '—';
+            const label = row.status === 'valid' ? 'Importável' : row.status === 'duplicate' ? 'Ignorado · duplicado' : 'Erro';
+            const badge = row.status === 'valid' ? 'success' : row.status === 'duplicate' ? 'secondary' : 'danger';
+            return '<tr><td>' + row.line + '</td><td>' + h(name) + '</td><td><div class="small">' + details + '</div></td><td><span class="badge text-bg-' + badge + '">' + label + '</span></td><td>' + h(row.message) + '</td></tr>';
+        }).join('');
+        return '<div class="card border-primary mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Revisar importação · ' + h(catalogImport.filename) + '</strong>' +
+            '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="cancel-catalog-import">Cancelar</button></div><div class="card-body">' +
+            '<p class="mb-2"><strong>' + validCount + '</strong> para importar · <strong>' + duplicates + '</strong> duplicado(s) ignorado(s) · <strong>' + errors + '</strong> erro(s).</p>' +
+            (rows.length > 100 ? '<p class="small text-muted">Prévia das primeiras 100 de ' + rows.length + ' linhas; todas as linhas foram verificadas.</p>' : '') +
+            '<div class="table-responsive mb-3"><table class="table table-sm table-striped align-middle"><thead><tr><th>Linha</th><th>Nome</th><th>Dados</th><th>Resultado</th><th>Detalhe</th></tr></thead><tbody>' + visibleRows + '</tbody></table></div>' +
+            '<button class="btn btn-primary" type="button" data-action="confirm-catalog-import"' + (validCount ? '' : ' disabled') + '><i class="bi bi-upload me-1"></i>Importar ' + validCount + ' registro(s)</button>' +
+            '<span class="small text-muted ms-2">Os registros existentes não serão substituídos.</span></div></div>';
+    }
+
+    function downloadCatalogTemplate(route) {
+        const schema = catalogImportSchemas[route];
+        const csv = '\uFEFF' + schema.headers.map(function (header) {
+            return '"' + header.replace(/"/g, '""') + '"';
+        }).join(';') + '\r\n';
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = schema.filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function confirmCatalogImport() {
+        if (!catalogImport || !catalogImport.accepted.length) throw new Error('Não há registros válidos para importar.');
+        const spec = specs[catalogImport.route];
+        const existing = readRecords(spec.key);
+        let id = nextId(existing);
+        const additions = catalogImport.accepted.map(function (record) {
+            return Object.assign({ id: id++ }, record);
+        });
+        saveRecords(spec.key, existing.concat(additions), spec.module);
+        const count = additions.length;
+        catalogImport = null;
+        render();
+        notify(count + ' registro(s) importado(s) com sucesso.', 'success');
+    }
+
     function renderCrud(route) {
         const spec = specs[route];
         const records = readRecords(spec.key).slice().sort(function (a, b) {
@@ -391,7 +670,17 @@
                 '</div></form></div></div>'
             : '';
         const bulkDemandForm = route === 'demandas' ? renderBulkDemandForm() : '';
+        const importTools = catalogImportSchemas[route]
+            ? '<div class="card mb-4"><div class="card-header">Importar cadastro por planilha</div><div class="card-body">' +
+                '<p class="text-muted">Baixe o modelo CSV, preencha uma linha por registro e envie o arquivo para revisar antes de importar. Os dados permanecem neste navegador.</p>' +
+                '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-catalog-template"><i class="bi bi-download me-1"></i>Baixar modelo CSV</button>' +
+                '<button class="btn btn-primary" type="button" data-action="pick-catalog-import"><i class="bi bi-upload me-1"></i>Escolher planilha CSV</button>' +
+                '<input id="catalog-import-file" class="d-none" type="file" accept=".csv,text/csv"></div>' +
+                '<div class="form-text mt-2">Para disciplinas e turmas, informe o nome do curso já cadastrado. Importe cursos primeiro quando necessário.</div></div></div>'
+            : '';
         return pageHeader(spec.title, spec.icon, descriptionFor(route)) +
+            importTools +
+            renderCatalogImport(route) +
             bulkDemandForm +
             '<div class="card mb-4"><div class="card-header">' + (isEditing ? 'Editar registro' : 'Novo registro') + '</div><div class="card-body">' +
             '<form id="record-form" data-route="' + route + '"><div class="row g-3">' + fields + '</div>' +
@@ -1506,6 +1795,15 @@
                 toggle.innerHTML = '<i class="bi ' + (collapsed ? 'bi-x-lg' : 'bi-list') + '" aria-hidden="true"></i>';
             } else if (action === 'export-backup') exportBackup();
             else if (action === 'pick-backup') document.getElementById('backup-file').click();
+            else if (action === 'download-catalog-template') {
+                const route = window.location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+                if (!catalogImportSchemas[route]) throw new Error('Este cadastro não possui modelo de importação.');
+                downloadCatalogTemplate(route);
+            } else if (action === 'pick-catalog-import') document.getElementById('catalog-import-file').click();
+            else if (action === 'cancel-catalog-import') {
+                catalogImport = null;
+                render();
+            } else if (action === 'confirm-catalog-import') confirmCatalogImport();
             else if (action === 'toggle-demand-classes') {
                 const checkboxes = Array.from(document.querySelectorAll('#bulk-demand-form input[name="turma_ids"]'));
                 const shouldCheck = checkboxes.some(function (checkbox) { return !checkbox.checked; });
@@ -1630,7 +1928,33 @@
     }
 
     function handleChange(event) {
-        if (event.target.id === 'pdf-export-type') {
+        if (event.target.id === 'catalog-import-file' && event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            const route = window.location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+            event.target.value = '';
+            if (!catalogImportSchemas[route]) {
+                notify('Abra um cadastro compatível antes de importar uma planilha.', 'warning');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                notify('O arquivo excede o limite de 5 MB.', 'danger');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function () {
+                try {
+                    if ((window.location.hash.replace(/^#\/?/, '').split('/')[0] || '') !== route) return;
+                    prepareCatalogImport(route, file.name, String(reader.result || ''));
+                } catch (error) {
+                    console.error('Falha ao validar planilha:', error);
+                    notify(error.message || 'A planilha não pôde ser validada.', 'danger');
+                }
+            };
+            reader.onerror = function () {
+                notify('Não foi possível ler o arquivo selecionado.', 'danger');
+            };
+            reader.readAsText(file, 'UTF-8');
+        } else if (event.target.id === 'pdf-export-type') {
             pdfExportType = event.target.value === 'professor' ? 'professor' : 'turma';
             pdfExportId = '';
             render();
@@ -1760,7 +2084,11 @@
     document.addEventListener('dragover', handleDragOver);
     document.addEventListener('dragleave', handleDragLeave);
     document.addEventListener('drop', handleDrop);
-    window.addEventListener('hashchange', function () { editing = null; render(); });
+    window.addEventListener('hashchange', function () {
+        editing = null;
+        catalogImport = null;
+        render();
+    });
     if (!window.location.hash) window.location.hash = '#/dashboard';
     render();
 })();
