@@ -4318,14 +4318,18 @@
                 margin: [0, 0, 0, 6]
             });
             const isCorrect = item.difference === 0;
+            const isOverDeclared = item.difference > 0;
             let comparison;
             if (item.declared == null) comparison = 'Carga semanal declarada: não informada no cadastro.';
             else if (isCorrect) comparison = 'CORRETO · ' + item.total + ' aula(s) atribuída(s) de ' + item.declared + ' declarada(s).';
-            else comparison = 'DIVERGÊNCIA · ' + item.total + ' atribuída(s) de ' + item.declared + ' declarada(s) (' +
-                (item.difference > 0 ? '+' : '') + item.difference + ' aula(s)).';
+            else if (isOverDeclared) comparison = 'DIVERGÊNCIA · ' + item.total + ' aula(s) atribuída(s) para ' +
+                item.declared + ' declarada(s) (excedente de ' + item.difference + ' aula(s)).';
+            else comparison = 'AJUSTE NECESSÁRIO · ' + item.total + ' aula(s) atribuída(s) para ' +
+                item.declared + ' declarada(s) (faltam ' + Math.abs(item.difference) + ' aula(s)).';
             content.push({
                 text: comparison,
-                style: item.declared == null ? 'comparisonUnknown' : isCorrect ? 'comparisonCorrect' : 'comparisonMismatch',
+                style: item.declared == null ? 'comparisonUnknown' : isCorrect ? 'comparisonCorrect' :
+                    isOverDeclared ? 'comparisonMismatch' : 'comparisonAdjustment',
                 margin: [0, 0, 0, 10]
             });
         });
@@ -4488,6 +4492,7 @@
                 tableHeader: { bold: true, fontSize: 7.5, color: '#23486f', fillColor: '#eaf1f8', alignment: 'center' },
                 comparisonCorrect: { bold: true, color: '#176b42', fillColor: '#e8f5ed', fontSize: 8.5, margin: [6, 5, 6, 5] },
                 comparisonMismatch: { bold: true, color: '#a33131', fillColor: '#fdecec', fontSize: 8.5, margin: [6, 5, 6, 5] },
+                comparisonAdjustment: { bold: true, color: '#765b13', fillColor: '#fff7df', fontSize: 8.5, margin: [6, 5, 6, 5] },
                 comparisonUnknown: { bold: true, color: '#765b13', fillColor: '#fff7df', fontSize: 8.5, margin: [6, 5, 6, 5] },
                 sectionTitle: { fontSize: 10, bold: true, color: '#1d4e89' },
                 substitutionEyebrow: { fontSize: 7, bold: true, color: '#5380a8', characterSpacing: 1.1 },

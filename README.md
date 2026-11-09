@@ -36,6 +36,8 @@ Gere uma proposta de grade automaticamente pelo QDP e acompanhe todas as turmas 
 
 A visualização **Grade de todas as turmas** pode ser recolhida pelo botão **Recolher grade** e reaberta por **Expandir grade**, mantendo os filtros aplicados.
 
+Na declaração docente, carga atribuída igual à declarada aparece como correta; carga abaixo do declarado é listada como ajuste necessário, sem sinalização de erro; somente aulas acima da carga declarada são marcadas como divergência.
+
 ### 📊 Análises e relatórios
 
 Na página **Relatórios**, escolha o semestre para consultar indicadores e o ranking com todos os professores, inclusive quem ainda não tem aulas. Filtre por curso, professor, turma, disciplina, busca textual ou quantidade mínima/máxima de aulas preenchidas. Ao selecionar um curso, o relatório considera suas turmas e o filtro de professor mostra quem tem aulas alocadas nelas; os indicadores, gráficos, ranking e resumo por turma refletem os filtros aplicados. O resumo por turma reúne aulas preenchidas e previstas, disciplinas e professores responsáveis. Use **Gerar PDF** para imprimir esse resumo em formato A4 ou exporte a grade do semestre em CSV.
