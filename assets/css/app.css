@@ -349,6 +349,17 @@ body {
 .generation-summary-label { margin-top: .55rem; font-size: .8rem; font-weight: 700; }
 .generation-summary ul { max-height: 120px; overflow: auto; margin: .25rem 0 0; padding-left: 1.1rem; font-size: .78rem; }
 .generation-summary li + li { margin-top: .15rem; }
+.qdp-processing { position: fixed; z-index: 1200; inset: 0; display: grid; place-items: center; padding: 1rem; background: #10274699; backdrop-filter: blur(3px); }
+.qdp-processing-card { display: flex; width: min(390px, 100%); flex-direction: column; align-items: center; padding: 2rem 1.5rem; border: 1px solid #dce8f4; border-radius: 1rem; background: #fff; box-shadow: 0 20px 60px #10274640; text-align: center; }
+.qdp-processing-card h2 { margin: 1rem 0 .45rem; color: var(--owltime-ink); font-size: 1.2rem; font-weight: 800; }
+.qdp-processing-card p { margin: 0 0 .8rem; color: #536176; font-size: .88rem; }
+.qdp-processing-card > strong { color: var(--owltime-blue); font-size: .82rem; }
+.qdp-processing-card > small { margin-top: .5rem; color: var(--owltime-muted); font-size: .75rem; }
+.qdp-loader { position: relative; display: grid; width: 4.5rem; height: 4.5rem; place-items: center; border-radius: 50%; color: #1d4e89; background: #edf5fd; font-size: 1.7rem; }
+.qdp-loader-orbit { position: absolute; inset: -.35rem; border: 3px solid transparent; border-top-color: #3478b8; border-right-color: #83b9dc; border-radius: 50%; animation: qdp-loader-spin .85s linear infinite; }
+.qdp-loader-orbit::after { position: absolute; top: .15rem; right: .15rem; width: .55rem; height: .55rem; border-radius: 50%; background: #3478b8; content: ""; }
+@keyframes qdp-loader-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .qdp-loader-orbit { animation-duration: 2.5s; } }
 .meter span.meter-over { background: #dc3545; }
 .assignment-dialog { width: min(920px, calc(100vw - 2rem)); max-width: none; max-height: calc(100vh - 2rem); overflow: auto; padding: 1.4rem; border: 1px solid var(--owltime-border); border-radius: .9rem; color: var(--owltime-ink); box-shadow: 0 1rem 3rem #10274640; }
 .assignment-dialog::backdrop { background: #1027469c; }
