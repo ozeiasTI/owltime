@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#15335b">
-    <meta name="description" content="Owltime: organização escolar que funciona no navegador e salva os dados localmente.">
+    <meta name="description"
+        content="Owltime: organização escolar que funciona no navegador e salva os dados localmente.">
     <title>Owltime | Gestão escolar local </title>
     <link rel="icon" type="image/x-icon" href="assets/img/logo.ico">
     <link rel="apple-touch-icon" href="assets/img/logo.png">
@@ -12,15 +14,17 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="assets/css/app.css">
 </head>
+
 <body>
     <header class="topbar">
         <div class="topbar-brand-group">
-            <button type="button" class="btn btn-sm btn-outline-light sidebar-toggle" id="sidebar-toggle" data-action="toggle-sidebar" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu">
+            <button type="button" class="btn btn-sm btn-outline-light sidebar-toggle" id="sidebar-toggle"
+                data-action="toggle-sidebar" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu">
                 <i class="bi bi-list" aria-hidden="true"></i>
             </button>
             <a class="brand" href="#/dashboard" aria-label="Owltime, início">
                 <img src="assets/img/logo.png" alt="" width="40" height="40">
-                <span>Owltime<small>Gestão escolar local</small></span>
+                <span>Owltime<small> Gestão escolar local</small></span>
             </a>
         </div>
         <div class="topbar-right">
@@ -31,7 +35,8 @@
         </div>
         <div id="tutorial-environment-banner" class="tutorial-environment-banner" hidden role="status">
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
-            <span><strong>AMBIENTE DE PRODUÇÃO</strong> · Tutorial ativo: os dados são fictícios, mas qualquer cadastro salvo será gravado neste navegador.</span>
+            <span><strong>AMBIENTE DE PRODUÇÃO</strong> · Tutorial ativo: os dados são fictícios, mas qualquer cadastro
+                salvo será gravado neste navegador.</span>
         </div>
     </header>
 
@@ -42,22 +47,31 @@
 
             <div class="nav-group-label">Cadastros</div>
             <a class="side-link" href="#/cursos" data-route="cursos"><i class="bi bi-mortarboard"></i> Cursos</a>
-            <a class="side-link" href="#/disciplinas" data-route="disciplinas"><i class="bi bi-book"></i> Disciplinas</a>
-            <a class="side-link" href="#/professores" data-route="professores"><i class="bi bi-person-workspace"></i> Professores</a>
+            <a class="side-link" href="#/disciplinas" data-route="disciplinas"><i class="bi bi-book"></i>
+                Disciplinas</a>
+            <a class="side-link" href="#/professores" data-route="professores"><i class="bi bi-person-workspace"></i>
+                Professores</a>
             <a class="side-link" href="#/turmas" data-route="turmas"><i class="bi bi-people"></i> Turmas</a>
-            <a class="side-link" href="#/horarios" data-route="horarios"><i class="bi bi-clock"></i> Horários da escola</a>
-            <a class="side-link" href="#/demandas" data-route="demandas"><i class="bi bi-journal-plus"></i> Demandas das turmas</a>
-            <a class="side-link" href="#/vinculos" data-route="vinculos"><i class="bi bi-link-45deg"></i> Vínculos professor × disciplina</a>
-            <a class="side-link" href="#/disponibilidade" data-route="disponibilidade"><i class="bi bi-calendar2-check"></i> PRD e disponibilidade</a>
+            <a class="side-link" href="#/horarios" data-route="horarios"><i class="bi bi-clock"></i> Horários da
+                escola</a>
+            <a class="side-link" href="#/demandas" data-route="demandas"><i class="bi bi-journal-plus"></i> Demandas das
+                turmas</a>
+            <a class="side-link" href="#/vinculos" data-route="vinculos"><i class="bi bi-link-45deg"></i> Vínculos
+                professor × disciplina</a>
+            <a class="side-link" href="#/disponibilidade" data-route="disponibilidade"><i
+                    class="bi bi-calendar2-check"></i> PRD e disponibilidade</a>
 
             <div class="nav-group-label">Planejamento</div>
             <a class="side-link" href="#/grade" data-route="grade"><i class="bi bi-calendar3"></i> Grade oficial</a>
-            <a class="side-link" href="#/ajustes" data-route="ajustes"><i class="bi bi-pencil-square"></i> Ajustes manuais</a>
-            <a class="side-link" href="#/relatorios" data-route="relatorios"><i class="bi bi-bar-chart"></i> Relatórios</a>
+            <a class="side-link" href="#/ajustes" data-route="ajustes"><i class="bi bi-pencil-square"></i> Ajustes
+                manuais</a>
+            <a class="side-link" href="#/relatorios" data-route="relatorios"><i class="bi bi-bar-chart"></i>
+                Relatórios</a>
             <a class="side-link" href="#/notas" data-route="notas"><i class="bi bi-journal-text"></i> Bloco de notas</a>
 
             <div class="nav-group-label">Sistema</div>
-            <a class="side-link" href="#/armazenamento" data-route="armazenamento"><i class="bi bi-hdd-stack"></i> Armazenamento e backup</a>
+            <a class="side-link" href="#/armazenamento" data-route="armazenamento"><i class="bi bi-hdd-stack"></i>
+                Armazenamento e backup</a>
             <a class="side-link" href="#/ajuda" data-route="ajuda"><i class="bi bi-question-circle"></i> Ajuda</a>
         </aside>
 
@@ -76,4 +90,5 @@
     <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/vfs_fonts.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
+
 </html>
