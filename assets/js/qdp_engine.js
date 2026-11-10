@@ -20,6 +20,7 @@ class QDPEngine {
     this.vinculos = config.vinculos || {};
     this.demandaPorTurma = config.demandaPorTurma || {};
     this.disponibilidades = config.disponibilidades || {};
+    this.protecoes = config.protecoes || [];
     this.maxAulasDia = config.maxAulasDia || 6;
     this.maxCargaProfessor = config.maxCargaProfessor || 40;
     this.logs = [];
@@ -227,28 +228,6 @@ class QDPEngine {
     return true;
   }
 
-  _getOrdemAula(horaInicio) {
-    const horas = {
-      "07:00": 1,
-      "07:50": 2,
-      "09:00": 3,
-      "09:50": 4,
-      "08:00": 1,
-      "08:50": 2,
-      "09:40": 3,
-      "10:30": 4,
-      "07:30": 1,
-      "08:20": 2,
-      "09:20": 3,
-      "10:10": 4,
-      "07:45": 1,
-      "08:35": 2,
-      "09:35": 3,
-      "10:25": 4,
-    };
-    return horas[horaInicio] || 0;
-  }
-
   _turnoByHora(horaInicio) {
     const hh = Number(String(horaInicio || "00:00").split(":")[0] || 0);
     if (hh < 12) return "manha";
@@ -264,12 +243,18 @@ class QDPEngine {
       .replace(/[\u0300-\u036f]/g, "");
   }
 
-  _horarioPermitidoTurma(turmaId, horarioId) {
+  _horarioPermitidoTurma(turmaId, horarioId, diaSemana) {
     const turma = this.turmas.find((t) => Number(t.id) === Number(turmaId));
     const horario = this.horarios.find(
       (h) => Number(h.id) === Number(horarioId),
     );
     if (!turma || !horario) return true;
+    const dia = diaSemana || horario.dia_semana;
+    if (this.protecoes.some((protection) =>
+      Number(protection.turma_id) === Number(turmaId) &&
+      Number(protection.horario_id) === Number(horarioId) &&
+      String(protection.dia_semana) === String(dia)
+    )) return false;
 
     const periodo = this._normalizarPeriodo(turma.periodo || "");
     const turno = this._turnoByHora(horario.hora_inicio);
@@ -336,7 +321,7 @@ class QDPEngine {
     ignorarDisponibilidade = false,  // NOVO PARÂMETRO
 ) {
     // Verifica se o horário é permitido para a turma
-    if (!this._horarioPermitidoTurma(turmaId, horarioId)) return false;
+    if (!this._horarioPermitidoTurma(turmaId, horarioId, dia)) return false;
     
     // Verifica restrições da disciplina
     if (!this._verificarRestricaoDisciplina(disciplinaId, dia, horarioId))
@@ -681,13 +666,13 @@ class QDPEngine {
                         // Urgência: quanto mais aulas faltam, maior a prioridade
                         score += aulasRestantes * 10000;
 
-                        // Evitar sobrecarga do professor no mesmo dia
+                        // Preferir concentrar a carga do professor sem relaxar limites diários.
                         const aulasProfDia = assignments.filter(
                             (a) =>
                                 Number(a.professor_id) === Number(primario.id) &&
                                 a.dia_semana === dia,
                         ).length;
-                        score -= aulasProfDia * 5000;
+                        score += Math.min(aulasProfDia, 3) * 2500;
 
                         // Preferir dias com menos aulas da turma
                         const aulasTurmaDia = assignments.filter(
@@ -697,23 +682,21 @@ class QDPEngine {
                         ).length;
                         score -= aulasTurmaDia * 1000;
 
-                        // Aulas consecutivas (bônus)
-                        const ordemAtual = this._getOrdemAula(horario.hora_inicio);
-                        const temConsecutiva = assignments.some(
-                            (a) =>
-                                Number(a.turma_id) === Number(demanda.turmaId) &&
-                                Number(a.disciplina_id) === Number(demanda.disciplinaId) &&
-                                a.dia_semana === dia &&
-                                Math.abs(
-                                    this._getOrdemAula(
-                                        this.horarios.find((h) => h.id === a.horario_id)
-                                            ?.hora_inicio,
-                                    ) - ordemAtual,
-                                ) === 1,
+                        // Preferir horários adjacentes às aulas já atribuídas ao professor.
+                        const periodosOrdenados = horariosDoDia.slice().sort(
+                            (a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)),
                         );
-                        if (temConsecutiva) {
-                            score += 500;
-                        }
+                        const ordemAtual = periodosOrdenados.findIndex(
+                            (item) => Number(item.id) === Number(horario.id),
+                        );
+                        const temAulaConsecutivaDoProfessor = ordemAtual >= 0 && assignments.some((a) => {
+                            if (Number(a.professor_id) !== Number(primario.id) || a.dia_semana !== dia) return false;
+                            const ordemExistente = periodosOrdenados.findIndex(
+                                (item) => Number(item.id) === Number(a.horario_id),
+                            );
+                            return ordemExistente >= 0 && Math.abs(ordemExistente - ordemAtual) === 1;
+                        });
+                        if (temAulaConsecutivaDoProfessor) score += 6500;
 
                         // Distribuir ao longo da semana
                         const diasComAula = new Set();
@@ -2086,7 +2069,7 @@ class QDPEngine {
       const horarioId = Number(a.horario_id);
       const dia = String(a.dia_semana || "");
 
-      if (!this._horarioPermitidoTurma(turmaId, horarioId)) {
+      if (!this._horarioPermitidoTurma(turmaId, horarioId, dia)) {
         removidas++;
         continue;
       }

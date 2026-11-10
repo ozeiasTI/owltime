@@ -11,6 +11,8 @@
         disponibilidade: 'owltime_professor_disponibilidade_v1',
         demandas: 'owltime_turma_disciplina_v1',
         substituicoes: 'owltime_substituicoes_docentes_v1',
+        peculiaridades: 'owltime_peculiaridades_v1',
+        protecoesGrade: 'owltime_protecoes_grade_v1',
         notas: 'owltime_notas_v1',
         semestre: 'owltime_semestre_atual'
     };
@@ -533,6 +535,17 @@
                     return statusBadge(Number(value) === 1 ? 'Disponível' : 'Indisponível');
                 }],
                 ['semestre_letivo', 'Semestre']
+            ]
+        },
+        peculiaridades: {
+            title: 'Peculiaridades', icon: 'bi-shield-check', key: KEYS.peculiaridades, module: 'Peculiaridades',
+            fields: [
+                { name: 'nome', label: 'Nome da proteção', required: true, placeholder: 'Ex.: Momento cívico, DEPAE, PPS' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva o uso deste horário protegido' }
+            ],
+            columns: [
+                ['nome', 'Proteção'],
+                ['descricao', 'Descrição', function (value) { return h(value || '—'); }]
             ]
         },
         demandas: {
@@ -2066,6 +2079,7 @@
             vinculos: 'Indique quais disciplinas cada professor pode ministrar e acompanhe a cobertura do semestre selecionado.',
             disponibilidade: 'Planeje os dias de PRD e registre indisponibilidades por horário ou dia completo.',
             demandas: 'Defina quantas aulas semanais de cada disciplina cada turma precisa.',
+            peculiaridades: 'Cadastre tipos de proteção e marque os períodos reservados de cada turma antes de gerar a grade.',
             notas: 'Observações, pendências e decisões salvas apenas neste navegador.'
         };
         return descriptions[route] || '';
@@ -2078,16 +2092,38 @@
         return SUBJECT_COLORS[hash % SUBJECT_COLORS.length];
     }
 
-    function renderWeeklyGrid(slots, assignments, turmaId, editable) {
-        const sorted = slots.slice().sort(function (a, b) {
+    function slotMatchesClassPeriod(turma, slot) {
+        const period = normalizeCatalogValue(turma && turma.periodo);
+        const hour = Number(String(slot.hora_inicio || '00:00').split(':')[0] || 0);
+        if (period === 'matutino' || period === 'manha') return hour < 12;
+        if (period === 'vespertino' || period === 'tarde') return hour >= 12 && hour < 18;
+        if (period === 'noturno' || period === 'noite') return hour >= 18;
+        if (period === 'integral') return hour < 18;
+        return true;
+    }
+
+    function renderWeeklyGrid(slots, assignments, turmaId, editable, protections, allowProtection) {
+        const slotProtections = protections || [];
+        const turma = turmaId ? findById(KEYS.turmas, turmaId) : null;
+        const sorted = slots.filter(function (slot) {
+            return !turmaId || slotMatchesClassPeriod(turma, slot);
+        }).sort(function (a, b) {
             return String(a.hora_inicio).localeCompare(String(b.hora_inicio)) || String(a.hora_fim).localeCompare(String(b.hora_fim));
         });
+        if (turmaId && !sorted.length) {
+            return '<div class="empty-state py-4"><i class="bi bi-calendar-x"></i>Nenhum horário de aula cadastrado para o turno ' +
+                h(turma && turma.periodo || 'da turma') + '.</div>';
+        }
         const turmaAssignments = turmaId
             ? assignments.filter(function (item) { return String(item.turma_id) === String(turmaId); })
             : assignments;
-        const compactSlots = turmaId && !editable
+        const compactSlots = turmaId && !editable && !allowProtection
             ? sorted.filter(function (slot) {
-                return turmaAssignments.some(function (item) {
+                return slotProtections.some(function (protection) {
+                    return String(protection.turma_id) === String(turmaId) &&
+                        String(protection.horario_id) === String(slot.id) &&
+                        String(protection.dia_semana) === String(slot.dia_semana);
+                }) || turmaAssignments.some(function (item) {
                     if (String(item.dia_semana || '') !== String(slot.dia_semana || '')) return false;
                     return String(item.horario_id || '') === String(slot.id) ||
                         (String(item.hora_inicio || '') === String(slot.hora_inicio || '') &&
@@ -2108,18 +2144,33 @@
                     return item.dia_semana === day && String(item.hora_inicio) === times[0] && String(item.hora_fim) === times[1];
                 });
                 if (!slot) return '<td><span class="text-muted">—</span></td>';
-                const canDrag = Boolean(editable && turmaId);
+                const protection = slotProtections.find(function (item) {
+                    return String(item.turma_id) === String(turmaId) &&
+                        String(item.horario_id) === String(slot.id) &&
+                        String(item.dia_semana) === String(day);
+                });
+                const canDrag = Boolean(editable && turmaId && !protection);
                 const dropTarget = canDrag
                     ? ' data-drop-class-id="' + h(turmaId) + '" data-drop-day="' + h(day) + '" data-drop-slot-id="' + h(slot.id) + '"'
+                    : '';
+                const protectionTarget = allowProtection && turmaId
+                    ? ' data-protection-class-id="' + h(turmaId) + '" data-protection-day="' + h(day) +
+                        '" data-protection-slot-id="' + h(slot.id) + '" title="Clique duas vezes para proteger ou alterar este horário"'
                     : '';
                 const atSlot = assignments.filter(function (item) {
                     return String(item.horario_id) === String(slot.id) && String(item.dia_semana) === day &&
                         (!turmaId || String(item.turma_id) === String(turmaId));
                 });
                 if (!atSlot.length) {
-                    return '<td' + dropTarget + '>' + (editable && turmaId
+                    const emptyContent = protection
+                        ? '<div class="grade-protection-entry"><strong>' + h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
+                            '</strong><small>Horário protegido' + (allowProtection ? ' · duplo clique para alterar' : '') + '</small></div>'
+                        : editable && turmaId
                         ? '<button class="grade-empty" type="button" data-action="select-slot" data-class-id="' + h(turmaId) + '" data-day="' + h(day) + '" data-slot-id="' + h(slot.id) + '" aria-label="Adicionar aula em ' + h(day) + ' às ' + h(slot.hora_inicio) + '"></button>'
-                        : '<span class="text-muted">—</span>') + '</td>';
+                        : allowProtection && turmaId
+                            ? '<span class="grade-protection-hint">Duplo clique para proteger</span>'
+                            : '<span class="text-muted">—</span>';
+                    return '<td' + dropTarget + protectionTarget + '>' + emptyContent + '</td>';
                 }
                 const entries = atSlot.map(function (assignment) {
                     const disciplineId = assignment.disciplina_id;
@@ -2132,14 +2183,14 @@
                     entry + '</button>'
                     : '<div class="grade-entry" style="--grade-subject-color:' + subjectColor(disciplineId) + '">' + entry + '</div>';
                 }).join('');
-                return '<td' + dropTarget + '><div class="grade-cell-entries">' + entries + '</div></td>';
+                return '<td' + dropTarget + protectionTarget + '><div class="grade-cell-entries">' + entries + '</div></td>';
             }).join('');
             return '<tr><th>' + h(times[0]) + '–' + h(times[1]) + '</th>' + cells + '</tr>';
         }).join('');
         return '<div class="table-responsive"><table class="table table-bordered align-middle grade-table mb-0">' + header + '<tbody>' + body + '</tbody></table></div>';
     }
 
-    function renderClassSchedules(turmas, slots, assignments, editable, teacherId) {
+    function renderClassSchedules(turmas, slots, assignments, editable, teacherId, protections, allowProtection) {
         if (!turmas.length) return '<div class="empty-state"><i class="bi bi-people"></i>Cadastre turmas ativas para montar as grades.</div>';
         if (!slots.length) return '<div class="empty-state"><i class="bi bi-calendar-x"></i>Cadastre os horários de aula para montar as grades.</div>';
         const cards = turmas.map(function (turma) {
@@ -2154,9 +2205,126 @@
             const classSummary = teacherId ? turmaAssignments.length + ' aula(s) do professor' : turmaAssignments.length + ' / ' + demand + ' aula(s)';
             return '<section class="card grade-class-card"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
                 '<strong>' + h(turma.nome) + '</strong><span class="small text-muted">' + classSummary + '</span>' + status + '</div>' +
-                '<div class="card-body">' + renderWeeklyGrid(slots, turmaAssignments, turma.id, editable) + '</div></section>';
+                '<div class="card-body">' + renderWeeklyGrid(slots, turmaAssignments, turma.id, editable, protections, allowProtection) + '</div></section>';
         }).join('');
         return '<div class="grade-class-schedules">' + cards + '</div>';
+    }
+
+    function getGradeProtections(semester) {
+        return readRecords(KEYS.protecoesGrade).filter(function (protection) {
+            return String(protection.semestre_letivo || '') === String(semester || getSemester());
+        });
+    }
+
+    function renderSlotProtectionDialog() {
+        const peculiarities = readRecords(KEYS.peculiaridades).slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const options = '<option value="">Sem proteção · liberar horário</option>' + peculiarities.map(function (item) {
+            return '<option value="' + h(item.id) + '">' + h(item.nome || 'Proteção') + '</option>';
+        }).join('');
+        return '<dialog class="assignment-dialog" id="slot-protection-dialog" aria-labelledby="slot-protection-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="slot-protection-title">Proteger horário</h2>' +
+            '<p class="mb-0 text-muted" id="slot-protection-context"></p></div>' +
+            '<button type="button" class="btn-close" data-action="close-slot-protection" aria-label="Fechar"></button></div>' +
+            (!peculiarities.length ? '<div class="alert alert-warning">Cadastre primeiro os tipos de proteção em <a href="#/peculiaridades">Peculiaridades</a>.</div>' : '') +
+            '<form id="slot-protection-form"><input type="hidden" name="turma_id"><input type="hidden" name="dia_semana"><input type="hidden" name="horario_id">' +
+            '<div class="mb-3"><label class="form-label" for="slot-protection-type">Proteção</label><select class="form-select" id="slot-protection-type" name="peculiaridade_id"' +
+            (peculiarities.length ? '' : ' disabled') + '>' + options + '</select>' +
+            '<div class="form-text">O período protegido fica reservado para esta turma e não receberá aulas na geração automática.</div></div>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit"' + (peculiarities.length ? '' : ' disabled') +
+            '>Salvar proteção</button><button class="btn btn-outline-secondary" type="button" data-action="close-slot-protection">Cancelar</button></div></form></dialog>';
+    }
+
+    function openSlotProtectionDialog(cell) {
+        const turmaId = String(cell.dataset.protectionClassId || '');
+        const day = String(cell.dataset.protectionDay || '');
+        const slotId = String(cell.dataset.protectionSlotId || '');
+        const semester = getSemester();
+        const slot = findById(KEYS.horarios, slotId);
+        const turma = findById(KEYS.turmas, turmaId);
+        if (!slot || !turma || slot.dia_semana !== day) throw new Error('Não foi possível identificar a turma e o período selecionados.');
+        const state = readSimulation(semester);
+        const alreadyProtected = getGradeProtections(semester).find(function (item) {
+            return String(item.turma_id) === turmaId &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        const occupied = state.assignments.some(function (assignment) {
+            return String(assignment.turma_id) === turmaId &&
+                String(assignment.dia_semana) === day &&
+                String(assignment.horario_id) === slotId;
+        });
+        if (occupied && !alreadyProtected) {
+            throw new Error('Este horário já tem uma aula. Remova ou realoque a aula antes de protegê-lo.');
+        }
+        const dialog = document.getElementById('slot-protection-dialog');
+        const form = document.getElementById('slot-protection-form');
+        if (!dialog || !form) throw new Error('O formulário de proteção não está disponível nesta tela.');
+        form.elements.namedItem('turma_id').value = turmaId;
+        form.elements.namedItem('dia_semana').value = day;
+        form.elements.namedItem('horario_id').value = slotId;
+        form.elements.namedItem('peculiaridade_id').value = alreadyProtected ? String(alreadyProtected.peculiaridade_id || '') : '';
+        document.getElementById('slot-protection-context').textContent =
+            turma.nome + ' · ' + day + ' · ' + slot.hora_inicio + '–' + slot.hora_fim;
+        if (!dialog.open) dialog.showModal();
+    }
+
+    function saveSlotProtection(form) {
+        const data = new FormData(form);
+        const semester = getSemester();
+        const turmaId = String(data.get('turma_id') || '');
+        const day = String(data.get('dia_semana') || '');
+        const slotId = String(data.get('horario_id') || '');
+        const peculiarityId = String(data.get('peculiaridade_id') || '');
+        const slot = findById(KEYS.horarios, slotId);
+        const turma = findById(KEYS.turmas, turmaId);
+        if (!slot || !turma || slot.dia_semana !== day ||
+            String(slot.tipo || 'Aula').toLocaleLowerCase('pt-BR') !== 'aula') {
+            throw new Error('Selecione uma turma e um período de aula válidos.');
+        }
+        const protections = readRecords(KEYS.protecoesGrade);
+        const existing = protections.find(function (item) {
+            return String(item.semestre_letivo || '') === semester &&
+                String(item.turma_id) === turmaId &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        const remaining = protections.filter(function (item) {
+            return String(item.id) !== String(existing && existing.id);
+        });
+        if (!peculiarityId) {
+            if (!existing) throw new Error('Selecione uma proteção para salvar ou um horário protegido para liberar.');
+            saveRecords(KEYS.protecoesGrade, remaining, 'ProtecoesGrade');
+            document.getElementById('slot-protection-dialog').close();
+            render();
+            notify('Proteção removida. O horário está liberado para aulas.', 'success');
+            return;
+        }
+        const peculiarity = findById(KEYS.peculiaridades, peculiarityId);
+        if (!peculiarity) throw new Error('A proteção selecionada não foi encontrada. Atualize a página e tente novamente.');
+        const grade = readSimulation(semester);
+        const occupied = grade.assignments.some(function (assignment) {
+            return String(assignment.turma_id) === turmaId &&
+                String(assignment.dia_semana) === day &&
+                String(assignment.horario_id) === slotId;
+        });
+        if (occupied) throw new Error('Este horário já tem uma aula. Remova ou realoque a aula antes de protegê-lo.');
+        const protection = {
+            id: existing ? existing.id : nextId(protections),
+            semestre_letivo: semester,
+            turma_id: Number(turmaId),
+            dia_semana: day,
+            horario_id: Number(slotId),
+            peculiaridade_id: Number(peculiarityId),
+            peculiaridade_nome: peculiarity.nome || 'Proteção'
+        };
+        saveRecords(KEYS.protecoesGrade, existing
+            ? protections.map(function (item) { return String(item.id) === String(existing.id) ? protection : item; })
+            : protections.concat(protection), 'ProtecoesGrade');
+        document.getElementById('slot-protection-dialog').close();
+        render();
+        notify('Horário protegido para ' + protection.peculiaridade_nome + '.', 'success');
     }
 
     function renderDisciplineTeacherSchedules(slots, assignments, disciplineId, turmaId, teachers, editable) {
@@ -2346,6 +2514,7 @@
             vinculos: vínculos,
             demandaPorTurma: demandaPorTurma,
             disponibilidades: disponibilidades,
+            protecoes: getGradeProtections(getSemester()),
             maxAulasDia: Math.max(1, Math.max.apply(null, DAYS.map(function (day) {
                 return horarios.filter(function (slot) { return slot.dia_semana === day; }).length;
             })))
@@ -2520,6 +2689,7 @@
         const turmas = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
         const slots = readRecords(KEYS.horarios).filter(function (slot) { return String(slot.tipo || 'Aula').toLowerCase() === 'aula'; });
         const assignments = state.assignments || [];
+        const protections = getGradeProtections(semester);
         const disciplines = readRecords(KEYS.disciplinas);
         const teachers = activeRecords(KEYS.professores, ['ativo']);
         if (!['', 'complete', 'pending'].includes(gradeCompletionFilter)) gradeCompletionFilter = '';
@@ -2617,22 +2787,22 @@
             : !selectedFilterTurma
                 ? '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
                     '<div><strong>Grade de todas as turmas</strong><span class="text-muted small ms-2">' +
-                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Visualização consolidada das aulas geradas.') +
+                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma proteção.') +
                     '</span></div><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-grade-all-classes" aria-controls="grade-all-classes-content" aria-expanded="' +
                     String(!gradeAllClassesCollapsed) + '"><i class="bi ' + (gradeAllClassesCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
                     ' me-1" aria-hidden="true"></i>' + (gradeAllClassesCollapsed ? 'Expandir grade' : 'Recolher grade') +
                     '</button></div><div id="grade-all-classes-content" class="card-body p-2"' + (gradeAllClassesCollapsed ? ' hidden' : '') + '>' +
                     ((gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
                         ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
-                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter)) +
+                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable)) +
                     '</div></section>'
                 : '<div class="mb-2"><strong>Grade da turma ' + h(selectedFilterTurma.nome) +
                     '</strong><span class="text-muted small ms-2">' +
-                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Visualização consolidada das aulas geradas.') +
+                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma proteção.') +
                     '</span></div>' +
                 ((gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
                     ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
-                    : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter));
+                    : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable));
         const gradeEditing = state.assignments.find(function (item) { return String(item.id) === String(gradeEditingId); }) || null;
         const manual = editable ? renderManualAssignment(selectedTurma, slots, gradeEditing, gradeFocusDay, gradeFocusSlotId) : '';
         const workload = renderTeacherWorkload(readRecords(KEYS.professores), assignments);
@@ -2653,7 +2823,7 @@
             '<button class="btn btn-outline-secondary" type="button" data-action="print">Imprimir</button>' +
             '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button></div></div></div>' +
             '<div class="card mb-3"><div class="card-body d-flex align-items-end justify-content-between flex-wrap gap-3">' + turmaFilter + disciplineFilter + teacherFilter + completionFilter + legend + '</div></div>' +
-            scheduleView + declarationControls + substitutionPanel + workload + manual +
+            scheduleView + (!editable ? renderSlotProtectionDialog() : '') + declarationControls + substitutionPanel + workload + manual +
             '<p class="small text-muted mt-3"><i class="bi bi-info-circle me-1"></i>' + (editable
                 ? 'As alterações manuais são gravadas neste navegador. Confira as orientações de demanda e disponibilidade no formulário de cada aula.'
                 : 'Use os ajustes manuais em uma tela separada para corrigir ou complementar a grade automática.') + '</p>';
@@ -3164,6 +3334,11 @@
         const state = readSimulation(semester);
         const oldAssignment = assignmentId ? state.assignments.find(function (item) { return String(item.id) === assignmentId; }) : null;
         if (assignmentId && !oldAssignment) throw new Error('A aula que você tentou editar não foi encontrada.');
+        if (getGradeProtections(semester).some(function (protection) {
+            return String(protection.turma_id) === turmaId &&
+                String(protection.dia_semana) === day &&
+                String(protection.horario_id) === String(slotId);
+        })) throw new Error('Este período está protegido para a turma e não pode receber uma aula.');
         const remainingAssignments = state.assignments.filter(function (item) { return String(item.id) !== assignmentId; });
         const conflict = state.assignments.find(function (item) {
             if (String(item.id) === assignmentId) return false;
@@ -3221,6 +3396,11 @@
             throw new Error('O horário de destino não é um período de aula válido.');
         }
         if (String(assignment.dia_semana) === String(day) && String(assignment.horario_id) === String(slotId)) return;
+        if (getGradeProtections(semester).some(function (protection) {
+            return String(protection.turma_id) === String(classId) &&
+                String(protection.dia_semana) === String(day) &&
+                String(protection.horario_id) === String(slotId);
+        })) throw new Error('Este período está protegido para a turma e não pode receber uma aula.');
         const otherAssignments = state.assignments.filter(function (item) { return String(item.id) !== String(assignmentId); });
         if (otherAssignments.some(function (item) {
             return String(item.turma_id) === String(classId) && String(item.dia_semana) === String(day) && String(item.horario_id) === String(slotId);
@@ -3584,11 +3764,24 @@
                 '</td><td class="text-end fw-semibold">' + teacher.aulas + '</td><td><div class="report-share"><i style="width:' +
                 share + '%"></i></div><span class="small text-muted">' + share + '% da grade</span></td></tr>';
         }).join('');
+        const reportProtections = getGradeProtections(semester);
+        const reportSlotsById = new Map(readRecords(KEYS.horarios).map(function (slot) {
+            return [String(slot.id), slot];
+        }));
         const classSummaries = reportClasses.map(function (turma) {
             const subjects = visibleDemandRows.filter(function (row) { return String(row.turma_id) === String(turma.id); });
             const planned = subjects.reduce(function (sum, row) { return sum + row.previstas; }, 0);
             const allocated = subjects.reduce(function (sum, row) { return sum + row.alocadas; }, 0);
             const complete = planned > 0 && subjects.every(function (row) { return row.alocadas === row.previstas; });
+            const classProtections = reportProtections.filter(function (protection) {
+                return String(protection.turma_id) === String(turma.id);
+            }).sort(function (a, b) {
+                const dayDifference = DAYS.indexOf(String(a.dia_semana || '')) - DAYS.indexOf(String(b.dia_semana || ''));
+                if (dayDifference) return dayDifference;
+                const slotA = reportSlotsById.get(String(a.horario_id)) || {};
+                const slotB = reportSlotsById.get(String(b.horario_id)) || {};
+                return String(slotA.hora_inicio || '').localeCompare(String(slotB.hora_inicio || ''));
+            });
             const subjectList = subjects.map(function (row) {
                 const teacherList = row.professores.length
                     ? row.professores.map(function (teacher) {
@@ -3600,11 +3793,26 @@
                     row.alocadas + '/' + row.previstas + '</span></div><div class="report-class-teachers"><span>Professor(es):</span> ' +
                     teacherList + '</div></div>';
             }).join('');
+            const protectionList = classProtections.map(function (protection) {
+                const slot = reportSlotsById.get(String(protection.horario_id)) || {};
+                const time = slot.hora_inicio && slot.hora_fim
+                    ? ' · ' + slot.hora_inicio + '–' + slot.hora_fim
+                    : '';
+                const name = protection.peculiaridade_nome ||
+                    nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção');
+                return '<li><strong>' + h(protection.dia_semana || 'Dia não informado') + h(time) +
+                    '</strong><span>' + h(name) + '</span></li>';
+            }).join('');
+            const protectionSummary = '<section class="report-class-protections" aria-label="Peculiaridades da turma ' +
+                h(turma.nome || 'Turma') + '"><h3><i class="bi bi-shield-exclamation" aria-hidden="true"></i>Peculiaridades' +
+                (classProtections.length ? ' <span>' + classProtections.length + '</span>' : '') + '</h3>' +
+                (protectionList ? '<ul>' + protectionList + '</ul>' :
+                    '<p>Nenhum horário protegido para esta turma neste semestre.</p>') + '</section>';
             return '<article class="card report-class-card"><div class="report-class-heading"><h2>' + h(turma.nome || 'Turma') +
                 '</h2><span class="report-class-coverage ' + (complete ? 'is-complete' : 'is-pending') + '">' +
                 allocated + '/' + planned + ' aulas preenchidas</span></div>' +
                 '<div class="report-class-subjects">' + (subjectList || '<p class="text-muted mb-0">Nenhuma demanda cadastrada para esta turma.</p>') +
-                '</div></article>';
+                '</div>' + protectionSummary + '</article>';
         }).join('');
         const generationCard = lastReport
             ? '<div class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Última geração automática</strong><span class="badge text-bg-' +
@@ -3816,6 +4024,15 @@
             });
             if (duplicate) throw new Error('Já existe uma demanda dessa disciplina para a turma neste semestre. Edite o registro existente.');
         }
+        if (route === 'peculiaridades') {
+            values.nome = String(values.nome || '').trim();
+            if (!values.nome) throw new Error('Informe o nome da proteção.');
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    String(row.nome || '').trim().toLocaleLowerCase('pt-BR') === values.nome.toLocaleLowerCase('pt-BR');
+            });
+            if (duplicate) throw new Error('Já existe uma proteção com esse nome.');
+        }
         const records = readRecords(spec.key);
         const oldRecord = editing && editing.route === route ? records.find(function (row) { return String(row.id) === String(editing.id); }) : null;
         const record = Object.assign({}, oldRecord || {}, values);
@@ -3843,6 +4060,11 @@
         if (!spec) return;
         const record = findById(spec.key, id);
         if (!record) throw new Error('O registro não foi encontrado.');
+        if (route === 'peculiaridades' && readRecords(KEYS.protecoesGrade).some(function (protection) {
+            return String(protection.peculiaridade_id) === String(id);
+        })) {
+            throw new Error('Esta proteção está aplicada a uma ou mais turmas. Remova as marcações na Grade oficial antes de excluí-la.');
+        }
         const label = record.nome || record.titulo || record.dia_semana || 'este registro';
         if (!window.confirm('Excluir ' + label + '? Esta ação não pode ser desfeita sem um backup.')) return;
         saveRecords(spec.key, readRecords(spec.key).filter(function (item) { return String(item.id) !== String(id); }), spec.module);
@@ -3866,9 +4088,11 @@
         }
         if (route === 'turmas') {
             saveRecords(KEYS.demandas, readRecords(KEYS.demandas).filter(function (item) { return String(item.turma_id) !== String(id); }), 'TurmaDisciplina');
+            saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (item) { return String(item.turma_id) !== String(id); }), 'ProtecoesGrade');
         }
         if (route === 'horarios') {
             saveRecords(KEYS.disponibilidade, readRecords(KEYS.disponibilidade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProfessorDisponibilidade');
+            saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProtecoesGrade');
         }
         editing = null;
         render();
@@ -3886,19 +4110,33 @@
     function exportGradeCsv() {
         const semester = getSemester();
         const state = readSimulation(semester);
-        const rows = [['Semestre', 'Turma', 'Dia', 'Início', 'Fim', 'Disciplina', 'Professor']];
+        const rows = [['Semestre', 'Tipo', 'Turma', 'Dia', 'Início', 'Fim', 'Disciplina / proteção', 'Professor']];
         const slotMap = {};
         readRecords(KEYS.horarios).forEach(function (slot) { slotMap[String(slot.id)] = slot; });
         (state.assignments || []).forEach(function (item) {
             const slot = slotMap[String(item.horario_id)] || {};
             rows.push([
                 semester,
+                'Aula',
                 nameById(KEYS.turmas, item.turma_id, 'Turma'),
                 item.dia_semana || '',
                 slot.hora_inicio || item.hora_inicio || '',
                 slot.hora_fim || item.hora_fim || '',
                 item.disciplina_nome || nameById(KEYS.disciplinas, item.disciplina_id, ''),
                 item.professor_nome || nameById(KEYS.professores, item.professor_id, '')
+            ]);
+        });
+        getGradeProtections(semester).forEach(function (protection) {
+            const slot = slotMap[String(protection.horario_id)] || {};
+            rows.push([
+                semester,
+                'Proteção',
+                nameById(KEYS.turmas, protection.turma_id, 'Turma'),
+                protection.dia_semana || '',
+                slot.hora_inicio || '',
+                slot.hora_fim || '',
+                protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido'),
+                ''
             ]);
         });
         const csv = '\ufeff' + rows.map(function (row) {
@@ -3932,19 +4170,22 @@
             const slotB = slotMap[String(b.horario_id)] || {};
             return String(slotA.hora_inicio || a.hora_inicio || '').localeCompare(String(slotB.hora_inicio || b.hora_inicio || ''));
         });
-        return { entity: entity, type: type, semester: semester, assignments: assignments, slots: slotMap };
+        const protections = type === 'turma' ? getGradeProtections(semester).filter(function (protection) {
+            return String(protection.turma_id) === String(entityId);
+        }) : [];
+        return { entity: entity, type: type, semester: semester, assignments: assignments, protections: protections, slots: slotMap };
     }
 
     function exportIndividualScheduleCsv() {
         const schedule = getIndividualSchedule(pdfExportType, pdfExportId);
         const entityLabel = schedule.type === 'turma' ? 'Turma' : 'Professor';
         const rows = [
-            ['Semestre', 'Tipo', 'Nome', 'Dia', 'Início', 'Fim', 'Disciplina', 'Turma', 'Professor'],
+            ['Semestre', 'Tipo', 'Nome', 'Dia', 'Início', 'Fim', 'Disciplina / proteção', 'Turma', 'Professor'],
             ...schedule.assignments.map(function (assignment) {
                 const slot = schedule.slots[String(assignment.horario_id)] || {};
                 return [
                     schedule.semester,
-                    entityLabel,
+                    'Aula · ' + entityLabel,
                     schedule.entity.nome,
                     assignment.dia_semana || '',
                     slot.hora_inicio || assignment.hora_inicio || '',
@@ -3952,6 +4193,20 @@
                     assignment.disciplina_nome || nameById(KEYS.disciplinas, assignment.disciplina_id, ''),
                     nameById(KEYS.turmas, assignment.turma_id, ''),
                     nameById(KEYS.professores, assignment.professor_id, '')
+                ];
+            }),
+            ...schedule.protections.map(function (protection) {
+                const slot = schedule.slots[String(protection.horario_id)] || {};
+                return [
+                    schedule.semester,
+                    'Proteção',
+                    schedule.entity.nome,
+                    protection.dia_semana || '',
+                    slot.hora_inicio || '',
+                    slot.hora_fim || '',
+                    protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido'),
+                    schedule.entity.nome,
+                    ''
                 ];
             })
         ];
@@ -3975,14 +4230,18 @@
         const title = isClass ? 'Grade de horários da turma' : 'Horários do professor';
         const lessons = schedule.assignments;
         const activeDays = DAYS.slice(5).filter(function (day) {
-            return lessons.some(function (assignment) { return assignment.dia_semana === day; });
+            return lessons.some(function (assignment) { return assignment.dia_semana === day; }) ||
+                schedule.protections.some(function (protection) { return protection.dia_semana === day; });
         });
         const days = WEEKDAYS.concat(activeDays);
         const timeRanges = Array.from(new Set(lessons.map(function (assignment) {
             const slot = schedule.slots[String(assignment.horario_id)] || {};
             return (slot.hora_inicio || assignment.hora_inicio || '--:--') + '|' +
                 (slot.hora_fim || assignment.hora_fim || '--:--');
-        }))).sort(function (a, b) { return a.localeCompare(b); });
+        }).concat(schedule.protections.map(function (protection) {
+            const slot = schedule.slots[String(protection.horario_id)] || {};
+            return (slot.hora_inicio || '--:--') + '|' + (slot.hora_fim || '--:--');
+        })))).sort(function (a, b) { return a.localeCompare(b); });
         const body = [[
             { text: 'HORÁRIO', style: 'tableHeader' }
         ].concat(days.map(function (day) { return { text: day.toLocaleUpperCase('pt-BR'), style: 'tableHeader' }; }))];
@@ -3997,7 +4256,19 @@
                         (slot.hora_fim || assignment.hora_fim || '--:--') === times[1];
                 });
                 if (!atSlot.length) {
-                    row.push({ text: '—', color: '#94a3b8', alignment: 'center' });
+                    const protection = schedule.protections.find(function (item) {
+                        const slot = schedule.slots[String(item.horario_id)] || {};
+                        return item.dia_semana === day &&
+                            (slot.hora_inicio || '--:--') === times[0] &&
+                            (slot.hora_fim || '--:--') === times[1];
+                    });
+                    row.push(protection
+                        ? {
+                            text: 'HORÁRIO PROTEGIDO\n' + (protection.peculiaridade_nome ||
+                                nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção')),
+                            style: 'protectionCell'
+                        }
+                        : { text: '—', color: '#94a3b8', alignment: 'center' });
                     return;
                 }
                 const stack = [];
@@ -4034,7 +4305,9 @@
             {
                 columns: [
                     { text: 'Semestre ' + schedule.semester, style: 'meta' },
-                    { text: lessons.length + (lessons.length === 1 ? ' aula na grade' : ' aulas na grade'), style: 'meta', alignment: 'right' }
+                    { text: lessons.length + (lessons.length === 1 ? ' aula' : ' aulas') + ' · ' +
+                        schedule.protections.length + (schedule.protections.length === 1 ? ' horário protegido' : ' horários protegidos'),
+                        style: 'meta', alignment: 'right' }
                 ],
                 margin: [0, 0, 0, 18]
             }
@@ -4059,7 +4332,9 @@
             });
         } else {
             content.push({
-                text: 'Nenhuma aula alocada para ' + schedule.entity.nome + ' neste semestre.',
+                text: schedule.protections.length
+                    ? 'Não há aulas alocadas. Os horários protegidos estão identificados na grade.'
+                    : 'Nenhuma aula alocada para ' + schedule.entity.nome + ' neste semestre.',
                 color: '#64748b',
                 alignment: 'center',
                 margin: [0, 24, 0, 0]
@@ -4084,6 +4359,7 @@
                 meta: { fontSize: 9, color: '#64748b' },
                 tableHeader: { bold: true, fontSize: 8, color: '#23486f', fillColor: '#edf4fc', alignment: 'center' },
                 timeCell: { bold: true, fontSize: 8, color: '#42566e', alignment: 'center' },
+                protectionCell: { bold: true, fontSize: 8, color: '#8f2933', fillColor: '#fdeced', alignment: 'center', margin: [5, 6, 5, 6] },
                 footer: { fontSize: 8, color: '#718096', alignment: 'right' }
             }
         };
@@ -4667,7 +4943,10 @@
                     ? String(assignment.turma_id) === String(item.id)
                     : String(assignment.professor_id) === String(item.id);
             });
-            const grid = renderWeeklyGrid(slots, assignments, type === 'turma' ? item.id : null, false);
+            const grid = renderWeeklyGrid(
+                slots, assignments, type === 'turma' ? item.id : null, false,
+                type === 'turma' ? getGradeProtections(semester) : []
+            );
             const sectionTitle = type === 'turma' ? item.nome : item.nome;
             return '<section class="pdf-schedule-section"><h2>' + h(sectionTitle) + '</h2>' + grid +
                 '<footer class="pdf-footer">' + assignments.length + ' aula(s) na grade</footer></section>';
@@ -4691,7 +4970,7 @@
             '.pdf-header p{margin:0;color:#64748b}.pdf-meta{text-align:right;color:#64748b;font-size:12px;line-height:1.7}.pdf-schedule-section{break-after:page;page-break-after:always}.pdf-schedule-section:last-child{break-after:auto;page-break-after:auto}.pdf-schedule-section h2{margin:0 0 12px;color:#23486f;font-size:20px}.empty-state{padding:24px;color:#64748b;text-align:center}' +
             '.table-responsive{width:100%}.grade-table{width:100%;border-collapse:collapse;table-layout:fixed}.grade-table th,.grade-table td{border:1px solid #cbd5e1;padding:8px;text-align:center;vertical-align:middle}' +
             '.grade-table thead th{background:#edf4fc;color:#23486f;font-size:11px;text-transform:uppercase}.grade-table tbody th{width:70px;background:#f7f9fc;font-size:12px;white-space:nowrap}' +
-            '.grade-table td{height:76px}.grade-cell-entries{display:grid;gap:4px}.grade-entry{display:block;width:100%;padding:8px;border:0;border-radius:6px;color:#20436b;background:var(--grade-subject-color,#eaf3fc);font-size:12px;line-height:1.35;text-align:left;break-inside:avoid}' +
+            '.grade-table td{height:76px}.grade-cell-entries{display:grid;gap:4px}.grade-entry{display:block;width:100%;padding:8px;border:0;border-radius:6px;color:#20436b;background:var(--grade-subject-color,#eaf3fc);font-size:12px;line-height:1.35;text-align:left;break-inside:avoid}.grade-protection-entry{display:grid;gap:3px;padding:8px;border:1px solid #e6a3a8;border-left:4px solid #c74750;border-radius:6px;color:#8f2933;background:#fdeced;font-size:12px;line-height:1.35}.grade-protection-entry small{color:#a34a52;font-size:10px}' +
             '.grade-entry strong{display:block}.grade-entry small{display:block;margin-top:3px;color:#58718e;font-size:10px}.pdf-footer{margin-top:16px;padding-top:8px;border-top:1px solid #dbe3ec;color:#7b8797;font-size:10px;text-align:right}' +
             '</style></head><body><header class="pdf-header"><div><div class="pdf-brand">Owltime · Planejamento escolar</div><h1>' +
             h(heading) + '</h1><p>' + h(titleName) + '</p></div><div class="pdf-meta">Semestre: ' + h(semester) + '<br>Gerado em: ' +
@@ -4758,6 +5037,9 @@
             } else if (action === 'toggle-grade-all-classes') {
                 gradeAllClassesCollapsed = !gradeAllClassesCollapsed;
                 render();
+            } else if (action === 'close-slot-protection') {
+                const dialog = document.getElementById('slot-protection-dialog');
+                if (dialog && dialog.open) dialog.close();
             } else if (action === 'toggle-sidebar') {
                 const sidebar = document.getElementById('main-sidebar');
                 const toggle = document.getElementById('sidebar-toggle');
@@ -5001,6 +5283,9 @@
             } else if (form.id === 'teacher-substitution-form') {
                 event.preventDefault();
                 saveTeacherSubstitution(form);
+            } else if (form.id === 'slot-protection-form') {
+                event.preventDefault();
+                saveSlotProtection(form);
             } else if (form.id === 'semester-form') {
                 event.preventDefault();
                 applySemesterFrom('semester-input');
@@ -5185,6 +5470,7 @@
             });
             return;
         }
+
         if (event.target.id === 'table-search' || event.target.classList.contains('record-filter-control')) {
             const route = window.location.hash.replace(/^#\/?/, '').split('/')[0];
             if (specs[route]) {
@@ -5195,6 +5481,18 @@
             document.querySelectorAll('#view tbody tr').forEach(function (row) {
                 row.hidden = query && !row.textContent.toLocaleLowerCase('pt-BR').includes(query);
             });
+        }
+    }
+
+    function handleDoubleClick(event) {
+        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'grade') return;
+        const cell = event.target.closest('td[data-protection-class-id]');
+        if (!cell) return;
+        try {
+            openSlotProtectionDialog(cell);
+        } catch (error) {
+            console.error('Falha ao abrir proteção do horário:', error);
+            notify(error.message || 'Não foi possível abrir a proteção do horário.', 'warning');
         }
     }
 
@@ -5249,6 +5547,7 @@
     document.addEventListener('submit', handleSubmit);
     document.addEventListener('change', handleChange);
     document.addEventListener('input', handleInput);
+    document.addEventListener('dblclick', handleDoubleClick);
     document.addEventListener('dragstart', handleDragStart);
     document.addEventListener('dragend', handleDragEnd);
     document.addEventListener('dragover', handleDragOver);
