@@ -13,6 +13,8 @@
         substituicoes: 'owltime_substituicoes_docentes_v1',
         peculiaridades: 'owltime_peculiaridades_v1',
         protecoesGrade: 'owltime_protecoes_grade_v1',
+        eventos: 'owltime_eventos_v1',
+        eventosGrade: 'owltime_eventos_grade_v1',
         notas: 'owltime_notas_v1',
         semestre: 'owltime_semestre_atual'
     };
@@ -113,14 +115,14 @@
     const catalogImportSchemas = {
         cursos: {
             filename: 'modelo_cursos.csv',
-            headers: ['Nome', 'Sigla', 'Status'],
-            aliases: { nome: ['nome'], sigla: ['sigla'], status: ['status'] }
+            headers: ['ID', 'Nome', 'Sigla', 'Status'],
+            aliases: { id: ['id'], nome: ['nome'], sigla: ['sigla'], status: ['status'] }
         },
         professores: {
             filename: 'modelo_professores.csv',
-            headers: ['Nome', 'Disciplina de ingresso', 'Matrícula', 'E-mail', 'Telefone', 'Titulação', 'Carga semanal (aulas)', 'Limite de aulas por dia', 'Status'],
+            headers: ['ID', 'Nome', 'Disciplina de ingresso', 'Matrícula', 'E-mail', 'Telefone', 'Titulação', 'Carga semanal (aulas)', 'Limite de aulas por dia', 'Status'],
             aliases: {
-                nome: ['nome'], disciplina_ingresso: ['disciplina_de_ingresso', 'disciplina_ingresso'],
+                id: ['id'], nome: ['nome'], disciplina_ingresso: ['disciplina_de_ingresso', 'disciplina_ingresso'],
                 matricula: ['matricula'], email: ['email', 'e_mail'],
                 telefone: ['telefone', 'celular'], titulacao: ['titulacao'],
                 carga_horaria_semanal: ['carga_semanal_aulas', 'carga_horaria_semanal', 'carga_semanal'],
@@ -129,13 +131,14 @@
         },
         disciplinas: {
             filename: 'modelo_disciplinas.csv',
-            headers: ['Nome', 'Curso', 'Status'],
-            aliases: { nome: ['nome'], curso_nome: ['curso', 'curso_nome', 'nome_do_curso'], status: ['status'] }
+            headers: ['ID', 'Nome', 'Curso', 'Status'],
+            aliases: { id: ['id'], nome: ['nome'], curso_nome: ['curso', 'curso_nome', 'nome_do_curso'], status: ['status'] }
         },
         turmas: {
             filename: 'modelo_turmas.csv',
-            headers: ['Nome da turma', 'Curso', 'Ano letivo', 'Período/turno', 'Semestre letivo', 'Status'],
+            headers: ['ID', 'Nome da turma', 'Curso', 'Ano letivo', 'Período/turno', 'Semestre letivo', 'Status'],
             aliases: {
+                id: ['id'],
                 nome: ['nome_da_turma', 'nome', 'turma'],
                 curso_nome: ['curso', 'curso_nome', 'nome_do_curso'],
                 ano_letivo: ['ano_letivo', 'ano'], periodo: ['periodo_turno', 'periodo', 'turno'],
@@ -548,6 +551,17 @@
                 ['descricao', 'Descrição', function (value) { return h(value || '—'); }]
             ]
         },
+        eventos: {
+            title: 'Eventos', icon: 'bi-calendar-event', key: KEYS.eventos, module: 'Eventos',
+            fields: [
+                { name: 'nome', label: 'Nome do evento', required: true, placeholder: 'Ex.: Momento cívico' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva este evento recorrente da escola' }
+            ],
+            columns: [
+                ['nome', 'Evento'],
+                ['descricao', 'Descrição', function (value) { return h(value || '—'); }]
+            ]
+        },
         demandas: {
             title: 'Demandas das turmas', icon: 'bi-journal-plus', key: KEYS.demandas, module: 'TurmaDisciplina',
             fields: [
@@ -847,7 +861,7 @@
             Object.keys(headerPositions).forEach(function (fieldName) {
                 fields[fieldName] = String(values[headerPositions[fieldName]] == null ? '' : values[headerPositions[fieldName]]).trim();
             });
-            return { line: index + 2, fields: fields };
+            return { line: index + 2, id: fields.id || '', fields: fields };
         });
     }
 
@@ -982,14 +996,33 @@
     function prepareCatalogImport(route, filename, rows) {
         const existing = readRecords(specs[route].key);
         const accepted = [];
+        const seenIds = new Set();
         const preview = rows.map(function (row) {
             if (row.message) return { line: row.line, status: 'error', message: row.message };
             try {
+                let oldRecord = null;
+                if (row.id) {
+                    if (!/^[1-9]\d*$/.test(row.id) || !Number.isSafeInteger(Number(row.id))) {
+                        throw new Error('ID inválido. Use o ID numérico exportado pelo sistema ou deixe a coluna vazia para criar um registro.');
+                    }
+                    if (seenIds.has(row.id)) throw new Error('ID repetido nesta planilha.');
+                    seenIds.add(row.id);
+                    oldRecord = existing.find(function (record) { return String(record.id) === row.id; }) || null;
+                    if (!oldRecord) throw new Error('O ID ' + row.id + ' não existe neste cadastro. Baixe uma nova cópia preenchida pelo sistema.');
+                }
                 const record = importCatalogRecord(route, row.fields);
-                const duplicate = catalogDuplicateReason(route, record, existing.concat(accepted));
+                const comparable = existing.filter(function (item) {
+                    return !oldRecord || String(item.id) !== String(oldRecord.id);
+                }).concat(accepted);
+                const duplicate = catalogDuplicateReason(route, record, comparable);
                 if (duplicate) return { line: row.line, record: record, status: 'duplicate', message: duplicate };
+                if (oldRecord) record.id = oldRecord.id;
                 accepted.push(record);
-                return { line: row.line, record: record, status: 'valid', message: 'Pronto para importar.' };
+                return {
+                    line: row.line, record: record, status: 'valid',
+                    update: Boolean(oldRecord),
+                    message: oldRecord ? 'Pronto para atualizar o registro existente.' : 'Pronto para importar.'
+                };
             } catch (error) {
                 return { line: row.line, status: 'error', message: error.message || 'Registro inválido.' };
             }
@@ -1005,13 +1038,17 @@
         const errors = rows.filter(function (row) { return row.status === 'error'; }).length;
         const duplicates = rows.filter(function (row) { return row.status === 'duplicate'; }).length;
         const detailLabels = {
+            id: 'ID',
             sigla: 'Sigla', matricula: 'Matrícula', email: 'E-mail', telefone: 'Telefone',
             titulacao: 'Titulação', carga_horaria_semanal: 'Carga semanal',
             limite_aulas_dia: 'Limite diário', disciplina_ingresso: 'Disciplina de ingresso',
             curso_nome: 'Curso', ano_letivo: 'Ano letivo',
             periodo: 'Período', semestre_letivo: 'Semestre', status: 'Status'
         };
-        const visibleRows = rows.slice(0, 100).map(function (row) {
+        const previewRows = errors || duplicates
+            ? rows.filter(function (row) { return row.status === 'error' || row.status === 'duplicate'; })
+            : rows.slice(0, 100);
+        const visibleRows = previewRows.map(function (row) {
             const name = row.record ? row.record.nome : '—';
             const details = row.record ? Object.keys(row.record).filter(function (key) {
                 return key !== 'nome';
@@ -1020,17 +1057,21 @@
                 const value = rawValue == null || rawValue === '' ? '—' : rawValue;
                 return '<span><strong>' + h(detailLabels[key] || key) + ':</strong> ' + h(value) + '</span>';
             }).join(' · ') : '—';
-            const label = row.status === 'valid' ? 'Importável' : row.status === 'duplicate' ? 'Ignorado · duplicado' : 'Erro';
+            const label = row.status === 'valid' ? row.update ? 'Atualizar' : 'Importável' : row.status === 'duplicate' ? 'Ignorado · duplicado' : 'Erro';
             const badge = row.status === 'valid' ? 'success' : row.status === 'duplicate' ? 'secondary' : 'danger';
             return '<tr><td>' + row.line + '</td><td>' + h(name) + '</td><td><div class="small">' + details + '</div></td><td><span class="badge text-bg-' + badge + '">' + label + '</span></td><td>' + h(row.message) + '</td></tr>';
         }).join('');
+        const importStatus = errors || duplicates
+            ? '<div class="alert alert-warning">Exibindo todas as linhas com erro e todos os ' + duplicates + ' registro(s) duplicado(s), inclusive após as primeiras 100 linhas; a coluna Detalhe informa o motivo da rejeição. Os ' + validCount + ' registro(s) válidos podem ser importados sem incluir essas linhas.</div>'
+            : '<div class="alert alert-success">Tudo certo: ' + validCount + ' registro(s) estão prontos para importar.</div>';
         return '<div class="card border-primary mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Revisar importação · ' + h(catalogImport.filename) + '</strong>' +
             '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="cancel-catalog-import">Cancelar</button></div><div class="card-body">' +
             '<p class="mb-2"><strong>' + validCount + '</strong> para importar · <strong>' + duplicates + '</strong> duplicado(s) ignorado(s) · <strong>' + errors + '</strong> erro(s).</p>' +
-            (rows.length > 100 ? '<p class="small text-muted">Prévia das primeiras 100 de ' + rows.length + ' linhas; todas as linhas foram verificadas.</p>' : '') +
-            '<div class="table-responsive mb-3"><table class="table table-sm table-striped align-middle"><thead><tr><th>Linha</th><th>Nome</th><th>Dados</th><th>Resultado</th><th>Detalhe</th></tr></thead><tbody>' + visibleRows + '</tbody></table></div>' +
-            '<button class="btn btn-primary" type="button" data-action="confirm-catalog-import"' + (validCount ? '' : ' disabled') + '><i class="bi bi-upload me-1"></i>Importar ' + validCount + ' registro(s)</button>' +
-            '<span class="small text-muted ms-2">Os registros existentes não serão substituídos.</span></div></div>';
+            importStatus +
+            (previewRows.length ? '<div class="table-responsive mb-3"><table class="table table-sm table-striped align-middle"><thead><tr><th>Linha</th><th>Nome</th><th>Dados</th><th>Resultado</th><th>Detalhe</th></tr></thead><tbody>' + visibleRows + '</tbody></table></div>' : '') +
+            (!errors && rows.length > 100 ? '<p class="small text-muted">Prévia das primeiras 100 de ' + rows.length + ' linhas; todas as linhas foram verificadas.</p>' : '') +
+            '<button class="btn btn-primary" type="button" data-action="confirm-catalog-import"' + (validCount ? '' : ' disabled') + '><i class="bi bi-upload me-1"></i>Importar ' + validCount + ' registro(s) válidos</button>' +
+            '<span class="small text-muted ms-2">IDs preenchidos atualizam registros existentes; sem ID, um novo registro é criado.</span></div></div>';
     }
 
     function downloadCatalogBlob(filename, blob) {
@@ -1081,27 +1122,27 @@
         const listSheet = workbook.addWorksheet('Listas');
         listSheet.state = 'veryHidden';
         const validations = [];
-        if (route === 'cursos') validations.push({ column: 3, name: 'Status', values: ['Ativo', 'Inativo'] });
+        if (route === 'cursos') validations.push({ column: 4, name: 'Status', values: ['Ativo', 'Inativo'] });
         if (route === 'professores') {
             validations.push(
-                { column: 6, name: 'Titulos', values: ['Graduado(a)', 'Especializado(a)', 'Mestre', 'Doutor(a)', 'PHD'] },
-                { column: 7, name: 'CargasSemanais', values: ['10', '20', '30', '40'] },
-                { column: 8, name: 'LimitesDiarios', values: Array.from({ length: 12 }, function (_, index) { return String(index + 1); }) },
-                { column: 9, name: 'Status', values: ['Ativo', 'Inativo'] }
+                { column: 7, name: 'Titulos', values: ['Graduado(a)', 'Especializado(a)', 'Mestre', 'Doutor(a)', 'PHD'] },
+                { column: 8, name: 'CargasSemanais', values: ['10', '20', '30', '40'] },
+                { column: 9, name: 'LimitesDiarios', values: Array.from({ length: 12 }, function (_, index) { return String(index + 1); }) },
+                { column: 10, name: 'Status', values: ['Ativo', 'Inativo'] }
             );
         }
         if (route === 'disciplinas' || route === 'turmas') {
             const courses = readRecords(KEYS.cursos).map(function (course) { return String(course.nome || '').trim(); }).filter(Boolean);
-            if (courses.length) validations.push({ column: 2, name: 'Cursos', values: courses });
+            if (courses.length) validations.push({ column: 3, name: 'Cursos', values: courses });
             if (route === 'turmas') {
                 const currentYear = new Date().getFullYear();
                 validations.push(
-                    { column: 3, name: 'AnosLetivos', values: [currentYear - 1, currentYear, currentYear + 1] },
-                    { column: 4, name: 'Periodos', values: PERIODOS },
-                    { column: 5, name: 'SemestresLetivos', values: getSemesterOptions(getSemester(), 2) }
+                    { column: 4, name: 'AnosLetivos', values: [currentYear - 1, currentYear, currentYear + 1] },
+                    { column: 5, name: 'Periodos', values: PERIODOS },
+                    { column: 6, name: 'SemestresLetivos', values: getSemesterOptions(getSemester(), 2) }
                 );
             }
-            validations.push({ column: route === 'disciplinas' ? 3 : 6, name: 'Status', values: ['Ativa', 'Inativa'] });
+            validations.push({ column: route === 'disciplinas' ? 4 : 7, name: 'Status', values: ['Ativa', 'Inativa'] });
         }
 
         validations.forEach(function (validation, index) {
@@ -1135,6 +1176,176 @@
         }
         if (field.type === 'select' && field.optionsFrom === 'cursos' && record.curso_nome) return record.curso_nome;
         return value == null ? '' : value;
+    }
+
+    function currentSpreadsheetOption(field, input) {
+        const normalizedInput = normalizeCatalogValue(input);
+        const options = fieldOptions(field);
+        const exactOption = options.find(function (option) {
+            return normalizeCatalogValue(option[0]) === normalizedInput ||
+                normalizeCatalogValue(option[1]) === normalizedInput;
+        });
+        if (exactOption || field.optionsFrom !== 'professores') return exactOption;
+
+        const professorName = String(input).replace(/\s*(?:·|—|-|\|)\s*ingresso\s*:.+$/i, '').trim();
+        const matches = readRecords(KEYS.professores).filter(function (professor) {
+            return normalizeCatalogValue(professor.nome) === normalizeCatalogValue(professorName);
+        });
+        if (matches.length > 1) {
+            throw new Error('O professor "' + professorName + '" aparece mais de uma vez. Use um nome exclusivo na coluna Professor.');
+        }
+        if (!matches.length) return null;
+        const professorId = String(matches[0].id);
+        return options.find(function (option) { return String(option[0]) === professorId; }) || null;
+    }
+
+    function resolveVinculoProfessors(input) {
+        const professorName = String(input).replace(/\s*(?:·|—|-|\|)\s*ingresso\s*:.+$/i, '').trim();
+        const exactOption = currentSpreadsheetOption(specs.vinculos.fields[0], input);
+        if (exactOption) return [{ id: Number(exactOption[0]) }];
+        const names = professorName.split('/').map(function (name) { return name.trim(); }).filter(Boolean);
+        if (!names.length) throw new Error('Informe um professor válido.');
+        const professors = readRecords(KEYS.professores);
+        const resolved = [];
+        names.forEach(function (name) {
+            const normalizedName = normalizeCatalogValue(name);
+            const matches = professors.filter(function (professor) {
+                const normalizedFullName = normalizeCatalogValue(professor.nome);
+                return normalizedFullName === normalizedName ||
+                    (professorName.includes('/') && normalizedFullName.startsWith(normalizedName + ' '));
+            });
+            if (matches.length > 1) {
+                throw new Error('O nome "' + name + '" corresponde a mais de um professor. Use o nome completo na planilha.');
+            }
+            if (!matches.length) {
+                throw new Error('Não foi possível localizar o professor "' + name + '" no cadastro.');
+            }
+            if (!resolved.some(function (item) { return String(item.id) === String(matches[0].id); })) {
+                resolved.push(matches[0]);
+            }
+        });
+        return resolved;
+    }
+
+    function readVinculoSpreadsheetRows(worksheet, idPosition, fieldPositions) {
+        const currentLinks = readRecords(KEYS.vinculos);
+        const currentDisciplines = readRecords(KEYS.disciplinas);
+        const pendingDisciplines = [];
+        const seenIds = new Set();
+        const seenPairs = new Set();
+        const rows = [];
+        let nextLinkIdValue = nextId(currentLinks);
+        let nextDisciplineIdValue = nextId(currentDisciplines);
+        worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+            if (rowNumber === 1) return;
+            const values = [];
+            for (let column = 1; column <= row.cellCount; column += 1) {
+                values.push(excelCellText(row.getCell(column)).trim());
+            }
+            if (!values.some(Boolean)) return;
+            try {
+                const sourceId = values[idPosition];
+                if (sourceId && seenIds.has(sourceId)) throw new Error('ID repetido nesta planilha.');
+                if (sourceId) seenIds.add(sourceId);
+                const oldRecord = sourceId
+                    ? currentLinks.find(function (record) { return String(record.id) === sourceId; })
+                    : null;
+                if (sourceId && !oldRecord) {
+                    throw new Error('O ID ' + sourceId + ' não existe neste cadastro. Baixe uma nova cópia preenchida pelo sistema.');
+                }
+                const professorInput = values[fieldPositions[0]] || '';
+                const disciplineInput = values[fieldPositions[1]] || '';
+                const semester = values[fieldPositions[2]] || getSemester();
+                if (!professorInput) throw new Error('"Professor" é obrigatório.');
+                if (!disciplineInput) throw new Error('"Disciplina" é obrigatório.');
+                if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+
+                const professors = resolveVinculoProfessors(professorInput);
+                if (sourceId && professors.length > 1) {
+                    throw new Error('Uma linha com ID só pode indicar um professor. Deixe o ID vazio para importar uma atribuição compartilhada.');
+                }
+                let discipline = currentDisciplines.find(function (item) {
+                    return normalizeCatalogValue(item.nome) === normalizeCatalogValue(disciplineInput);
+                }) || pendingDisciplines.find(function (item) {
+                    return normalizeCatalogValue(item.nome) === normalizeCatalogValue(disciplineInput);
+                });
+                let newDiscipline = false;
+                let createdDiscipline = null;
+                if (!discipline) {
+                    createdDiscipline = {
+                        id: nextDisciplineIdValue,
+                        nome: disciplineInput,
+                        curso_id: null,
+                        curso_nome: '',
+                        status: 'Ativa'
+                    };
+                    discipline = createdDiscipline;
+                    newDiscipline = true;
+                } else {
+                    newDiscipline = pendingDisciplines.includes(discipline);
+                }
+
+                const rowRecords = [];
+                professors.forEach(function (professor, index) {
+                    const identity = [
+                        String(professor.id),
+                        String(discipline.id),
+                        semester
+                    ].join('|');
+                    if (seenPairs.has(identity)) {
+                        throw new Error('Este professor e disciplina aparecem mais de uma vez neste semestre na planilha.');
+                    }
+                    const existingLinks = currentLinks.filter(function (item) {
+                        return String(item.professor_id) === String(professor.id) &&
+                            String(item.disciplina_id) === String(discipline.id) &&
+                            String(item.semestre_letivo || getSemester()) === semester &&
+                            (!oldRecord || String(item.id) !== String(oldRecord.id));
+                    });
+                    if (existingLinks.length > 1) {
+                        throw new Error('Este vínculo já aparece mais de uma vez no cadastro; corrija os registros existentes antes de importar.');
+                    }
+                    const matchedLink = oldRecord || existingLinks[0] || null;
+                    rowRecords.push({
+                        record: {
+                            id: matchedLink ? matchedLink.id : nextLinkIdValue + index,
+                            professor_id: Number(professor.id),
+                            disciplina_id: Number(discipline.id),
+                            semestre_letivo: semester
+                        },
+                        update: Boolean(matchedLink),
+                        newDiscipline: newDiscipline,
+                        disciplineName: discipline.nome,
+                        professorName: nameById(KEYS.professores, professor.id, 'Professor')
+                    });
+                });
+                rowRecords.forEach(function (item) {
+                    const identity = [
+                        String(item.record.professor_id),
+                        String(item.record.disciplina_id),
+                        item.record.semestre_letivo
+                    ].join('|');
+                    seenPairs.add(identity);
+                    if (!item.update) nextLinkIdValue = Math.max(nextLinkIdValue, Number(item.record.id) + 1);
+                    rows.push({
+                        line: rowNumber,
+                        record: item.record,
+                        update: item.update,
+                        newDiscipline: item.newDiscipline,
+                        disciplineName: item.disciplineName,
+                        professorName: item.professorName,
+                        error: ''
+                    });
+                });
+                if (createdDiscipline) {
+                    pendingDisciplines.push(createdDiscipline);
+                    nextDisciplineIdValue += 1;
+                }
+            } catch (error) {
+                rows.push({ line: rowNumber, record: null, update: false, error: error.message || 'Registro inválido.' });
+            }
+        });
+        if (!rows.length) throw new Error('Nenhuma linha preenchida foi encontrada abaixo do cabeçalho.');
+        return { rows: rows, newDisciplines: pendingDisciplines };
     }
 
     async function downloadCurrentSpreadsheet(route) {
@@ -1207,8 +1418,20 @@
             if (position === undefined) throw new Error('A planilha está sem a coluna "' + field.label + '". Baixe uma nova cópia preenchida pelo sistema.');
             return position;
         });
+        if (route === 'vinculos') {
+            const imported = readVinculoSpreadsheetRows(worksheet, idPosition, fieldPositions);
+            spreadsheetImport = {
+                route: route,
+                filename: 'planilha XLSX',
+                rows: imported.rows,
+                newDisciplines: imported.newDisciplines
+            };
+            render();
+            return;
+        }
         const currentRecords = readRecords(spec.key);
         const seenIds = new Set();
+        const seenVinculoPairs = new Set();
         const rows = [];
         worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
             if (rowNumber === 1) return;
@@ -1218,7 +1441,7 @@
                 const id = values[idPosition];
                 if (id && seenIds.has(id)) throw new Error('ID repetido nesta planilha.');
                 if (id) seenIds.add(id);
-                const oldRecord = id ? currentRecords.find(function (record) { return String(record.id) === id; }) : null;
+                let oldRecord = id ? currentRecords.find(function (record) { return String(record.id) === id; }) : null;
                 if (id && !oldRecord) throw new Error('O ID ' + id + ' não existe neste cadastro. Baixe uma nova planilha antes de editar.');
                 const record = Object.assign({}, oldRecord || {});
                 spec.fields.forEach(function (field, index) {
@@ -1233,10 +1456,7 @@
                     } else if (field.type === 'select') {
                         if (!input) value = field.name.endsWith('_id') ? null : '';
                         else {
-                            const option = fieldOptions(field).find(function (item) {
-                                return normalizeCatalogValue(item[0]) === normalizeCatalogValue(input) ||
-                                    normalizeCatalogValue(item[1]) === normalizeCatalogValue(input);
-                            });
+                            const option = currentSpreadsheetOption(field, input);
                             if (!option) throw new Error('"' + field.label + '" contém uma opção inválida: ' + input + '.');
                             value = field.name.endsWith('_id') ? Number(option[0]) : option[0];
                             if (field.name === 'disponivel') value = Number(value);
@@ -1248,6 +1468,32 @@
                     }
                     record[field.name] = value;
                 });
+                if (route === 'vinculos') {
+                    if (record.semestre_letivo && !/^\d{4}\/[12]$/.test(String(record.semestre_letivo))) {
+                        throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+                    }
+                    record.semestre_letivo = String(record.semestre_letivo || getSemester());
+                    const identity = [
+                        String(record.professor_id || ''),
+                        String(record.disciplina_id || ''),
+                        record.semestre_letivo
+                    ].join('|');
+                    if (seenVinculoPairs.has(identity)) {
+                        throw new Error('Este professor e disciplina aparecem mais de uma vez neste semestre na planilha.');
+                    }
+                    seenVinculoPairs.add(identity);
+                    if (!oldRecord) {
+                        const matches = currentRecords.filter(function (item) {
+                            return String(item.professor_id) === String(record.professor_id) &&
+                                String(item.disciplina_id) === String(record.disciplina_id) &&
+                                String(item.semestre_letivo || getSemester()) === record.semestre_letivo;
+                        });
+                        if (matches.length > 1) {
+                            throw new Error('Este vínculo já aparece mais de uma vez no cadastro; corrija os registros existentes antes de importar.');
+                        }
+                        if (matches.length === 1) oldRecord = matches[0];
+                    }
+                }
                 if (route === 'disponibilidade') {
                     record.tipo = record.tipo || 'indisponibilidade';
                     if (!/^\d{4}\/[12]$/.test(String(record.semestre_letivo || getSemester()))) {
@@ -1267,7 +1513,7 @@
                 if (route === 'horarios' && record.hora_fim <= record.hora_inicio) {
                     throw new Error('O horário final precisa ser posterior ao horário inicial.');
                 }
-                if (id) record.id = oldRecord.id;
+                if (oldRecord) record.id = oldRecord.id;
                 else {
                     record.id = nextId(currentRecords.concat(rows.filter(function (item) { return item.record; }).map(function (item) { return item.record; })));
                     if (route === 'notas') record.created_at = record.created_at || new Date().toISOString();
@@ -1297,7 +1543,7 @@
                 });
                 if (duplicate) throw new Error('Este vínculo, demanda ou registro de disponibilidade já existe neste semestre.');
                 if (route === 'notas') record.updated_at = new Date().toISOString();
-                rows.push({ line: rowNumber, record: record, update: Boolean(id), error: '' });
+                rows.push({ line: rowNumber, record: record, update: Boolean(oldRecord), error: '' });
             } catch (error) {
                 rows.push({ line: rowNumber, record: null, update: false, error: error.message || 'Registro inválido.' });
             }
@@ -1311,22 +1557,72 @@
         if (!spreadsheetImport || spreadsheetImport.route !== route) return '';
         const valid = spreadsheetImport.rows.filter(function (row) { return row.record; });
         const errors = spreadsheetImport.rows.filter(function (row) { return row.error; });
-        const preview = spreadsheetImport.rows.slice(0, 100).map(function (row) {
-            const label = row.record ? row.record.nome || row.record.titulo || row.record.dia_semana || ('ID ' + row.record.id) : '—';
-            return '<tr><td>' + row.line + '</td><td>' + h(label) + '</td><td><span class="badge text-bg-' + (row.error ? 'danger' : row.update ? 'primary' : 'success') + '">' +
-                (row.error ? 'Erro' : row.update ? 'Atualizar' : 'Novo') + '</span></td><td>' + h(row.error || 'Pronto para aplicar.') + '</td></tr>';
+        const newDisciplineCount = (spreadsheetImport.newDisciplines || []).length;
+        const previewRows = errors.length
+            ? spreadsheetImport.rows.filter(function (row) { return row.error; })
+            : spreadsheetImport.rows.slice(0, 100);
+        const preview = previewRows.map(function (row) {
+            const label = row.record
+                ? route === 'vinculos'
+                    ? (row.professorName || nameById(KEYS.professores, row.record.professor_id, 'Professor')) + ' · ' +
+                        (row.disciplineName || nameById(KEYS.disciplinas, row.record.disciplina_id, 'Disciplina'))
+                    : row.record.nome || row.record.titulo || row.record.dia_semana || ('ID ' + row.record.id)
+                : '—';
+            const actionLabel = row.error ? 'Erro' : row.update ? 'Atualizar' : 'Novo';
+            const details = row.error
+                ? row.error
+                : row.newDiscipline
+                    ? 'A disciplina será criada sem curso; associe-a ao curso no cadastro de Disciplinas.'
+                    : 'Pronto para aplicar.';
+            return '<tr><td>' + row.line + '</td><td>' + h(label) +
+                (row.newDiscipline ? '<small class="d-block text-warning-emphasis">Nova disciplina</small>' : '') +
+                '</td><td><span class="badge text-bg-' + (row.error ? 'danger' : row.update ? 'primary' : 'success') + '">' +
+                actionLabel + '</span></td><td>' + h(details) + '</td></tr>';
         }).join('');
+        const importInstruction = route === 'vinculos'
+            ? 'Linhas sem ID atualizam vínculos iguais de professor, disciplina e semestre; nomes compostos como Dany/Aldo geram um vínculo para cada professor reconhecido.'
+            : 'Linhas sem ID serão adicionadas; as demais atualizarão o registro correspondente.';
+        const importStatus = errors.length
+            ? '<div class="alert alert-warning">Exibindo todos os ' + errors.length + ' erro(s), inclusive os que estão após as primeiras 100 linhas. Os ' + valid.length + ' registro(s) válidos podem ser aplicados agora; linhas com erro serão ignoradas.</div>'
+            : '<div class="alert alert-success">Tudo certo: ' + valid.length + ' registro(s) estão prontos para aplicar.</div>';
         return '<div class="card border-primary mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Revisar planilha preenchida</strong>' +
             '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="cancel-current-spreadsheet">Cancelar</button></div><div class="card-body">' +
-            '<p><strong>' + valid.length + '</strong> registro(s) válidos · <strong>' + errors.length + '</strong> erro(s). Linhas sem ID serão adicionadas; as demais atualizarão o registro correspondente.</p>' +
-            '<div class="table-responsive mb-3"><table class="table table-sm table-striped align-middle"><thead><tr><th>Linha</th><th>Registro</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody>' + preview + '</tbody></table></div>' +
-            '<button class="btn btn-primary" type="button" data-action="confirm-current-spreadsheet"' + (valid.length ? '' : ' disabled') + '>Aplicar ' + valid.length + ' alteração(ões)</button>' +
-            (spreadsheetImport.rows.length > 100 ? '<p class="small text-muted mt-2">Prévia das primeiras 100 de ' + spreadsheetImport.rows.length + ' linhas.</p>' : '') + '</div></div>';
+            '<p><strong>' + valid.length + '</strong> registro(s) válidos · <strong>' + errors.length + '</strong> erro(s). ' + h(importInstruction) +
+            (newDisciplineCount ? ' <strong>' + newDisciplineCount + '</strong> disciplina(s) ausente(s) serão criadas sem curso e precisarão ser associadas depois.' : '') + '</p>' +
+            importStatus +
+            (previewRows.length ? '<div class="table-responsive mb-3"><table class="table table-sm table-striped align-middle"><thead><tr><th>Linha</th><th>Registro</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody>' + preview + '</tbody></table></div>' : '') +
+            '<button class="btn btn-primary" type="button" data-action="confirm-current-spreadsheet"' + (valid.length ? '' : ' disabled') + '>Importar ' + valid.length + ' registro(s) válido(s)</button>' +
+            (!errors.length && spreadsheetImport.rows.length > 100 ? '<p class="small text-muted mt-2">Prévia das primeiras 100 de ' + spreadsheetImport.rows.length + ' linhas; todas foram verificadas.</p>' : '') + '</div></div>';
     }
 
     function confirmCurrentSpreadsheet() {
         if (!spreadsheetImport) return;
         const spec = specs[spreadsheetImport.route];
+        if (spreadsheetImport.route === 'vinculos' && spreadsheetImport.newDisciplines && spreadsheetImport.newDisciplines.length) {
+            const disciplines = readRecords(KEYS.disciplinas);
+            let nextDisciplineIdValue = nextId(disciplines);
+            spreadsheetImport.newDisciplines.forEach(function (discipline) {
+                const existing = disciplines.find(function (item) {
+                    return normalizeCatalogValue(item.nome) === normalizeCatalogValue(discipline.nome);
+                });
+                if (existing) {
+                    discipline.id = existing.id;
+                } else {
+                    if (disciplines.some(function (item) { return String(item.id) === String(discipline.id); })) {
+                        discipline.id = nextDisciplineIdValue++;
+                    } else {
+                        nextDisciplineIdValue = Math.max(nextDisciplineIdValue, Number(discipline.id) + 1);
+                    }
+                    disciplines.push(discipline);
+                }
+                spreadsheetImport.rows.forEach(function (row) {
+                    if (row.record && normalizeCatalogValue(row.disciplineName) === normalizeCatalogValue(discipline.nome)) {
+                        row.record.disciplina_id = Number(discipline.id);
+                    }
+                });
+            });
+            saveRecords(KEYS.disciplinas, disciplines, specs.disciplinas.module);
+        }
         const records = readRecords(spec.key);
         spreadsheetImport.rows.forEach(function (row) {
             if (!row.record) return;
@@ -1345,16 +1641,23 @@
     function confirmCatalogImport() {
         if (!catalogImport || !catalogImport.accepted.length) throw new Error('Não há registros válidos para importar.');
         const spec = specs[catalogImport.route];
-        const existing = readRecords(spec.key);
-        let id = nextId(existing);
-        const additions = catalogImport.accepted.map(function (record) {
-            return Object.assign({ id: id++ }, record);
+        const records = readRecords(spec.key);
+        let nextRecordId = nextId(records);
+        catalogImport.accepted.forEach(function (record) {
+            const index = record.id
+                ? records.findIndex(function (item) { return String(item.id) === String(record.id); })
+                : -1;
+            if (index >= 0) {
+                records[index] = Object.assign({}, records[index], record);
+            } else {
+                records.push(Object.assign({}, record, { id: nextRecordId++ }));
+            }
         });
-        saveRecords(spec.key, existing.concat(additions), spec.module);
-        const count = additions.length;
+        saveRecords(spec.key, records, spec.module);
+        const count = catalogImport.accepted.length;
         catalogImport = null;
         render();
-        notify(count + ' registro(s) importado(s) com sucesso.', 'success');
+        notify(count + ' registro(s) aplicado(s) com sucesso.', 'success');
     }
 
     function getAvailabilityCourseScope(courseId, semester) {
@@ -1743,7 +2046,7 @@
             : 'No XLSX, o status também tem lista suspensa.';
         const importTools = catalogImportSchemas[route]
             ? '<div class="card mb-4"><div class="card-header">Importar cadastro por planilha</div><div class="card-body">' +
-                '<p class="text-muted">Baixe um modelo, preencha uma linha por registro e envie o arquivo para revisar antes de importar. Os dados permanecem neste navegador.</p>' +
+                '<p class="text-muted">Baixe um modelo, preencha uma linha por registro e envie o arquivo para revisar antes de importar. Se a planilha tiver a coluna ID, IDs existentes atualizam os registros; deixe o ID vazio para criar novos.</p>' +
                 '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-catalog-template" data-format="xlsx"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar modelo XLSX com listas</button>' +
                 '<button class="btn btn-outline-secondary" type="button" data-action="download-catalog-template" data-format="csv"><i class="bi bi-download me-1"></i>Baixar modelo CSV</button>' +
                 '<button class="btn btn-primary" type="button" data-action="pick-catalog-import"><i class="bi bi-upload me-1"></i>Enviar CSV ou XLSX</button>' +
@@ -2080,6 +2383,7 @@
             disponibilidade: 'Planeje os dias de PRD e registre indisponibilidades por horário ou dia completo.',
             demandas: 'Defina quantas aulas semanais de cada disciplina cada turma precisa.',
             peculiaridades: 'Cadastre tipos de proteção e marque os períodos reservados de cada turma antes de gerar a grade.',
+            eventos: 'Cadastre eventos recorrentes que, ao serem marcados na Grade oficial, bloqueiam o mesmo horário nas turmas do turno compatível.',
             notas: 'Observações, pendências e decisões salvas apenas neste navegador.'
         };
         return descriptions[route] || '';
@@ -2100,6 +2404,12 @@
         if (period === 'noturno' || period === 'noite') return hour >= 18;
         if (period === 'integral') return hour < 18;
         return true;
+    }
+
+    function getEventTargetClasses(slot) {
+        return activeRecords(KEYS.turmas, ['ativa', 'ativo']).filter(function (turma) {
+            return slotMatchesClassPeriod(turma, slot);
+        });
     }
 
     function renderWeeklyGrid(slots, assignments, turmaId, editable, protections, allowProtection) {
@@ -2164,7 +2474,8 @@
                 if (!atSlot.length) {
                     const emptyContent = protection
                         ? '<div class="grade-protection-entry"><strong>' + h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
-                            '</strong><small>Horário protegido' + (allowProtection ? ' · duplo clique para alterar' : '') + '</small></div>'
+                            '</strong><small>' + (protection.tipo_marcacao === 'evento' ? 'Evento aplicado às turmas do mesmo turno' : 'Horário protegido') +
+                            (allowProtection ? ' · duplo clique para alterar' : '') + '</small></div>'
                         : editable && turmaId
                         ? '<button class="grade-empty" type="button" data-action="select-slot" data-class-id="' + h(turmaId) + '" data-day="' + h(day) + '" data-slot-id="' + h(slot.id) + '" aria-label="Adicionar aula em ' + h(day) + ' às ' + h(slot.hora_inicio) + '"></button>'
                         : allowProtection && turmaId
@@ -2211,29 +2522,50 @@
     }
 
     function getGradeProtections(semester) {
-        return readRecords(KEYS.protecoesGrade).filter(function (protection) {
-            return String(protection.semestre_letivo || '') === String(semester || getSemester());
+        const selectedSemester = String(semester || getSemester());
+        const eventDefinitions = new Map(readRecords(KEYS.eventos).map(function (event) {
+            return [String(event.id), event];
+        }));
+        const protections = readRecords(KEYS.protecoesGrade).filter(function (protection) {
+            return String(protection.semestre_letivo || '') === selectedSemester;
         });
+        const events = readRecords(KEYS.eventosGrade).filter(function (event) {
+            return String(event.semestre_letivo || '') === selectedSemester;
+        }).map(function (event) {
+            const definition = eventDefinitions.get(String(event.evento_id));
+            return Object.assign({}, event, {
+                tipo_marcacao: 'evento',
+                peculiaridade_nome: definition ? definition.nome : (event.evento_nome || 'Evento')
+            });
+        });
+        return protections.concat(events);
     }
 
     function renderSlotProtectionDialog() {
         const peculiarities = readRecords(KEYS.peculiaridades).slice().sort(function (a, b) {
             return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
         });
-        const options = '<option value="">Sem proteção · liberar horário</option>' + peculiarities.map(function (item) {
-            return '<option value="' + h(item.id) + '">' + h(item.nome || 'Proteção') + '</option>';
-        }).join('');
+        const events = readRecords(KEYS.eventos).slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const options = '<option value="">Sem marcação · liberar horário</option>' +
+            (peculiarities.length ? '<optgroup label="Peculiaridades · somente esta turma">' + peculiarities.map(function (item) {
+                return '<option value="peculiaridade:' + h(item.id) + '">' + h(item.nome || 'Proteção') + ' - Peculiaridade</option>';
+            }).join('') + '</optgroup>' : '') +
+            (events.length ? '<optgroup label="Eventos · todas as turmas do mesmo turno">' + events.map(function (item) {
+                return '<option value="evento:' + h(item.id) + '">' + h(item.nome || 'Evento') + ' - Evento</option>';
+            }).join('') + '</optgroup>' : '');
         return '<dialog class="assignment-dialog" id="slot-protection-dialog" aria-labelledby="slot-protection-title">' +
-            '<div class="assignment-dialog-header"><div><h2 id="slot-protection-title">Proteger horário</h2>' +
+            '<div class="assignment-dialog-header"><div><h2 id="slot-protection-title">Marcar horário</h2>' +
             '<p class="mb-0 text-muted" id="slot-protection-context"></p></div>' +
             '<button type="button" class="btn-close" data-action="close-slot-protection" aria-label="Fechar"></button></div>' +
-            (!peculiarities.length ? '<div class="alert alert-warning">Cadastre primeiro os tipos de proteção em <a href="#/peculiaridades">Peculiaridades</a>.</div>' : '') +
+            (!peculiarities.length && !events.length ? '<div class="alert alert-warning">Cadastre primeiro uma peculiaridade ou um evento nos módulos correspondentes.</div>' : '') +
             '<form id="slot-protection-form"><input type="hidden" name="turma_id"><input type="hidden" name="dia_semana"><input type="hidden" name="horario_id">' +
-            '<div class="mb-3"><label class="form-label" for="slot-protection-type">Proteção</label><select class="form-select" id="slot-protection-type" name="peculiaridade_id"' +
-            (peculiarities.length ? '' : ' disabled') + '>' + options + '</select>' +
-            '<div class="form-text">O período protegido fica reservado para esta turma e não receberá aulas na geração automática.</div></div>' +
-            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit"' + (peculiarities.length ? '' : ' disabled') +
-            '>Salvar proteção</button><button class="btn btn-outline-secondary" type="button" data-action="close-slot-protection">Cancelar</button></div></form></dialog>';
+            '<div class="mb-3"><label class="form-label" for="slot-protection-type">Marcação</label><select class="form-select" id="slot-protection-type" name="marcacao"' +
+            (peculiarities.length || events.length ? '' : ' disabled') + '>' + options + '</select>' +
+            '<div class="form-text">Peculiaridades protegem somente esta turma. Eventos são aplicados em todas as turmas compatíveis com o mesmo dia, horário e turno.</div></div>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit"' + (peculiarities.length || events.length ? '' : ' disabled') +
+            '>Salvar marcação</button><button class="btn btn-outline-secondary" type="button" data-action="close-slot-protection">Cancelar</button></div></form></dialog>';
     }
 
     function openSlotProtectionDialog(cell) {
@@ -2264,7 +2596,11 @@
         form.elements.namedItem('turma_id').value = turmaId;
         form.elements.namedItem('dia_semana').value = day;
         form.elements.namedItem('horario_id').value = slotId;
-        form.elements.namedItem('peculiaridade_id').value = alreadyProtected ? String(alreadyProtected.peculiaridade_id || '') : '';
+        form.elements.namedItem('marcacao').value = alreadyProtected
+            ? (alreadyProtected.tipo_marcacao === 'evento'
+                ? 'evento:' + String(alreadyProtected.evento_id)
+                : 'peculiaridade:' + String(alreadyProtected.peculiaridade_id))
+            : '';
         document.getElementById('slot-protection-context').textContent =
             turma.nome + ' · ' + day + ' · ' + slot.hora_inicio + '–' + slot.hora_fim;
         if (!dialog.open) dialog.showModal();
@@ -2276,7 +2612,10 @@
         const turmaId = String(data.get('turma_id') || '');
         const day = String(data.get('dia_semana') || '');
         const slotId = String(data.get('horario_id') || '');
-        const peculiarityId = String(data.get('peculiaridade_id') || '');
+        const selection = String(data.get('marcacao') || '');
+        const selectionParts = /^([^:]+):(.+)$/.exec(selection);
+        const selectionType = selectionParts ? selectionParts[1] : '';
+        const selectionId = selectionParts ? selectionParts[2] : '';
         const slot = findById(KEYS.horarios, slotId);
         const turma = findById(KEYS.turmas, turmaId);
         if (!slot || !turma || slot.dia_semana !== day ||
@@ -2284,47 +2623,130 @@
             throw new Error('Selecione uma turma e um período de aula válidos.');
         }
         const protections = readRecords(KEYS.protecoesGrade);
-        const existing = protections.find(function (item) {
+        const eventPlacements = readRecords(KEYS.eventosGrade);
+        const existing = getGradeProtections(semester).find(function (item) {
+            return String(item.turma_id) === turmaId &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        const existingProtection = protections.find(function (item) {
             return String(item.semestre_letivo || '') === semester &&
                 String(item.turma_id) === turmaId &&
                 String(item.dia_semana) === day &&
                 String(item.horario_id) === slotId;
         });
-        const remaining = protections.filter(function (item) {
-            return String(item.id) !== String(existing && existing.id);
-        });
-        if (!peculiarityId) {
-            if (!existing) throw new Error('Selecione uma proteção para salvar ou um horário protegido para liberar.');
-            saveRecords(KEYS.protecoesGrade, remaining, 'ProtecoesGrade');
+        const removeExistingEventGroup = function (records) {
+            if (!existing || existing.tipo_marcacao !== 'evento') return records;
+            return records.filter(function (item) {
+                return String(item.evento_grade_id) !== String(existing.evento_grade_id);
+            });
+        };
+        if (!selection) {
+            if (!existing) throw new Error('Selecione uma marcação para salvar ou um horário marcado para liberar.');
+            if (existing.tipo_marcacao === 'evento') {
+                saveRecords(KEYS.eventosGrade, removeExistingEventGroup(eventPlacements), 'EventosGrade');
+            } else {
+                saveRecords(KEYS.protecoesGrade, protections.filter(function (item) {
+                    return String(item.id) !== String(existing.id);
+                }), 'ProtecoesGrade');
+            }
             document.getElementById('slot-protection-dialog').close();
             render();
-            notify('Proteção removida. O horário está liberado para aulas.', 'success');
+            notify(existing.tipo_marcacao === 'evento'
+                ? 'Evento removido de todas as turmas deste horário.'
+                : 'Peculiaridade removida. O horário está liberado para aulas.', 'success');
             return;
         }
-        const peculiarity = findById(KEYS.peculiaridades, peculiarityId);
-        if (!peculiarity) throw new Error('A proteção selecionada não foi encontrada. Atualize a página e tente novamente.');
+        if (selectionType !== 'peculiaridade' && selectionType !== 'evento') {
+            throw new Error('Selecione uma peculiaridade ou evento válido.');
+        }
         const grade = readSimulation(semester);
         const occupied = grade.assignments.some(function (assignment) {
             return String(assignment.turma_id) === turmaId &&
                 String(assignment.dia_semana) === day &&
                 String(assignment.horario_id) === slotId;
         });
-        if (occupied) throw new Error('Este horário já tem uma aula. Remova ou realoque a aula antes de protegê-lo.');
-        const protection = {
-            id: existing ? existing.id : nextId(protections),
-            semestre_letivo: semester,
-            turma_id: Number(turmaId),
-            dia_semana: day,
-            horario_id: Number(slotId),
-            peculiaridade_id: Number(peculiarityId),
-            peculiaridade_nome: peculiarity.nome || 'Proteção'
-        };
-        saveRecords(KEYS.protecoesGrade, existing
-            ? protections.map(function (item) { return String(item.id) === String(existing.id) ? protection : item; })
-            : protections.concat(protection), 'ProtecoesGrade');
+        if (selectionType === 'peculiaridade') {
+            const peculiarity = findById(KEYS.peculiaridades, selectionId);
+            if (!peculiarity) throw new Error('A peculiaridade selecionada não foi encontrada. Atualize a página e tente novamente.');
+            if (occupied) throw new Error('Este horário já tem uma aula. Remova ou realoque a aula antes de protegê-lo.');
+            const protection = {
+                id: existingProtection ? existingProtection.id : nextId(protections),
+                semestre_letivo: semester,
+                turma_id: Number(turmaId),
+                dia_semana: day,
+                horario_id: Number(slotId),
+                peculiaridade_id: Number(selectionId),
+                peculiaridade_nome: peculiarity.nome || 'Proteção'
+            };
+            const nextProtections = protections.filter(function (item) {
+                return String(item.id) !== String(existingProtection && existingProtection.id);
+            }).concat(protection);
+            saveRecords(KEYS.protecoesGrade, nextProtections, 'ProtecoesGrade');
+            if (existing && existing.tipo_marcacao === 'evento') {
+                saveRecords(KEYS.eventosGrade, removeExistingEventGroup(eventPlacements), 'EventosGrade');
+            }
+            document.getElementById('slot-protection-dialog').close();
+            render();
+            notify('Peculiaridade aplicada somente à turma ' + turma.nome + '.', 'success');
+            return;
+        }
+
+        const eventDefinition = findById(KEYS.eventos, selectionId);
+        if (!eventDefinition) throw new Error('O evento selecionado não foi encontrado. Atualize a página e tente novamente.');
+        const targetClasses = getEventTargetClasses(slot);
+        if (!targetClasses.some(function (item) { return String(item.id) === turmaId; })) {
+            throw new Error('A turma selecionada não está entre as turmas compatíveis com este horário.');
+        }
+        const targetClassIds = new Set(targetClasses.map(function (item) { return String(item.id); }));
+        const occupiedClasses = targetClasses.filter(function (item) {
+            return grade.assignments.some(function (assignment) {
+                return String(assignment.turma_id) === String(item.id) &&
+                    String(assignment.dia_semana) === day &&
+                    String(assignment.horario_id) === slotId;
+            });
+        });
+        if (occupiedClasses.length) {
+            const names = occupiedClasses.slice(0, 5).map(function (item) { return item.nome; }).join(', ');
+            const more = occupiedClasses.length > 5 ? ' e mais ' + (occupiedClasses.length - 5) + ' turma(s)' : '';
+            throw new Error('O evento não foi aplicado porque há aulas neste horário em: ' + names + more +
+                '. Realoque ou remova essas aulas primeiro.');
+        }
+        const conflictingProtection = protections.find(function (item) {
+            return String(item.semestre_letivo || '') === semester &&
+                targetClassIds.has(String(item.turma_id)) &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        if (conflictingProtection) {
+            const conflictingClass = targetClasses.find(function (item) { return String(item.id) === String(conflictingProtection.turma_id); });
+            throw new Error('Remova primeiro a peculiaridade existente em ' + (conflictingClass ? conflictingClass.nome : 'uma turma') +
+                ' antes de aplicar o evento a todas.');
+        }
+        const nextIdValue = nextId(eventPlacements);
+        const groupId = 'evento_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        const newPlacements = targetClasses.map(function (item, index) {
+            return {
+                id: nextIdValue + index,
+                evento_grade_id: groupId,
+                semestre_letivo: semester,
+                turma_id: Number(item.id),
+                dia_semana: day,
+                horario_id: Number(slotId),
+                evento_id: Number(selectionId),
+                evento_nome: eventDefinition.nome || 'Evento'
+            };
+        });
+        const otherPlacements = eventPlacements.filter(function (item) {
+            return !(String(item.semestre_letivo || '') === semester &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId);
+        });
+        saveRecords(KEYS.eventosGrade, otherPlacements.concat(newPlacements), 'EventosGrade');
         document.getElementById('slot-protection-dialog').close();
         render();
-        notify('Horário protegido para ' + protection.peculiaridade_nome + '.', 'success');
+        notify('Evento "' + eventDefinition.nome + '" aplicado em ' + targetClasses.length +
+            (targetClasses.length === 1 ? ' turma.' : ' turmas.') + '.', 'success');
     }
 
     function renderDisciplineTeacherSchedules(slots, assignments, disciplineId, turmaId, teachers, editable) {
@@ -2787,7 +3209,7 @@
             : !selectedFilterTurma
                 ? '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
                     '<div><strong>Grade de todas as turmas</strong><span class="text-muted small ms-2">' +
-                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma proteção.') +
+                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma peculiaridade ou evento.') +
                     '</span></div><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-grade-all-classes" aria-controls="grade-all-classes-content" aria-expanded="' +
                     String(!gradeAllClassesCollapsed) + '"><i class="bi ' + (gradeAllClassesCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
                     ' me-1" aria-hidden="true"></i>' + (gradeAllClassesCollapsed ? 'Expandir grade' : 'Recolher grade') +
@@ -2798,7 +3220,7 @@
                     '</div></section>'
                 : '<div class="mb-2"><strong>Grade da turma ' + h(selectedFilterTurma.nome) +
                     '</strong><span class="text-muted small ms-2">' +
-                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma proteção.') +
+                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma peculiaridade ou evento.') +
                     '</span></div>' +
                 ((gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
                     ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
@@ -3801,10 +4223,11 @@
                 const name = protection.peculiaridade_nome ||
                     nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção');
                 return '<li><strong>' + h(protection.dia_semana || 'Dia não informado') + h(time) +
-                    '</strong><span>' + h(name) + '</span></li>';
+                    '</strong><span class="report-protection-kind">' +
+                    (protection.tipo_marcacao === 'evento' ? 'Evento: ' : 'Proteção: ') + h(name) + '</span></li>';
             }).join('');
-            const protectionSummary = '<section class="report-class-protections" aria-label="Peculiaridades da turma ' +
-                h(turma.nome || 'Turma') + '"><h3><i class="bi bi-shield-exclamation" aria-hidden="true"></i>Peculiaridades' +
+            const protectionSummary = '<section class="report-class-protections" aria-label="Peculiaridades e eventos da turma ' +
+                h(turma.nome || 'Turma') + '"><h3><i class="bi bi-shield-exclamation" aria-hidden="true"></i>Peculiaridades e eventos' +
                 (classProtections.length ? ' <span>' + classProtections.length + '</span>' : '') + '</h3>' +
                 (protectionList ? '<ul>' + protectionList + '</ul>' :
                     '<p>Nenhum horário protegido para esta turma neste semestre.</p>') + '</section>';
@@ -4024,14 +4447,14 @@
             });
             if (duplicate) throw new Error('Já existe uma demanda dessa disciplina para a turma neste semestre. Edite o registro existente.');
         }
-        if (route === 'peculiaridades') {
+        if (route === 'peculiaridades' || route === 'eventos') {
             values.nome = String(values.nome || '').trim();
-            if (!values.nome) throw new Error('Informe o nome da proteção.');
+            if (!values.nome) throw new Error(route === 'eventos' ? 'Informe o nome do evento.' : 'Informe o nome da proteção.');
             const duplicate = readRecords(spec.key).some(function (row) {
                 return String(row.id) !== String(editing && editing.id) &&
                     String(row.nome || '').trim().toLocaleLowerCase('pt-BR') === values.nome.toLocaleLowerCase('pt-BR');
             });
-            if (duplicate) throw new Error('Já existe uma proteção com esse nome.');
+            if (duplicate) throw new Error(route === 'eventos' ? 'Já existe um evento com esse nome.' : 'Já existe uma proteção com esse nome.');
         }
         const records = readRecords(spec.key);
         const oldRecord = editing && editing.route === route ? records.find(function (row) { return String(row.id) === String(editing.id); }) : null;
@@ -4065,6 +4488,11 @@
         })) {
             throw new Error('Esta proteção está aplicada a uma ou mais turmas. Remova as marcações na Grade oficial antes de excluí-la.');
         }
+        if (route === 'eventos' && readRecords(KEYS.eventosGrade).some(function (event) {
+            return String(event.evento_id) === String(id);
+        })) {
+            throw new Error('Este evento está aplicado a uma ou mais turmas. Remova as marcações na Grade oficial antes de excluí-lo.');
+        }
         const label = record.nome || record.titulo || record.dia_semana || 'este registro';
         if (!window.confirm('Excluir ' + label + '? Esta ação não pode ser desfeita sem um backup.')) return;
         saveRecords(spec.key, readRecords(spec.key).filter(function (item) { return String(item.id) !== String(id); }), spec.module);
@@ -4089,10 +4517,12 @@
         if (route === 'turmas') {
             saveRecords(KEYS.demandas, readRecords(KEYS.demandas).filter(function (item) { return String(item.turma_id) !== String(id); }), 'TurmaDisciplina');
             saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (item) { return String(item.turma_id) !== String(id); }), 'ProtecoesGrade');
+            saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (item) { return String(item.turma_id) !== String(id); }), 'EventosGrade');
         }
         if (route === 'horarios') {
             saveRecords(KEYS.disponibilidade, readRecords(KEYS.disponibilidade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProfessorDisponibilidade');
             saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProtecoesGrade');
+            saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'EventosGrade');
         }
         editing = null;
         render();
@@ -4110,7 +4540,7 @@
     function exportGradeCsv() {
         const semester = getSemester();
         const state = readSimulation(semester);
-        const rows = [['Semestre', 'Tipo', 'Turma', 'Dia', 'Início', 'Fim', 'Disciplina / proteção', 'Professor']];
+        const rows = [['Semestre', 'Tipo', 'Turma', 'Dia', 'Início', 'Fim', 'Disciplina / proteção / evento', 'Professor']];
         const slotMap = {};
         readRecords(KEYS.horarios).forEach(function (slot) { slotMap[String(slot.id)] = slot; });
         (state.assignments || []).forEach(function (item) {
@@ -4130,7 +4560,7 @@
             const slot = slotMap[String(protection.horario_id)] || {};
             rows.push([
                 semester,
-                'Proteção',
+                protection.tipo_marcacao === 'evento' ? 'Evento' : 'Peculiaridade',
                 nameById(KEYS.turmas, protection.turma_id, 'Turma'),
                 protection.dia_semana || '',
                 slot.hora_inicio || '',
@@ -4180,7 +4610,7 @@
         const schedule = getIndividualSchedule(pdfExportType, pdfExportId);
         const entityLabel = schedule.type === 'turma' ? 'Turma' : 'Professor';
         const rows = [
-            ['Semestre', 'Tipo', 'Nome', 'Dia', 'Início', 'Fim', 'Disciplina / proteção', 'Turma', 'Professor'],
+            ['Semestre', 'Tipo', 'Nome', 'Dia', 'Início', 'Fim', 'Disciplina / proteção / evento', 'Turma', 'Professor'],
             ...schedule.assignments.map(function (assignment) {
                 const slot = schedule.slots[String(assignment.horario_id)] || {};
                 return [
@@ -4199,7 +4629,7 @@
                 const slot = schedule.slots[String(protection.horario_id)] || {};
                 return [
                     schedule.semester,
-                    'Proteção',
+                    protection.tipo_marcacao === 'evento' ? 'Evento' : 'Peculiaridade',
                     schedule.entity.nome,
                     protection.dia_semana || '',
                     slot.hora_inicio || '',
@@ -4264,7 +4694,7 @@
                     });
                     row.push(protection
                         ? {
-                            text: 'HORÁRIO PROTEGIDO\n' + (protection.peculiaridade_nome ||
+                            text: (protection.tipo_marcacao === 'evento' ? 'EVENTO ESCOLAR\n' : 'HORÁRIO PROTEGIDO\n') + (protection.peculiaridade_nome ||
                                 nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção')),
                             style: 'protectionCell'
                         }
