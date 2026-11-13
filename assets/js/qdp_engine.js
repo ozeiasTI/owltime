@@ -18,6 +18,7 @@ class QDPEngine {
     this.professores = config.professores || [];
     this.disciplinas = config.disciplinas || [];
     this.vinculos = config.vinculos || {};
+    this.grupos = config.grupos || [];
     this.demandaPorTurma = config.demandaPorTurma || {};
     this.disponibilidades = config.disponibilidades || {};
     this.protecoes = config.protecoes || [];
@@ -62,6 +63,45 @@ class QDPEngine {
     for (const [discId, turmas] of Object.entries(turmasPorDisciplina)) {
       const professores = this.vinculos[discId] || [];
       if (professores.length === 0) continue;
+
+      if (professores.some((professor) => (professor.grupo_ids || []).length > 0)) {
+        const distribuicaoPorProf = new Map();
+        const aulasPorProf = new Map();
+        const turmasOrdenadas = [...turmas].sort((a, b) => {
+          const elegiveisA = this._professoresElegiveisParaTurma(professores, a.turmaId).length;
+          const elegiveisB = this._professoresElegiveisParaTurma(professores, b.turmaId).length;
+          if (elegiveisA !== elegiveisB) return elegiveisA - elegiveisB;
+          const numA = parseInt(a.turmaNome) || 0;
+          const numB = parseInt(b.turmaNome) || 0;
+          if (numA !== numB) return numA - numB;
+          return a.turmaNome.localeCompare(b.turmaNome);
+        });
+
+        turmasOrdenadas.forEach((turma) => {
+          const elegiveis = this._professoresElegiveisParaTurma(professores, turma.turmaId);
+          const escolhido = elegiveis.slice().sort((a, b) => {
+            const cargaA = aulasPorProf.get(Number(a.id)) || 0;
+            const cargaB = aulasPorProf.get(Number(b.id)) || 0;
+            return cargaA - cargaB || String(a.nome || "").localeCompare(String(b.nome || ""));
+          })[0];
+          if (!escolhido) return;
+          const professorId = Number(escolhido.id);
+          if (!distribuicaoPorProf.has(professorId)) {
+            distribuicaoPorProf.set(professorId, { id: professorId, nome: escolhido.nome, turmas: [] });
+          }
+          distribuicaoPorProf.get(professorId).turmas.push({ ...turma });
+          aulasPorProf.set(professorId, (aulasPorProf.get(professorId) || 0) + turma.aulas);
+        });
+
+        distribuicao[discId] = { professores: Array.from(distribuicaoPorProf.values()) };
+        distribuicao[discId].professores.forEach((professor) => {
+          const nomes = professor.turmas.map((turma) => turma.turmaNome).join(", ");
+          const totalAulas = professor.turmas.reduce((soma, turma) => soma + turma.aulas, 0);
+          this._log(`📊 Distribuição de ${this._getNomeDisciplina(Number(discId))}:`);
+          this._log(`   📌 ${professor.nome}: ${nomes} (${totalAulas} aulas)`);
+        });
+        continue;
+      }
 
       if (professores.length === 1) {
         distribuicao[discId] = {
@@ -131,6 +171,31 @@ class QDPEngine {
     }
 
     return distribuicao;
+  }
+
+  _professorPertenceAoGrupo(professor, turmaId) {
+    const grupoIds = Array.isArray(professor.grupo_ids) ? professor.grupo_ids.map(String) : [];
+    if (!grupoIds.length) return false;
+    return this.grupos.some((grupo) =>
+      grupoIds.includes(String(grupo.id)) &&
+      Array.isArray(grupo.turma_ids) &&
+      grupo.turma_ids.some((id) => Number(id) === Number(turmaId)),
+    );
+  }
+
+  _professoresElegiveisParaTurma(professores, turmaId) {
+    const vinculados = professores || [];
+    const restritos = vinculados.filter((professor) =>
+      Array.isArray(professor.grupo_ids) && professor.grupo_ids.length > 0,
+    );
+    if (!restritos.length) return vinculados;
+    const especificos = restritos.filter((professor) =>
+      this._professorPertenceAoGrupo(professor, turmaId),
+    );
+    if (especificos.length) return especificos;
+    return vinculados.filter((professor) =>
+      !Array.isArray(professor.grupo_ids) || professor.grupo_ids.length === 0,
+    );
   }
 
   // ==========================================
@@ -320,6 +385,10 @@ class QDPEngine {
     permitirTres = false,
     ignorarDisponibilidade = false,  // NOVO PARÂMETRO
 ) {
+    const professoresDaDisciplina = this.vinculos[String(disciplinaId)] || [];
+    const elegiveis = this._professoresElegiveisParaTurma(professoresDaDisciplina, turmaId);
+    if (professoresDaDisciplina.length && !elegiveis.some((professor) => Number(professor.id) === Number(professorId))) return false;
+
     // Verifica se o horário é permitido para a turma
     if (!this._horarioPermitidoTurma(turmaId, horarioId, dia)) return false;
     
@@ -523,7 +592,8 @@ class QDPEngine {
         const discNome = r.disciplina_nome || this._getNomeDisciplina(discId);
         const profs = this.vinculos[String(discId)] || [];
 
-        const profsDisponiveis = profs.filter((p) => {
+        const elegiveis = this._professoresElegiveisParaTurma(profs, turma.id);
+        const profsDisponiveis = elegiveis.filter((p) => {
           const disp = this.disponibilidades[p.id];
           if (!disp) return true;
 
@@ -544,6 +614,9 @@ class QDPEngine {
           disciplinaNome: discNome,
           qtd: qtd,
           professores: profsDisponiveis,
+          professoresVinculados: profs,
+          professoresElegiveis: elegiveis,
+          professoresDisponiveis: profsDisponiveis,
           alocadas: 0,
         });
       });
@@ -1365,23 +1438,6 @@ class QDPEngine {
         if (cargaAtual <= this.maxCargaProfessor) continue;
 
         const profsDaDisciplina = this.vinculos[discId] || [];
-        let melhorDestino = null;
-        let menorCarga = Infinity;
-
-        for (const prof of profsDaDisciplina) {
-          if (Number(prof.id) === Number(profIdSobrecarga)) continue;
-          const cargaDestino = this._getCargaProfessor(assignments, prof.id);
-          if (
-            cargaDestino < menorCarga &&
-            cargaDestino < this.maxCargaProfessor
-          ) {
-            menorCarga = cargaDestino;
-            melhorDestino = prof;
-          }
-        }
-
-        if (!melhorDestino) continue;
-
         const aulasParaTransferir = assignments.filter(
           (a) =>
             Number(a.professor_id) === Number(profIdSobrecarga) &&
@@ -1395,19 +1451,23 @@ class QDPEngine {
           )
             break;
 
-          if (
+          const elegiveis = this._professoresElegiveisParaTurma(profsDaDisciplina, aula.turma_id)
+            .filter((professor) => Number(professor.id) !== Number(profIdSobrecarga))
+            .sort((a, b) => this._getCargaProfessor(assignments, a.id) - this._getCargaProfessor(assignments, b.id));
+          const melhorDestino = elegiveis.find((professor) =>
             this._podeAlocarComProfessor(
               assignments,
               aula.turma_id,
               aula.disciplina_id,
-              melhorDestino.id,
+              professor.id,
               aula.dia_semana,
               aula.horario_id,
               aula.id,
               false,
               false,
-            )
-          ) {
+            ),
+          );
+          if (melhorDestino) {
             aula.professor_id = Number(melhorDestino.id);
             aula.professor_nome = melhorDestino.nome;
             escalonados++;
@@ -2106,6 +2166,45 @@ class QDPEngine {
     return resultado;
   }
 
+  _motivoPendencia(demanda, assignments) {
+    const vinculados = demanda.professoresVinculados || this.vinculos[String(demanda.disciplinaId)] || [];
+    if (!vinculados.length) return "Não há professor vinculado a esta disciplina neste semestre.";
+
+    const elegiveis = demanda.professoresElegiveis || this._professoresElegiveisParaTurma(vinculados, demanda.turmaId);
+    if (!elegiveis.length) {
+      return "Os vínculos da disciplina estão restritos a grupos que não incluem esta turma.";
+    }
+
+    const disponiveis = demanda.professoresDisponiveis || demanda.professores || [];
+    if (!disponiveis.length) {
+      return "Nenhum professor elegível tem esta turma incluída nas suas turmas autorizadas de disponibilidade.";
+    }
+
+    const horariosPermitidos = this.horarios.filter((horario) =>
+      this._horarioPermitidoTurma(demanda.turmaId, horario.id, horario.dia_semana),
+    );
+    if (!horariosPermitidos.length) {
+      return "A turma não tem períodos de aula utilizáveis; verifique horários cadastrados, turno e períodos protegidos.";
+    }
+
+    const professoresComHorario = disponiveis.filter((professor) =>
+      horariosPermitidos.some((horario) =>
+        this._professorDisponivel(professor.id, horario.dia_semana, horario.id),
+      ),
+    );
+    if (!professoresComHorario.length) {
+      return "Os professores elegíveis estão indisponíveis em todos os horários permitidos para esta turma.";
+    }
+
+    if (professoresComHorario.every((professor) =>
+      this._getCargaProfessor(assignments, professor.id) >= this.maxCargaProfessor,
+    )) {
+      return "Todos os professores elegíveis atingiram o limite máximo de aulas da geração.";
+    }
+
+    return "Não foi possível conciliar os horários restantes com a disponibilidade docente e os limites de aulas por horário e por dia.";
+  }
+
   // ==========================================
   // RELATÓRIO
   // ==========================================
@@ -2148,7 +2247,14 @@ class QDPEngine {
             turma_nome: turma.nome,
             disciplina_id: d.disciplinaId,
             disciplina_nome: d.disciplinaNome,
+            previstas: d.qtd,
+            atendidas: alocadas,
             pendentes: pendentes,
+            motivo: this._motivoPendencia(d, assignments),
+            professores: (d.professoresElegiveis || []).map((professor) => ({
+              id: Number(professor.id),
+              nome: professor.nome || this._getProfessorNome(professor.id),
+            })),
           });
         }
         return {

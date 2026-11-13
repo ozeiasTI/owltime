@@ -6,6 +6,7 @@
         professores: 'owltime_professores_v1',
         disciplinas: 'owltime_disciplinas_v1',
         turmas: 'owltime_turmas_v1',
+        grupos: 'owltime_grupos_v1',
         horarios: 'owltime_horarios_v1',
         vinculos: 'owltime_professor_disciplina_v1',
         disponibilidade: 'owltime_professor_disponibilidade_v1',
@@ -93,6 +94,13 @@
     let gradeTeacherFilter = '';
     let gradeCompletionFilter = '';
     let gradeAllClassesCollapsed = false;
+    let gradeLegendCollapsed = true;
+    let reportTeacherRankingCollapsed = true;
+    let workloadTeacherFilter = '';
+    let workloadCourseFilter = '';
+    let workloadTurmaFilter = '';
+    let workloadDisciplineFilter = '';
+    let workloadStatusFilter = '';
     let teacherSubstitutionEditingId = '';
     let coverageCourseId = '';
     let availabilityCourseId = '';
@@ -479,6 +487,24 @@
                 ['semestre_letivo', 'Semestre'], ['status', 'Status', statusBadge]
             ]
         },
+        grupos: {
+            title: 'Grupos de turmas', icon: 'bi-collection', key: KEYS.grupos, module: 'Grupos',
+            fields: [
+                { name: 'nome', label: 'Nome do grupo', required: true, placeholder: 'Ex.: Grupo 1º Ano' },
+                { name: 'descricao', label: 'Descrição', type: 'textarea', placeholder: 'Descreva o objetivo deste grupo' },
+                { name: 'turma_ids', label: 'Turmas do grupo', type: 'multi-check', optionsFrom: 'turmas', help: 'Marque todas as turmas que pertencem a este grupo.' }
+            ],
+            columns: [
+                ['nome', 'Grupo'],
+                ['descricao', 'Descrição'],
+                ['turma_ids', 'Turmas', function (ids) {
+                    const names = (Array.isArray(ids) ? ids : []).map(function (id) {
+                        return nameById(KEYS.turmas, id, '');
+                    }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                    return h(names.length ? names.join(', ') : 'Nenhuma turma selecionada');
+                }]
+            ]
+        },
         horarios: {
             title: 'Horários da escola', icon: 'bi-clock', key: KEYS.horarios, module: 'Horarios',
             fields: [
@@ -496,7 +522,8 @@
             fields: [
                 { name: 'professor_id', label: 'Professor', type: 'select', optionsFrom: 'professores', includeIngress: true, required: true },
                 { name: 'disciplina_id', label: 'Disciplina', type: 'select', optionsFrom: 'disciplinas', required: true },
-                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' }
+                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' },
+                { name: 'grupo_ids', label: 'Grupos de turmas (opcional)', type: 'multi-check', optionsFrom: 'grupos', help: 'Se marcar grupos, este professor será considerado apenas nas turmas deles. Sem grupo, o vínculo continua geral.' }
             ],
             columns: [
                 ['professor_id', 'Professor', function (id) {
@@ -506,7 +533,13 @@
                     return h(name) + (ingress ? '<small class="d-block text-muted">Ingresso: ' + h(ingress) + '</small>' : '');
                 }],
                 ['disciplina_id', 'Disciplina', function (id) { return h(nameById(KEYS.disciplinas, id)); }],
-                ['semestre_letivo', 'Semestre']
+                ['semestre_letivo', 'Semestre'],
+                ['grupo_ids', 'Grupos', function (ids) {
+                    const names = (Array.isArray(ids) ? ids : []).map(function (id) {
+                        return nameById(KEYS.grupos, id, '');
+                    }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                    return h(names.length ? names.join(', ') : 'Todos os grupos');
+                }]
             ]
         },
         disponibilidade: {
@@ -739,7 +772,19 @@
         const min = field.min == null ? '' : ' min="' + h(field.min) + '"';
         const placeholder = field.placeholder ? ' placeholder="' + h(field.placeholder) + '"' : '';
         let control;
-        if (field.type === 'select') {
+        if (field.type === 'multi-check') {
+            const selectedValues = (Array.isArray(current) ? current : []).map(String);
+            const options = fieldOptions(field).slice().sort(function (a, b) {
+                return String(a[1]).localeCompare(String(b[1]), 'pt-BR', { sensitivity: 'base', numeric: true });
+            });
+            control = options.length
+                ? '<div class="multi-check-list" role="group" aria-labelledby="' + id + '">' + options.map(function (option) {
+                    return '<label class="form-check"><input class="form-check-input" type="checkbox" name="' + h(field.name) +
+                        '" value="' + h(option[0]) + '"' + (selectedValues.includes(String(option[0])) ? ' checked' : '') +
+                        '><span class="form-check-label">' + h(option[1]) + '</span></label>';
+                }).join('') + '</div>'
+                : '<div class="form-text">Cadastre primeiro as opções disponíveis para este campo.</div>';
+        } else if (field.type === 'select') {
             const options = fieldOptions(field);
             control = '<select class="form-select" id="' + id + '" name="' + h(field.name) + '"' + required + '>' +
                 (field.optional ? '<option value="">Não informado</option>' : '') +
@@ -757,7 +802,11 @@
             control = '<input class="form-control" id="' + id + '" name="' + h(field.name) + '" type="' + h(field.type || 'text') + '"' +
                 (field.type === 'number' ? ' step="1"' : '') + min + placeholder + required + ' value="' + h(current) + '">';
         }
-        return '<div class="col-md-6"><label class="form-label" for="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</label>' + control + '</div>';
+        const label = field.type === 'multi-check'
+            ? '<div class="form-label" id="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</div>'
+            : '<label class="form-label" for="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</label>';
+        return '<div class="col-md-6">' + label + control +
+            (field.help ? '<div class="form-text">' + h(field.help) + '</div>' : '') + '</div>';
     }
 
     function ensureInputPlaceholders() {
@@ -1170,6 +1219,7 @@
 
     function spreadsheetDisplayValue(field, record) {
         const value = record[field.name];
+        if (field.type === 'multi-check') return (Array.isArray(value) ? value : []).join(', ');
         if (field.type === 'select' && field.optionsFrom && value != null && value !== '') {
             const option = fieldOptions(field).find(function (item) { return String(item[0]) === String(value); });
             return option ? option[1] : '';
@@ -1256,9 +1306,17 @@
                 const professorInput = values[fieldPositions[0]] || '';
                 const disciplineInput = values[fieldPositions[1]] || '';
                 const semester = values[fieldPositions[2]] || getSemester();
+                const groupInput = fieldPositions[3] == null ? '' : values[fieldPositions[3]] || '';
                 if (!professorInput) throw new Error('"Professor" é obrigatório.');
                 if (!disciplineInput) throw new Error('"Disciplina" é obrigatório.');
                 if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+                const availableGroupIds = new Set(readRecords(KEYS.grupos).map(function (group) { return String(group.id); }));
+                const groupIds = groupInput
+                    ? Array.from(new Set(groupInput.split(',').map(function (id) { return id.trim(); }).filter(Boolean)))
+                    : [];
+                if (groupIds.some(function (id) { return !/^[1-9]\d*$/.test(id) || !availableGroupIds.has(id); })) {
+                    throw new Error('"Grupos de turmas" contém um ID inválido. Use os IDs dos grupos cadastrados ou deixe vazio.');
+                }
 
                 const professors = resolveVinculoProfessors(professorInput);
                 if (sourceId && professors.length > 1) {
@@ -1310,7 +1368,8 @@
                             id: matchedLink ? matchedLink.id : nextLinkIdValue + index,
                             professor_id: Number(professor.id),
                             disciplina_id: Number(discipline.id),
-                            semestre_letivo: semester
+                            semestre_letivo: semester,
+                            grupo_ids: groupIds.map(Number)
                         },
                         update: Boolean(matchedLink),
                         newDiscipline: newDiscipline,
@@ -1415,6 +1474,7 @@
         if (idPosition === undefined) throw new Error('A planilha não contém a coluna ID. Baixe uma nova cópia preenchida pelo sistema.');
         const fieldPositions = spec.fields.map(function (field) {
             const position = positions.get(normalizeCatalogValue(field.label));
+            if (position === undefined && route === 'vinculos' && field.type === 'multi-check') return null;
             if (position === undefined) throw new Error('A planilha está sem a coluna "' + field.label + '". Baixe uma nova cópia preenchida pelo sistema.');
             return position;
         });
@@ -1453,6 +1513,14 @@
                         if (!Number.isFinite(value) || !Number.isInteger(value) || (field.min != null && value < field.min)) {
                             throw new Error('"' + field.label + '" deve ser um número inteiro igual ou maior que ' + (field.min || 0) + '.');
                         }
+                    } else if (field.type === 'multi-check') {
+                        value = input
+                            ? Array.from(new Set(input.split(',').map(function (id) { return id.trim(); }).filter(Boolean))).map(function (id) {
+                                const option = fieldOptions(field).find(function (item) { return String(item[0]) === id; });
+                                if (!option) throw new Error('"' + field.label + '" contém uma opção inválida: ' + id + '.');
+                                return Number(option[0]);
+                            })
+                            : [];
                     } else if (field.type === 'select') {
                         if (!input) value = field.name.endsWith('_id') ? null : '';
                         else {
@@ -1468,6 +1536,13 @@
                     }
                     record[field.name] = value;
                 });
+                if (route === 'grupos') {
+                    record.nome = String(record.nome || '').trim();
+                    if (!record.nome) throw new Error('"Nome do grupo" é obrigatório.');
+                    if (!Array.isArray(record.turma_ids) || !record.turma_ids.length) {
+                        throw new Error('Selecione ao menos uma turma para o grupo.');
+                    }
+                }
                 if (route === 'vinculos') {
                     if (record.semestre_letivo && !/^\d{4}\/[12]$/.test(String(record.semestre_letivo))) {
                         throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
@@ -1531,6 +1606,9 @@
                         return String(item.turma_id) === String(record.turma_id) &&
                             String(item.disciplina_id) === String(record.disciplina_id) &&
                             semesterOf(item) === semesterOf(record);
+                    }
+                    if (route === 'grupos') {
+                        return normalizeCatalogValue(item.nome) === normalizeCatalogValue(record.nome);
                     }
                     if (route === 'disponibilidade') {
                         return String(item.professor_id) === String(record.professor_id) &&
@@ -2378,6 +2456,7 @@
             professores: 'Dados e limites semanais usados no planejamento da grade.',
             disciplinas: 'Catálogo de disciplinas associado aos cursos.',
             turmas: 'Turmas, semestre e turno que receberão as aulas.',
+            grupos: 'Agrupe turmas e restrinja vínculos professor-disciplina aos grupos selecionados.',
             horarios: 'Defina os períodos de aula e intervalos da escola.',
             vinculos: 'Indique quais disciplinas cada professor pode ministrar e acompanhe a cobertura do semestre selecionado.',
             disponibilidade: 'Planeje os dias de PRD e registre indisponibilidades por horário ou dia completo.',
@@ -2767,14 +2846,89 @@
     }
 
     function renderTeacherWorkload(professores, assignments) {
-        const rows = professores.map(function (professor) {
+        const sortedTeachers = professores.slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' });
+        });
+        const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
+        const classes = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
+        const disciplines = activeRecords(KEYS.disciplinas, ['ativo', 'ativa']);
+        if (workloadCourseFilter && !courses.some(function (course) { return String(course.id) === workloadCourseFilter; })) {
+            workloadCourseFilter = '';
+        }
+        const selectedCourse = courses.find(function (course) { return String(course.id) === workloadCourseFilter; });
+        const classesInCourse = workloadCourseFilter
+            ? classes.filter(function (turma) {
+                return String(turma.curso_id || '') === workloadCourseFilter ||
+                    (!turma.curso_id && normalizeCatalogValue(turma.curso_nome) === normalizeCatalogValue(selectedCourse && selectedCourse.nome));
+            })
+            : classes;
+        if (workloadTurmaFilter && !classesInCourse.some(function (turma) { return String(turma.id) === workloadTurmaFilter; })) {
+            workloadTurmaFilter = '';
+        }
+        if (workloadDisciplineFilter && !disciplines.some(function (discipline) {
+            return String(discipline.id) === workloadDisciplineFilter;
+        })) workloadDisciplineFilter = '';
+        if (!['', 'above-weekly', 'above-daily', 'below-declared'].includes(workloadStatusFilter)) workloadStatusFilter = '';
+        if (workloadTeacherFilter && !sortedTeachers.some(function (teacher) {
+            return String(teacher.id) === workloadTeacherFilter;
+        })) workloadTeacherFilter = '';
+        const courseClassIds = new Set(classesInCourse.map(function (turma) { return String(turma.id); }));
+        const scopedAssignments = assignments.filter(function (item) {
+            return (!workloadCourseFilter || courseClassIds.has(String(item.turma_id))) &&
+                (!workloadTurmaFilter || String(item.turma_id) === workloadTurmaFilter) &&
+                (!workloadDisciplineFilter || String(item.disciplina_id) === workloadDisciplineFilter);
+        });
+        const scopedTeacherIds = new Set(scopedAssignments.map(function (item) { return String(item.professor_id); }));
+        const hasScopeFilter = Boolean(workloadCourseFilter || workloadTurmaFilter || workloadDisciplineFilter);
+        const teacherMetrics = new Map(sortedTeachers.map(function (professor) {
             const teacherAssignments = assignments.filter(function (item) { return String(item.professor_id) === String(professor.id); });
             const weeklyLimit = Number(professor.carga_horaria_semanal == null ? 40 : professor.carga_horaria_semanal);
             const dailyLimit = Number(professor.limite_aulas_dia == null ? 5 : professor.limite_aulas_dia);
             const dailyCounts = DAYS.map(function (day) {
                 return teacherAssignments.filter(function (item) { return item.dia_semana === day; }).length;
             });
-            const dailyMax = Math.max.apply(null, dailyCounts.concat([0]));
+            return [String(professor.id), {
+                assignments: teacherAssignments,
+                weeklyLimit: weeklyLimit,
+                dailyLimit: dailyLimit,
+                dailyMax: Math.max.apply(null, dailyCounts.concat([0]))
+            }];
+        }));
+        const visibleTeachers = sortedTeachers.filter(function (teacher) {
+            if (workloadTeacherFilter && String(teacher.id) !== workloadTeacherFilter) return false;
+            if (hasScopeFilter && !scopedTeacherIds.has(String(teacher.id))) return false;
+            const metrics = teacherMetrics.get(String(teacher.id));
+            if (workloadStatusFilter === 'above-weekly' && metrics.assignments.length <= metrics.weeklyLimit) return false;
+            if (workloadStatusFilter === 'above-daily' && metrics.dailyMax <= metrics.dailyLimit) return false;
+            if (workloadStatusFilter === 'below-declared' && metrics.assignments.length >= metrics.weeklyLimit) return false;
+            return true;
+        });
+        const teacherOptions = '<option value="">Todos os professores</option>' + sortedTeachers.map(function (teacher) {
+            return '<option value="' + h(teacher.id) + '"' +
+                (String(teacher.id) === workloadTeacherFilter ? ' selected' : '') + '>' + h(teacher.nome || 'Professor') + '</option>';
+        }).join('');
+        const courseOptions = '<option value="">Todos os cursos</option>' + courses.map(function (course) {
+            return '<option value="' + h(course.id) + '"' + (String(course.id) === workloadCourseFilter ? ' selected' : '') + '>' +
+                h(course.nome || 'Curso') + '</option>';
+        }).join('');
+        const classOptions = '<option value="">Todas as turmas</option>' + classesInCourse.map(function (turma) {
+            return '<option value="' + h(turma.id) + '"' + (String(turma.id) === workloadTurmaFilter ? ' selected' : '') + '>' +
+                h(turma.nome || 'Turma') + '</option>';
+        }).join('');
+        const disciplineOptions = '<option value="">Todas as disciplinas</option>' + disciplines.map(function (discipline) {
+            return '<option value="' + h(discipline.id) + '"' + (String(discipline.id) === workloadDisciplineFilter ? ' selected' : '') + '>' +
+                h(discipline.nome || 'Disciplina') + '</option>';
+        }).join('');
+        const statusOptions = '<option value="">Todas as situações</option>' +
+            '<option value="above-weekly"' + (workloadStatusFilter === 'above-weekly' ? ' selected' : '') + '>Acima do limite semanal</option>' +
+            '<option value="above-daily"' + (workloadStatusFilter === 'above-daily' ? ' selected' : '') + '>Acima do limite diário</option>' +
+            '<option value="below-declared"' + (workloadStatusFilter === 'below-declared' ? ' selected' : '') + '>Abaixo da carga declarada</option>';
+        const rows = visibleTeachers.map(function (professor) {
+            const metrics = teacherMetrics.get(String(professor.id));
+            const teacherAssignments = metrics.assignments;
+            const weeklyLimit = metrics.weeklyLimit;
+            const dailyLimit = metrics.dailyLimit;
+            const dailyMax = metrics.dailyMax;
             const percent = weeklyLimit > 0 ? Math.min(100, Math.round(teacherAssignments.length / weeklyLimit * 100)) : (teacherAssignments.length ? 100 : 0);
             const status = teacherAssignments.length > weeklyLimit
                 ? '<span class="badge text-bg-danger">Acima do limite</span>'
@@ -2789,8 +2943,16 @@
                 '<div class="meter mt-2"><span class="' + (teacherAssignments.length > weeklyLimit ? 'meter-over' : '') + '" style="width:' + percent + '%"></span></div></td><td>' + dailyStatus + '</td></tr>';
         }).join('');
         return '<div class="card mb-3"><div class="card-header"><strong>Carga dos professores</strong><span class="small text-muted ms-2">Aulas atribuídas / limite semanal e maior carga em um dia / limite diário</span></div>' +
+            '<div class="card-body pb-2"><div class="row g-2 align-items-end">' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-teacher-filter">Professor</label><select class="form-select form-select-sm" id="workload-teacher-filter">' + teacherOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-course-filter">Curso</label><select class="form-select form-select-sm" id="workload-course-filter">' + courseOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-class-filter">Turma</label><select class="form-select form-select-sm" id="workload-class-filter">' + classOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-discipline-filter">Disciplina</label><select class="form-select form-select-sm" id="workload-discipline-filter">' + disciplineOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-status-filter">Situação da carga</label><select class="form-select form-select-sm" id="workload-status-filter">' + statusOptions + '</select></div>' +
+            '<div class="col-12"><small class="text-muted">Filtros por curso, turma e disciplina selecionam docentes vinculados; a carga exibida considera todas as aulas de cada docente.</small></div></div></div>' +
             '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Professor</th><th>Carga semanal</th><th>Máximo diário</th></tr></thead><tbody>' +
-            (rows || '<tr><td colspan="3" class="text-center text-muted py-4">Cadastre professores para acompanhar a carga.</td></tr>') +
+            (rows || '<tr><td colspan="3" class="text-center text-muted py-4">' +
+                (sortedTeachers.length ? 'Nenhum professor corresponde ao filtro.' : 'Cadastre professores para acompanhar a carga.') + '</td></tr>') +
             '</tbody></table></div></div>';
     }
 
@@ -2895,7 +3057,8 @@
             vínculos[disciplineId].push({
                 id: professor.id, nome: professor.nome,
                 carga_horaria_semanal: professor.carga_horaria_semanal,
-                limite_aulas_dia: professor.limite_aulas_dia
+                limite_aulas_dia: professor.limite_aulas_dia,
+                grupo_ids: Array.isArray(row.grupo_ids) ? row.grupo_ids.map(Number) : []
             });
         });
         const demandaPorTurma = {};
@@ -2934,6 +3097,12 @@
             professores: professores,
             disciplinas: disciplinas,
             vinculos: vínculos,
+            grupos: readRecords(KEYS.grupos).map(function (group) {
+                return {
+                    id: Number(group.id),
+                    turma_ids: Array.isArray(group.turma_ids) ? group.turma_ids.map(Number) : []
+                };
+            }),
             demandaPorTurma: demandaPorTurma,
             disponibilidades: disponibilidades,
             protecoes: getGradeProtections(getSemester()),
@@ -3171,9 +3340,16 @@
                 '<option value="complete"' + (effectiveCompletionFilter === 'complete' ? ' selected' : '') + '>Grades completas</option>' +
                 '<option value="pending"' + (effectiveCompletionFilter === 'pending' ? ' selected' : '') + '>Com pendências</option>' +
                 '</select></div>';
-        const legend = '<div class="grade-discipline-legend">' + disciplines.map(function (discipline) {
+        const legendContent = '<div class="grade-discipline-legend">' + disciplines.map(function (discipline) {
             return '<span class="grade-discipline-chip"><i style="--grade-subject-color:' + subjectColor(discipline.id) + '"></i>' + h(discipline.nome) + '</span>';
         }).join('') + '</div>';
+        const legend = editable
+            ? legendContent
+            : '<div class="grade-legend-panel"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-grade-legend" aria-controls="grade-discipline-legend-content" aria-expanded="' +
+                String(!gradeLegendCollapsed) + '"><i class="bi ' + (gradeLegendCollapsed ? 'bi-palette' : 'bi-chevron-up') +
+                ' me-1" aria-hidden="true"></i>' + (gradeLegendCollapsed ? 'Mostrar cores e disciplinas' : 'Ocultar cores e disciplinas') +
+                '</button><div id="grade-discipline-legend-content" class="mt-2"' + (gradeLegendCollapsed ? ' hidden' : '') + '>' +
+                legendContent + '</div></div>';
         const selectedFilterTurma = turmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); });
         const completionClassIds = new Set(turmas.filter(function (turma) {
             const demandedLessons = getDemandsForClass(turma.id, semester).reduce(function (total, demand) {
@@ -4186,6 +4362,13 @@
                 '</td><td class="text-end fw-semibold">' + teacher.aulas + '</td><td><div class="report-share"><i style="width:' +
                 share + '%"></i></div><span class="small text-muted">' + share + '% da grade</span></td></tr>';
         }).join('');
+        const teacherRankingSection = '<div class="d-grid gap-2"><button class="btn btn-outline-secondary text-start" type="button" data-action="toggle-report-teacher-ranking" aria-controls="report-teacher-ranking-content" aria-expanded="' +
+            String(!reportTeacherRankingCollapsed) + '"><i class="bi ' + (reportTeacherRankingCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
+            ' me-1" aria-hidden="true"></i>' + (reportTeacherRankingCollapsed ? 'Mostrar ranking de professores por aulas' : 'Ocultar ranking de professores por aulas') +
+            '</button><div id="report-teacher-ranking-content"' + (reportTeacherRankingCollapsed ? ' hidden' : '') + '>' +
+            barChart('Ranking de professores por aulas', teacherRanking) +
+            '<section class="card mt-3"><div class="card-header">Ranking de professores</div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>#</th><th>Professor</th><th class="text-end">Aulas</th><th>Participação na grade</th></tr></thead><tbody>' +
+            (teacherRows || emptyRow(4, 'Nenhum professor corresponde aos filtros selecionados.')) + '</tbody></table></div></section></div></div>';
         const reportProtections = getGradeProtections(semester);
         const reportSlotsById = new Map(readRecords(KEYS.horarios).map(function (slot) {
             return [String(slot.id), slot];
@@ -4244,6 +4427,50 @@
                 h(lastReport.totalPrevistas || 0) + '</strong></span><span>Preenchidas <strong>' + h(lastReport.totalAtendidas || 0) +
                 '</strong></span><span>Pendentes na geração <strong>' + h(lastReport.totalPendentes || 0) + '</strong></span></div></div>'
             : '';
+        const recordedGenerationFailures = lastReport && Array.isArray(lastReport.falhas) ? lastReport.falhas : [];
+        const visibleGenerationFailures = recordedGenerationFailures.filter(function (failure) {
+            if (reportCourseFilter && !courseClassIds.has(String(failure.turma_id))) return false;
+            if (reportTurmaFilter && String(failure.turma_id) !== reportTurmaFilter) return false;
+            if (reportDisciplineFilter && String(failure.disciplina_id) !== reportDisciplineFilter) return false;
+            const candidateTeachers = Array.isArray(failure.professores) ? failure.professores : [];
+            if (reportTeacherFilter && candidateTeachers.length && !candidateTeachers.some(function (teacher) {
+                return String(teacher.id) === reportTeacherFilter;
+            })) return false;
+            if (!searchQuery) return true;
+            return normalizeReportSearch([
+                failure.turma_nome,
+                failure.disciplina_nome,
+                candidateTeachers.map(function (teacher) { return teacher.nome; }).join(' ')
+            ].join(' ')).includes(searchQuery);
+        });
+        const generationFailureRows = visibleGenerationFailures.map(function (failure) {
+            const candidateTeachers = Array.isArray(failure.professores) ? failure.professores : [];
+            const teacherNames = candidateTeachers.map(function (teacher) {
+                return teacher.nome || nameById(KEYS.professores, teacher.id, 'Professor');
+            });
+            return '<tr><td>' + h(failure.turma_nome || nameById(KEYS.turmas, failure.turma_id, 'Turma')) +
+                '</td><td>' + h(failure.disciplina_nome || nameById(KEYS.disciplinas, failure.disciplina_id, 'Disciplina')) +
+                '</td><td>' + h(failure.previstas == null ? '—' : failure.previstas) + '</td><td>' +
+                h(failure.atendidas == null ? '—' : failure.atendidas) + '</td><td><strong class="text-danger">' +
+                h(failure.pendentes || 0) + '</strong></td><td>' +
+                h(failure.motivo || 'O motivo não foi registrado. Gere novamente a grade para obter o diagnóstico.') +
+                (teacherNames.length ? '<small class="d-block text-muted mt-1">Professores elegíveis: ' + h(teacherNames.join(', ')) + '</small>' : '') +
+                '</td></tr>';
+        }).join('');
+        const generationPendingSection = lastReport
+            ? '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Pendências da última geração e possíveis causas</strong>' +
+                '<span class="badge text-bg-' + (Number(lastReport.totalPendentes || 0) ? 'warning' : 'success') + '">' +
+                h(lastReport.totalPendentes || 0) + ' aula(s) pendente(s)</span></div><div class="card-body">' +
+                (Number(lastReport.totalPendentes || 0) === 0
+                    ? '<p class="text-success mb-0">A última geração não deixou pendências.</p>'
+                    : recordedGenerationFailures.length
+                        ? (generationFailureRows
+                            ? '<div class="table-responsive"><table class="table table-sm table-striped align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Previstas</th><th>Alocadas</th><th>Faltantes</th><th>Possível causa</th></tr></thead><tbody>' +
+                                generationFailureRows + '</tbody></table></div>'
+                            : '<p class="text-muted mb-0">Nenhuma pendência corresponde aos filtros atuais.</p>')
+                        : '<div class="alert alert-warning mb-0">Esta geração não guardou o detalhamento das causas. Gere a grade novamente para registrar o diagnóstico das pendências.</div>') +
+                '</div></section>'
+            : '';
         const reportTeacherOptions = '<option value="">Todos os professores</option>' + reportTeachers.map(function (teacher) {
             return '<option value="' + h(teacher.id) + '"' + (String(teacher.id) === reportTeacherFilter ? ' selected' : '') + '>' +
                 h(teacher.nome || 'Professor') + '</option>';
@@ -4294,10 +4521,9 @@
             '<div class="col-6 col-xl-3"><div class="card report-kpi"><span>Turmas com aula</span><strong>' + classRanking.length + '</strong><small>de ' + reportClasses.length + ' no recorte</small></div></div>' +
             '<div class="col-6 col-xl-3"><div class="card report-kpi"><span>Atendimento das demandas</span><strong>' + completion + '%</strong><small>' + totalPending + ' aula(s) pendente(s) · ' + totalDemand + ' previstas</small></div></div></div>' +
             generationCard +
-            '<div class="row g-3 mb-3"><div class="col-xl-6">' + barChart('Ranking de professores por aulas', teacherRanking) + '</div>' +
-            '<div class="col-xl-6">' + pieChart('Distribuição de aulas por disciplina', disciplineRanking, function (item) { return subjectColor(item.id); }) + '</div></div>' +
-            '<section class="card mb-3"><div class="card-header">Ranking de professores</div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>#</th><th>Professor</th><th class="text-end">Aulas</th><th>Participação na grade</th></tr></thead><tbody>' +
-            (teacherRows || emptyRow(4, 'Nenhum professor corresponde aos filtros selecionados.')) + '</tbody></table></div></section></div>' +
+            '<div class="row g-3 mb-3"><div class="col-xl-6">' + teacherRankingSection + '</div>' +
+            '<div class="col-xl-6">' + pieChart('Distribuição de aulas por disciplina', disciplineRanking, function (item) { return subjectColor(item.id); }) + '</div></div></div>' +
+            generationPendingSection +
             '<section class="report-class-list"><div class="report-class-list-heading"><h2>Resumo por turma</h2><p>Disciplinas, aulas previstas e professores responsáveis.</p></div>' +
             (classSummaries || '<div class="empty-state"><i class="bi bi-journal-x"></i>Nenhuma turma ou demanda corresponde aos filtros selecionados.</div>') + '</section>';
     }
@@ -4371,6 +4597,12 @@
     function collectForm(form, fields) {
         const values = {};
         fields.forEach(function (field) {
+            if (field.type === 'multi-check') {
+                values[field.name] = Array.from(form.querySelectorAll('input[name="' + field.name + '"]:checked')).map(function (input) {
+                    return Number(input.value);
+                });
+                return;
+            }
             const control = form.elements.namedItem(field.name);
             if (!control) return;
             let value = String(control.value || '').trim();
@@ -4437,6 +4669,16 @@
             });
             if (duplicate) throw new Error('Este professor já está vinculado a essa disciplina neste semestre.');
         }
+        if (route === 'grupos') {
+            values.nome = String(values.nome || '').trim();
+            if (!values.nome) throw new Error('Informe o nome do grupo.');
+            if (!values.turma_ids.length) throw new Error('Marque ao menos uma turma para o grupo.');
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    normalizeCatalogValue(row.nome) === normalizeCatalogValue(values.nome);
+            });
+            if (duplicate) throw new Error('Já existe um grupo com esse nome.');
+        }
         if (route === 'demandas') {
             if (!values.aulas_semanais || values.aulas_semanais < 1) throw new Error('Informe ao menos uma aula por semana.');
             const duplicate = readRecords(spec.key).some(function (row) {
@@ -4483,6 +4725,13 @@
         if (!spec) return;
         const record = findById(spec.key, id);
         if (!record) throw new Error('O registro não foi encontrado.');
+        if (route === 'grupos' && readRecords(KEYS.vinculos).some(function (link) {
+            return (Array.isArray(link.grupo_ids) ? link.grupo_ids : []).some(function (groupId) {
+                return String(groupId) === String(id);
+            });
+        })) {
+            throw new Error('Este grupo está associado a vínculos professor-disciplina. Remova-o dos vínculos antes de excluir o grupo para não ampliar o alcance desses professores.');
+        }
         if (route === 'peculiaridades' && readRecords(KEYS.protecoesGrade).some(function (protection) {
             return String(protection.peculiaridade_id) === String(id);
         })) {
@@ -4518,6 +4767,13 @@
             saveRecords(KEYS.demandas, readRecords(KEYS.demandas).filter(function (item) { return String(item.turma_id) !== String(id); }), 'TurmaDisciplina');
             saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (item) { return String(item.turma_id) !== String(id); }), 'ProtecoesGrade');
             saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (item) { return String(item.turma_id) !== String(id); }), 'EventosGrade');
+            saveRecords(KEYS.grupos, readRecords(KEYS.grupos).map(function (group) {
+                return Object.assign({}, group, {
+                    turma_ids: (Array.isArray(group.turma_ids) ? group.turma_ids : []).filter(function (turmaId) {
+                        return String(turmaId) !== String(id);
+                    })
+                });
+            }), 'Grupos');
         }
         if (route === 'horarios') {
             saveRecords(KEYS.disponibilidade, readRecords(KEYS.disponibilidade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProfessorDisponibilidade');
@@ -5467,6 +5723,12 @@
             } else if (action === 'toggle-grade-all-classes') {
                 gradeAllClassesCollapsed = !gradeAllClassesCollapsed;
                 render();
+            } else if (action === 'toggle-grade-legend') {
+                gradeLegendCollapsed = !gradeLegendCollapsed;
+                render();
+            } else if (action === 'toggle-report-teacher-ranking') {
+                reportTeacherRankingCollapsed = !reportTeacherRankingCollapsed;
+                render();
             } else if (action === 'close-slot-protection') {
                 const dialog = document.getElementById('slot-protection-dialog');
                 if (dialog && dialog.open) dialog.close();
@@ -5831,6 +6093,22 @@
             render();
         } else if (event.target.id === 'grade-completion-filter') {
             gradeCompletionFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-teacher-filter') {
+            workloadTeacherFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-course-filter') {
+            workloadCourseFilter = event.target.value;
+            workloadTurmaFilter = '';
+            render();
+        } else if (event.target.id === 'workload-class-filter') {
+            workloadTurmaFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-discipline-filter') {
+            workloadDisciplineFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-status-filter') {
+            workloadStatusFilter = event.target.value;
             render();
         } else if (event.target.id === 'manual-day') {
             const form = event.target.form;
