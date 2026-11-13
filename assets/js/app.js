@@ -16,6 +16,7 @@
         protecoesGrade: 'owltime_protecoes_grade_v1',
         eventos: 'owltime_eventos_v1',
         eventosGrade: 'owltime_eventos_grade_v1',
+        sorts: 'owltime_sorts_teste_v1',
         notas: 'owltime_notas_v1',
         semestre: 'owltime_semestre_atual'
     };
@@ -93,7 +94,8 @@
     let gradeTurmaFilter = '';
     let gradeTeacherFilter = '';
     let gradeCompletionFilter = '';
-    let gradeAllClassesCollapsed = false;
+    let gradeScheduleCollapsed = false;
+    let workloadPanelCollapsed = false;
     let gradeLegendCollapsed = true;
     let reportTeacherRankingCollapsed = true;
     let workloadTeacherFilter = '';
@@ -101,6 +103,7 @@
     let workloadTurmaFilter = '';
     let workloadDisciplineFilter = '';
     let workloadStatusFilter = '';
+    const collapsedDataSections = Object.create(null);
     let teacherSubstitutionEditingId = '';
     let coverageCourseId = '';
     let availabilityCourseId = '';
@@ -491,7 +494,7 @@
             title: 'Grupos de turmas', icon: 'bi-collection', key: KEYS.grupos, module: 'Grupos',
             fields: [
                 { name: 'nome', label: 'Nome do grupo', required: true, placeholder: 'Ex.: Grupo 1º Ano' },
-                { name: 'descricao', label: 'Descrição', type: 'textarea', placeholder: 'Descreva o objetivo deste grupo' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva o objetivo deste grupo' },
                 { name: 'turma_ids', label: 'Turmas do grupo', type: 'multi-check', optionsFrom: 'turmas', help: 'Marque todas as turmas que pertencem a este grupo.' }
             ],
             columns: [
@@ -595,6 +598,30 @@
                 ['descricao', 'Descrição', function (value) { return h(value || '—'); }]
             ]
         },
+        sorts: {
+            title: 'Sort (beta)', icon: 'bi-shuffle', key: KEYS.sorts, module: 'Sort (beta)',
+            fields: [
+                { name: 'nome', label: 'Nome', required: true, placeholder: 'Ex.: Aula vaga' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva esta reserva de horários' },
+                { name: 'subgrupos', label: 'Subgrupos do sort', type: 'sort-groups', required: true, help: 'Crie subgrupos e selecione as turmas de cada um. Dentro do mesmo subgrupo, cada turma receberá horários diferentes; cada turma deve pertencer a apenas um subgrupo deste sort.' },
+                { name: 'ocorrencias', label: 'Quantidade de horários por turma', type: 'number', min: 1, required: true, defaultValue: 1 },
+                { name: 'consecutivas', label: 'Horários consecutivos?', type: 'select', required: true, defaultValue: '0', options: [['1', 'Sim'], ['0', 'Não']] }
+            ],
+            columns: [
+                ['nome', 'Sort'],
+                ['descricao', 'Descrição', function (value) { return h(value || '—'); }],
+                ['subgrupos', 'Subgrupos', function (groups, record) {
+                    return h(getSortSubgroups(record).map(function (group) {
+                        const classNames = (Array.isArray(group.turma_ids) ? group.turma_ids : []).map(function (id) {
+                            return nameById(KEYS.turmas, id, '');
+                        }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                        return (group.nome || 'Subgrupo') + ': ' + (classNames.length ? classNames.join(', ') : 'Nenhuma turma');
+                    }).join(' · ') || 'Nenhum subgrupo cadastrado');
+                }],
+                ['ocorrencias', 'Quantidade'],
+                ['consecutivas', 'Consecutivas', function (value) { return Number(value) === 1 || value === true ? 'Sim' : 'Não'; }]
+            ]
+        },
         demandas: {
             title: 'Demandas das turmas', icon: 'bi-journal-plus', key: KEYS.demandas, module: 'TurmaDisciplina',
             fields: [
@@ -652,6 +679,23 @@
             (description ? '<p>' + h(description) + '</p>' : '') + '</div>' + (actions || '') + '</div>';
     }
 
+    function renderDataSectionToggle(key, showLabel, hideLabel) {
+        const collapsed = collapsedDataSections[key] === true;
+        const id = 'data-section-' + key;
+        return '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-data-section" data-section="' + h(key) +
+            '" aria-controls="' + h(id) + '" aria-expanded="' + String(!collapsed) + '"><i class="bi ' +
+            (collapsed ? 'bi-chevron-down' : 'bi-chevron-up') + ' me-1" aria-hidden="true"></i>' +
+            (collapsed ? h(showLabel) : h(hideLabel)) + '</button>';
+    }
+
+    function renderDataSectionContent(key, content, className) {
+        const id = 'data-section-' + key;
+        const collapsed = collapsedDataSections[key] === true;
+        const classes = ['data-section-content', className].filter(Boolean).join(' ');
+        return '<div id="' + h(id) + '" class="' + h(classes) + '"' +
+            (collapsed ? ' hidden' : '') + '>' + content + '</div>';
+    }
+
     function renderAvailabilityDashboardCard() {
         const records = readRecords(KEYS.disponibilidade).filter(semesterMatches);
         const days = new Map();
@@ -694,12 +738,14 @@
             }).join('');
             return '<section class="dashboard-availability-day"><h3>' + h(day) + '</h3>' + entries + '</section>';
         }).join('');
-        return '<div class="card h-100 dashboard-availability-card"><div class="card-header d-flex justify-content-between align-items-center gap-2">' +
-            '<strong>Indisponibilidades e PRDs</strong><a class="btn btn-sm btn-outline-primary" href="#/disponibilidade">Gerenciar</a></div>' +
-            '<div class="card-body">' + (dayRows
+        return '<div class="card h-100 dashboard-availability-card"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
+            '<strong>Indisponibilidades e PRDs</strong><div class="d-flex gap-2">' +
+            renderDataSectionToggle('dashboard-availability', 'Mostrar dados', 'Recolher dados') +
+            '<a class="btn btn-sm btn-outline-primary" href="#/disponibilidade">Gerenciar</a></div></div>' +
+            renderDataSectionContent('dashboard-availability', '<div class="card-body">' + (dayRows
                 ? '<div class="dashboard-availability-days">' + dayRows + '</div>'
                 : '<div class="empty-state py-3"><i class="bi bi-calendar2-check"></i>Nenhuma indisponibilidade ou PRD cadastrado para ' + h(getSemester()) + '.</div>') +
-            '</div></div>';
+            '</div>') + '</div>';
     }
 
     function renderDashboard() {
@@ -741,10 +787,12 @@
             lastGenerationCard +
             '<div class="d-flex align-items-center justify-content-between mb-2"><h2 class="h5 mb-0">Acesso rápido</h2><a href="#/ajuda" class="small">Como funciona</a></div>' +
             '<div class="row g-3 mb-4">' + links + '</div>' +
-            '<div class="card"><div class="card-header d-flex justify-content-between align-items-center"><span>Notas recentes</span><a class="btn btn-sm btn-outline-primary" href="#/notas">Abrir bloco de notas</a></div>' +
-            (recentNotes.length ? '<div class="list-group list-group-flush">' + recentNotes.map(function (note) {
+            '<div class="card"><div class="card-header d-flex justify-content-between align-items-center gap-2"><span>Notas recentes</span><div class="d-flex gap-2">' +
+            renderDataSectionToggle('dashboard-recent-notes', 'Mostrar notas', 'Recolher notas') +
+            '<a class="btn btn-sm btn-outline-primary" href="#/notas">Abrir bloco de notas</a></div></div>' +
+            renderDataSectionContent('dashboard-recent-notes', (recentNotes.length ? '<div class="list-group list-group-flush">' + recentNotes.map(function (note) {
                 return '<div class="list-group-item"><div class="d-flex justify-content-between gap-3"><strong>' + h(note.titulo) + '</strong>' + statusBadge(noteStatusLabel(note.status)) + '</div><div class="small text-muted mt-1">' + h(String(note.texto || '').slice(0, 220)) + '</div></div>';
-            }).join('') + '</div>' : '<div class="empty-state"><i class="bi bi-journal"></i>Nenhuma nota registrada ainda.</div>') + '</div>';
+            }).join('') + '</div>' : '<div class="empty-state"><i class="bi bi-journal"></i>Nenhuma nota registrada ainda.</div>')) + '</div>';
     }
 
     function fieldOptions(field) {
@@ -765,6 +813,73 @@
         });
     }
 
+    function getSortSubgroups(sort) {
+        if (Array.isArray(sort && sort.subgrupos)) return sort.subgrupos;
+        const legacyTurmaIds = Array.isArray(sort && sort.turma_ids) ? sort.turma_ids : [];
+        return legacyTurmaIds.length ? [{ nome: 'Subgrupo 1', turma_ids: legacyTurmaIds }] : [];
+    }
+
+    function normalizeSortSubgroups(groups) {
+        if (!Array.isArray(groups) || !groups.length) {
+            throw new Error('Crie ao menos um subgrupo para este sort.');
+        }
+        const classes = new Map(readRecords(KEYS.turmas).map(function (turma) {
+            return [String(turma.id), turma];
+        }));
+        const usedClassIds = new Set();
+        const usedNames = new Set();
+        return groups.map(function (group, index) {
+            const name = String(group && group.nome || '').trim();
+            const normalizedName = normalizeCatalogValue(name);
+            if (!name) throw new Error('Informe o nome do subgrupo ' + (index + 1) + '.');
+            if (usedNames.has(normalizedName)) throw new Error('Os nomes dos subgrupos de um sort devem ser únicos.');
+            usedNames.add(normalizedName);
+            const turmaIds = Array.isArray(group.turma_ids)
+                ? Array.from(new Set(group.turma_ids.map(Number)))
+                : [];
+            if (!turmaIds.length) throw new Error('Selecione ao menos uma turma no subgrupo "' + name + '".');
+            turmaIds.forEach(function (id) {
+                if (!Number.isSafeInteger(id) || id < 1 || !classes.has(String(id))) {
+                    throw new Error('O subgrupo "' + name + '" contém uma turma inválida ou removida.');
+                }
+                if (usedClassIds.has(String(id))) {
+                    throw new Error('Cada turma só pode pertencer a um subgrupo do mesmo sort.');
+                }
+                usedClassIds.add(String(id));
+            });
+            return { nome: name, turma_ids: turmaIds };
+        });
+    }
+
+    function renderSortSubgroupRow(group, index) {
+        const selectedIds = new Set((Array.isArray(group.turma_ids) ? group.turma_ids : []).map(String));
+        const classes = fieldOptions({ optionsFrom: 'turmas' }).slice().sort(function (a, b) {
+            return String(a[1]).localeCompare(String(b[1]), 'pt-BR', { sensitivity: 'base', numeric: true });
+        });
+        const classOptions = classes.length
+            ? classes.map(function (turma) {
+                return '<label class="form-check"><input class="form-check-input" type="checkbox" name="sort-subgroup-turmas" value="' +
+                    h(turma[0]) + '"' + (selectedIds.has(String(turma[0])) ? ' checked' : '') + '><span class="form-check-label">' +
+                    h(turma[1]) + '</span></label>';
+            }).join('')
+            : '<div class="form-text">Cadastre turmas antes de criar subgrupos.</div>';
+        return '<section class="sort-subgroup-card" data-sort-subgroup><div class="d-flex justify-content-between align-items-center gap-2 mb-3">' +
+            '<strong>Subgrupo ' + (index + 1) + '</strong><button class="btn btn-sm btn-outline-danger" type="button" data-action="remove-sort-subgroup">' +
+            '<i class="bi bi-trash me-1" aria-hidden="true"></i>Remover</button></div><div class="row g-3">' +
+            '<div class="col-md-4"><label class="form-label">Nome do subgrupo</label><input class="form-control" type="text" data-sort-subgroup-name required value="' +
+            h(group.nome || '') + '" placeholder="Ex.: 1º ano"></div><div class="col-md-8"><div class="form-label">Turmas deste subgrupo</div>' +
+            '<div class="multi-check-list" role="group" aria-label="Turmas do subgrupo">' + classOptions + '</div></div></div></section>';
+    }
+
+    function renderSortSubgroupsEditor(groups) {
+        const items = Array.isArray(groups) && groups.length
+            ? groups
+            : [{ nome: 'Subgrupo 1', turma_ids: [] }];
+        return '<div class="sort-subgroups-editor" id="field-subgrupos" aria-labelledby="field-subgrupos-label"><div class="sort-subgroup-list">' +
+            items.map(renderSortSubgroupRow).join('') + '</div><button class="btn btn-sm btn-outline-primary mt-2" type="button" data-action="add-sort-subgroup">' +
+            '<i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Adicionar subgrupo</button></div>';
+    }
+
     function renderField(field, value) {
         const id = 'field-' + field.name;
         const current = value == null ? (field.defaultValue == null ? '' : field.defaultValue) : value;
@@ -772,7 +887,9 @@
         const min = field.min == null ? '' : ' min="' + h(field.min) + '"';
         const placeholder = field.placeholder ? ' placeholder="' + h(field.placeholder) + '"' : '';
         let control;
-        if (field.type === 'multi-check') {
+        if (field.type === 'sort-groups') {
+            control = renderSortSubgroupsEditor(current);
+        } else if (field.type === 'multi-check') {
             const selectedValues = (Array.isArray(current) ? current : []).map(String);
             const options = fieldOptions(field).slice().sort(function (a, b) {
                 return String(a[1]).localeCompare(String(b[1]), 'pt-BR', { sensitivity: 'base', numeric: true });
@@ -802,10 +919,11 @@
             control = '<input class="form-control" id="' + id + '" name="' + h(field.name) + '" type="' + h(field.type || 'text') + '"' +
                 (field.type === 'number' ? ' step="1"' : '') + min + placeholder + required + ' value="' + h(current) + '">';
         }
-        const label = field.type === 'multi-check'
-            ? '<div class="form-label" id="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</div>'
+        const label = field.type === 'multi-check' || field.type === 'sort-groups'
+            ? '<div class="form-label" id="' + (field.type === 'sort-groups' ? id + '-label' : id) + '">' +
+                h(field.label) + (field.required ? ' *' : '') + '</div>'
             : '<label class="form-label" for="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</label>';
-        return '<div class="col-md-6">' + label + control +
+        return '<div class="' + (field.type === 'sort-groups' ? 'col-12' : 'col-md-6') + '">' + label + control +
             (field.help ? '<div class="form-text">' + h(field.help) + '</div>' : '') + '</div>';
     }
 
@@ -1219,6 +1337,7 @@
 
     function spreadsheetDisplayValue(field, record) {
         const value = record[field.name];
+        if (field.type === 'sort-groups') return JSON.stringify(getSortSubgroups(record));
         if (field.type === 'multi-check') return (Array.isArray(value) ? value : []).join(', ');
         if (field.type === 'select' && field.optionsFrom && value != null && value !== '') {
             const option = fieldOptions(field).find(function (item) { return String(item[0]) === String(value); });
@@ -1474,6 +1593,9 @@
         if (idPosition === undefined) throw new Error('A planilha não contém a coluna ID. Baixe uma nova cópia preenchida pelo sistema.');
         const fieldPositions = spec.fields.map(function (field) {
             const position = positions.get(normalizeCatalogValue(field.label));
+            if (position === undefined && route === 'sorts' && field.name === 'subgrupos') {
+                return positions.get('turmas');
+            }
             if (position === undefined && route === 'vinculos' && field.type === 'multi-check') return null;
             if (position === undefined) throw new Error('A planilha está sem a coluna "' + field.label + '". Baixe uma nova cópia preenchida pelo sistema.');
             return position;
@@ -1513,6 +1635,19 @@
                         if (!Number.isFinite(value) || !Number.isInteger(value) || (field.min != null && value < field.min)) {
                             throw new Error('"' + field.label + '" deve ser um número inteiro igual ou maior que ' + (field.min || 0) + '.');
                         }
+                    } else if (field.type === 'sort-groups') {
+                        if (/^\s*\[/.test(input)) {
+                            try {
+                                value = JSON.parse(input);
+                            } catch (error) {
+                                throw new Error('"Subgrupos do sort" deve conter JSON válido.');
+                            }
+                        } else {
+                            value = input
+                                ? [{ nome: 'Subgrupo 1', turma_ids: input.split(',').map(function (id) { return Number(id.trim()); }) }]
+                                : [];
+                        }
+                        value = normalizeSortSubgroups(value);
                     } else if (field.type === 'multi-check') {
                         value = input
                             ? Array.from(new Set(input.split(',').map(function (id) { return id.trim(); }).filter(Boolean))).map(function (id) {
@@ -1541,6 +1676,18 @@
                     if (!record.nome) throw new Error('"Nome do grupo" é obrigatório.');
                     if (!Array.isArray(record.turma_ids) || !record.turma_ids.length) {
                         throw new Error('Selecione ao menos uma turma para o grupo.');
+                    }
+                }
+                if (route === 'sorts') {
+                    record.nome = String(record.nome || '').trim();
+                    record.descricao = String(record.descricao || '').trim();
+                    record.ocorrencias = Number(record.ocorrencias);
+                    record.consecutivas = Number(record.consecutivas) === 1 ? 1 : 0;
+                    record.subgrupos = normalizeSortSubgroups(record.subgrupos);
+                    delete record.turma_ids;
+                    if (!record.nome) throw new Error('Informe o nome do sort.');
+                    if (!Number.isInteger(record.ocorrencias) || record.ocorrencias < 1) {
+                        throw new Error('Informe uma quantidade inteira de horários maior que zero.');
                     }
                 }
                 if (route === 'vinculos') {
@@ -1616,6 +1763,9 @@
                             String(item.tipo || 'indisponibilidade') === String(record.tipo) &&
                             String(item.horario_id || '') === String(record.horario_id || '') &&
                             semesterOf(item) === semesterOf(record);
+                    }
+                    if (route === 'sorts') {
+                        return normalizeCatalogValue(item.nome) === normalizeCatalogValue(record.nome);
                     }
                     return false;
                 });
@@ -1847,7 +1997,11 @@
                 ' turma(s) · ' + scope.demands.length + ' disciplina(s) demandada(s) · ' + scope.teachers.filter(function (entry) { return entry.prdDays.length; }).length +
                 ' de ' + scope.teachers.length + ' professor(es) com PRD atribuído</p>' : '') +
             missingDisciplines + assignmentForm + summary +
-            (availabilityCourseId && scope.teachers.length ? '<h2 class="h6 mt-3 mb-2">Acompanhamento dos professores</h2>' + '<div class="prd-teacher-list">' + teacherRows + '</div>' : '') +
+            (availabilityCourseId && scope.teachers.length
+                ? '<div class="d-flex justify-content-between align-items-center gap-2 mt-3 mb-2"><h2 class="h6 mb-0">Acompanhamento dos professores (' +
+                    scope.teachers.length + ')</h2>' + renderDataSectionToggle('availability-teachers', 'Mostrar professores', 'Recolher professores') + '</div>' +
+                    renderDataSectionContent('availability-teachers', '<div class="prd-teacher-list">' + teacherRows + '</div>')
+                : '') +
             '</div></section>';
     }
 
@@ -1961,10 +2115,11 @@
         }).join('');
         return '<section class="schedule-planner card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
             '<div><strong>Visão semanal dos horários</strong><div class="small text-muted fw-normal">Confira períodos, intervalos e possíveis sobreposições por dia.</div></div>' +
-            '<span class="schedule-type-badge schedule-type-class">Aula</span><span class="schedule-type-badge schedule-type-break">Intervalo</span></div>' +
-            '<div class="card-body"><div class="row g-2 mb-3">' + stats + '</div>' +
+            '<div class="d-flex flex-wrap align-items-center gap-2"><span class="schedule-type-badge schedule-type-class">Aula</span><span class="schedule-type-badge schedule-type-break">Intervalo</span>' +
+            renderDataSectionToggle('schedule-planning', 'Mostrar horários', 'Recolher horários') + '</div></div>' +
+            renderDataSectionContent('schedule-planning', '<div class="card-body"><div class="row g-2 mb-3">' + stats + '</div>' +
             (conflicts.size ? '<div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle me-1"></i>Há horários sobrepostos no mesmo dia. Edite os períodos destacados para evitar conflitos na grade.</div>' : '') +
-            '<div class="schedule-week-grid">' + dayCards + '</div></div></section>';
+            '<div class="schedule-week-grid">' + dayCards + '</div></div>') + '</section>';
     }
 
     function noteStatusLabel(status) {
@@ -2039,8 +2194,9 @@
             '</div></form></div></section>' +
             '<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3"><div><h2 class="h5 mb-1">Quadro de anotações</h2>' +
             '<p class="small text-muted mb-0">Defina prioridade e prazo; avance cada cartão conforme a tarefa evolui.</p></div>' +
-            '<div><label class="form-label mb-1" for="notes-search">Buscar nas anotações</label><input id="notes-search" class="form-control form-control-sm" type="search" placeholder="Título, texto ou prioridade"></div></div>' +
-            '<div class="notes-board">' + notesBoard + '</div>';
+            '<div class="d-flex flex-wrap align-items-end gap-2"><div><label class="form-label mb-1" for="notes-search">Buscar nas anotações</label><input id="notes-search" class="form-control form-control-sm" type="search" placeholder="Título, texto ou prioridade"></div>' +
+            renderDataSectionToggle('notes-board', 'Mostrar anotações', 'Recolher anotações') + '</div></div>' +
+            renderDataSectionContent('notes-board', '<div class="notes-board">' + notesBoard + '</div>');
     }
 
     function renderCrud(route) {
@@ -2069,6 +2225,10 @@
         const fields = spec.fields.map(function (field) {
             let value = isEditing ? editing.record[field.name] : undefined;
             if (route === 'disponibilidade' && field.name === 'semestre_letivo' && !isEditing) value = availabilitySemester;
+            if (isEditing && route === 'sorts' && field.name === 'subgrupos' &&
+                !Array.isArray(value) && Array.isArray(editing.record.turma_ids)) {
+                value = getSortSubgroups(editing.record);
+            }
             if (isEditing && route === 'professores' && field.name === 'disciplina_ingresso' && !value && editing.record.disciplina_ingresso_id) {
                 value = nameById(KEYS.disciplinas, editing.record.disciplina_ingresso_id, '');
             }
@@ -2147,13 +2307,16 @@
             scheduleCopy +
             '<div class="card"><div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap"><strong>Registros (<span id="table-visible-count">' + records.length + '</span>)' +
             (route === 'demandas' ? ' · <span id="demand-visible-lessons">' + totalDemandLessons + '</span> aulas semanais previstas' : '') + '</strong>' +
-            '<input id="table-search" class="form-control form-control-sm" style="max-width:260px" type="search" placeholder="Filtrar registros" aria-label="Filtrar registros"></div>' +
+            '<div class="d-flex flex-wrap align-items-center gap-2">' +
+            '<input id="table-search" class="form-control form-control-sm" style="max-width:260px" type="search" placeholder="Filtrar registros" aria-label="Filtrar registros">' +
+            renderDataSectionToggle('records-' + route, 'Mostrar registros', 'Recolher registros') + '</div></div>' +
             recordFilters +
-            '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr>' +
+            renderDataSectionContent('records-' + route,
+                '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr>' +
             spec.columns.map(function (column) { return '<th>' + h(column[1]) + '</th>'; }).join('') + '<th class="text-end">Ações</th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-inbox"></i>Nenhum registro. Use o formulário acima para começar.</div></td></tr>') +
             (rows ? '<tr id="record-filter-empty" hidden><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-funnel"></i>Nenhum registro encontrado com esses filtros.</div></td></tr>' : '') +
-            '</tbody></table></div></div>';
+            '</tbody></table></div>') + '</div>';
     }
 
     function getRecordFilterDefinitions(route) {
@@ -2463,6 +2626,7 @@
             demandas: 'Defina quantas aulas semanais de cada disciplina cada turma precisa.',
             peculiaridades: 'Cadastre tipos de proteção e marque os períodos reservados de cada turma antes de gerar a grade.',
             eventos: 'Cadastre eventos recorrentes que, ao serem marcados na Grade oficial, bloqueiam o mesmo horário nas turmas do turno compatível.',
+            sorts: 'Crie subgrupos de turmas e reserve horários aleatórios distintos dentro de cada subgrupo antes de gerar a grade.',
             notas: 'Observações, pendências e decisões salvas apenas neste navegador.'
         };
         return descriptions[route] || '';
@@ -2544,7 +2708,10 @@
                     : '';
                 const protectionTarget = allowProtection && turmaId
                     ? ' data-protection-class-id="' + h(turmaId) + '" data-protection-day="' + h(day) +
-                        '" data-protection-slot-id="' + h(slot.id) + '" title="Clique duas vezes para proteger ou alterar este horário"'
+                        '" data-protection-slot-id="' + h(slot.id) + '" title="' +
+                        (protection && protection.tipo_marcacao === 'sort'
+                            ? 'Horário reservado pelo Sort (beta); remova a aplicação no botão correspondente'
+                            : 'Clique duas vezes para proteger ou alterar este horário') + '"'
                     : '';
                 const atSlot = assignments.filter(function (item) {
                     return String(item.horario_id) === String(slot.id) && String(item.dia_semana) === day &&
@@ -2552,9 +2719,15 @@
                 });
                 if (!atSlot.length) {
                     const emptyContent = protection
-                        ? '<div class="grade-protection-entry"><strong>' + h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
-                            '</strong><small>' + (protection.tipo_marcacao === 'evento' ? 'Evento aplicado às turmas do mesmo turno' : 'Horário protegido') +
-                            (allowProtection ? ' · duplo clique para alterar' : '') + '</small></div>'
+                        ? '<div class="grade-protection-entry"><strong>' +
+                            (protection.tipo_marcacao === 'sort' ? 'Sort (beta): ' : '') +
+                            h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
+                                '</strong><small>' + (protection.tipo_marcacao === 'evento'
+                                    ? 'Evento aplicado às turmas do mesmo turno'
+                                    : protection.tipo_marcacao === 'sort'
+                                        ? 'Sort (beta) · horário reservado'
+                                        : 'Horário protegido') +
+                                    (allowProtection && protection.tipo_marcacao !== 'sort' ? ' · duplo clique para alterar' : '') + '</small></div>'
                         : editable && turmaId
                         ? '<button class="grade-empty" type="button" data-action="select-slot" data-class-id="' + h(turmaId) + '" data-day="' + h(day) + '" data-slot-id="' + h(slot.id) + '" aria-label="Adicionar aula em ' + h(day) + ' às ' + h(slot.hora_inicio) + '"></button>'
                         : allowProtection && turmaId
@@ -2620,6 +2793,264 @@
         return protections.concat(events);
     }
 
+    function gradeProtectionTypeLabel(protection) {
+        if (protection.tipo_marcacao === 'evento') return 'Evento';
+        if (protection.tipo_marcacao === 'sort') return 'Sort (beta)';
+        return 'Peculiaridade';
+    }
+
+    function renderSortApplyDialog(sortDefinitions, semester, hasAssignments) {
+        const activeClassIds = new Set(activeRecords(KEYS.turmas, ['ativa', 'ativo']).map(function (turma) {
+            return String(turma.id);
+        }));
+        const availableSorts = sortDefinitions.filter(function (sort) {
+            return getSortSubgroups(sort).some(function (group) {
+                return (Array.isArray(group.turma_ids) ? group.turma_ids : []).some(function (id) {
+                    return activeClassIds.has(String(id));
+                });
+            });
+        });
+        const options = availableSorts.map(function (sort) {
+            const subgroups = getSortSubgroups(sort);
+            const classCount = subgroups.reduce(function (count, group) {
+                return count + (Array.isArray(group.turma_ids) ? group.turma_ids : []).filter(function (id) {
+                    return activeClassIds.has(String(id));
+                }).length;
+            }, 0);
+            return '<option value="' + h(sort.id) + '">' + h(sort.nome || 'Sort') + ' · ' + h(sort.ocorrencias || 0) +
+                ' horário(s) por turma · ' + classCount + ' turma(s) em ' + subgroups.length + ' subgrupo(s)' +
+                (Number(sort.consecutivas) === 1 ? ' · consecutivos' : '') + '</option>';
+        }).join('');
+        const applicationsById = new Map();
+        getGradeProtections(semester).filter(function (protection) {
+            return protection.tipo_marcacao === 'sort' && protection.sort_aplicacao_id;
+        }).forEach(function (protection) {
+            const key = String(protection.sort_aplicacao_id);
+            const application = applicationsById.get(key) || {
+                nome: protection.sort_nome || 'Sort',
+                slots: 0,
+                classes: new Set()
+            };
+            application.slots += 1;
+            application.classes.add(String(protection.turma_id));
+            applicationsById.set(key, application);
+        });
+        const currentApplications = Array.from(applicationsById.entries()).map(function (entry) {
+            return '<li class="list-group-item d-flex justify-content-between align-items-center gap-2">' +
+                '<span><strong>' + h(entry[1].nome) + '</strong> · ' + entry[1].classes.size + ' turma(s), ' +
+                entry[1].slots + ' horário(s)</span><button class="btn btn-sm btn-outline-danger" type="button" data-action="remove-applied-sort" data-sort-application-id="' +
+                h(entry[0]) + '">Remover</button></li>';
+        }).join('');
+        return '<dialog class="assignment-dialog" id="sort-apply-dialog" aria-labelledby="sort-apply-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="sort-apply-title">Aplicar Sort (beta)</h2>' +
+            '<p class="mb-0 text-muted">Os horários são sorteados por turma e ficam protegidos durante a próxima geração.</p></div>' +
+            '<button type="button" class="btn-close" data-action="close-sort-dialog" aria-label="Fechar"></button></div>' +
+            (hasAssignments ? '<div class="alert alert-warning">Limpe as aulas desta Grade oficial antes de aplicar um sort. As reservas já aplicadas podem ser removidas abaixo.</div>' : '') +
+            (availableSorts.length
+                ? '<form id="sort-apply-form"><div class="mb-3"><label class="form-label" for="sort-apply-select">Sort</label><select class="form-select" id="sort-apply-select" name="sort_id" required><option value="">Selecione</option>' +
+                    options + '</select></div><button class="btn btn-primary" type="submit"' + (hasAssignments ? ' disabled' : '') + '>Sortear horários</button></form>'
+                : '<div class="alert alert-info mb-0">Cadastre um sort com turmas ativas antes de aplicá-lo.</div>') +
+            (currentApplications ? '<hr><h3 class="h6">Reservas aplicadas neste semestre</h3><ul class="list-group">' + currentApplications + '</ul>' : '') +
+            '<div class="d-flex justify-content-end mt-3"><button class="btn btn-outline-secondary" type="button" data-action="close-sort-dialog">Fechar</button></div></dialog>';
+    }
+
+    function shuffleSortItems(items) {
+        const shuffled = items.slice();
+        for (let index = shuffled.length - 1; index > 0; index -= 1) {
+            const randomIndex = Math.floor(Math.random() * (index + 1));
+            const current = shuffled[index];
+            shuffled[index] = shuffled[randomIndex];
+            shuffled[randomIndex] = current;
+        }
+        return shuffled;
+    }
+
+    function getSortSlotPool(turma, scheduleSlots, occurrences, consecutive, existingProtections, groupSlots) {
+        const slotsByDay = new Map();
+        DAYS.forEach(function (day) {
+            const daySlots = scheduleSlots.filter(function (slot) {
+                return slot.dia_semana === day && slotMatchesClassPeriod(turma, slot);
+            }).sort(function (a, b) {
+                return String(a.hora_inicio || '').localeCompare(String(b.hora_inicio || '')) ||
+                    String(a.hora_fim || '').localeCompare(String(b.hora_fim || ''));
+            });
+            slotsByDay.set(day, daySlots);
+        });
+        const isAvailable = function (day, slot) {
+            return !existingProtections.some(function (protection) {
+                return String(protection.turma_id) === String(turma.id) &&
+                    String(protection.dia_semana) === day &&
+                    String(protection.horario_id) === String(slot.id);
+            }) && !groupSlots.has(day + '|' + String(slot.id));
+        };
+        if (consecutive) {
+            const windows = [];
+            slotsByDay.forEach(function (daySlots, day) {
+                for (let index = 0; index <= daySlots.length - occurrences; index += 1) {
+                    const window = daySlots.slice(index, index + occurrences);
+                    if (window.every(function (slot) { return isAvailable(day, slot); })) windows.push(window);
+                }
+            });
+            return windows;
+        }
+        const independentCandidates = [];
+        slotsByDay.forEach(function (daySlots, day) {
+            let run = [];
+            const addIndependentRun = function () {
+                const firstIndex = run.length % 2 === 0 && Math.random() < 0.5 ? 1 : 0;
+                for (let index = firstIndex; index < run.length; index += 2) {
+                    independentCandidates.push(run[index]);
+                }
+                run = [];
+            };
+            daySlots.forEach(function (slot) {
+                if (isAvailable(day, slot)) run.push(slot);
+                else addIndependentRun();
+            });
+            addIndependentRun();
+        });
+        return independentCandidates;
+    }
+
+    function selectSortGroupSchedules(groupClasses, scheduleSlots, occurrences, consecutive, existingProtections) {
+        const classOptions = groupClasses.map(function (turma) {
+            return {
+                turma: turma,
+                flexibility: getSortSlotPool(turma, scheduleSlots, occurrences, consecutive, existingProtections, new Set()).length
+            };
+        });
+        if (classOptions.some(function (item) { return item.flexibility < occurrences; })) return null;
+        const attempts = Math.max(20, groupClasses.length * 8);
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+            const orderedClasses = shuffleSortItems(classOptions).sort(function (a, b) {
+                return a.flexibility - b.flexibility;
+            });
+            const groupSlots = new Set();
+            const selections = new Map();
+            let failed = false;
+            orderedClasses.some(function (item) {
+                const pool = getSortSlotPool(item.turma, scheduleSlots, occurrences, consecutive, existingProtections, groupSlots);
+                if (pool.length < occurrences) {
+                    failed = true;
+                    return true;
+                }
+                const selectedSlots = consecutive
+                    ? pool[Math.floor(Math.random() * pool.length)]
+                    : shuffleSortItems(pool).slice(0, occurrences);
+                selections.set(String(item.turma.id), selectedSlots);
+                selectedSlots.forEach(function (slot) {
+                    groupSlots.add(slot.dia_semana + '|' + String(slot.id));
+                });
+                return false;
+            });
+            if (!failed) return selections;
+        }
+        return null;
+    }
+
+    function applySortFromForm(form) {
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        if (state.assignments.length) {
+            throw new Error('Limpe as aulas da Grade oficial antes de aplicar um sort.');
+        }
+        const sortId = String(new FormData(form).get('sort_id') || '');
+        const sort = readRecords(KEYS.sorts).find(function (item) { return String(item.id) === sortId; });
+        if (!sort) throw new Error('Selecione um sort válido.');
+        const subgroups = normalizeSortSubgroups(getSortSubgroups(sort));
+        const targetIds = subgroups.reduce(function (ids, group) {
+            return ids.concat(group.turma_ids.map(String));
+        }, []);
+        const activeClasses = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
+        const activeClassMap = new Map(activeClasses.map(function (turma) {
+            return [String(turma.id), turma];
+        }));
+        const targetClasses = targetIds.map(function (id) {
+            return activeClassMap.get(id);
+        });
+        const missingClasses = targetIds.filter(function (id) { return !activeClassMap.has(id); });
+        if (missingClasses.length) {
+            throw new Error('O sort contém turma(s) inativa(s) ou removida(s). Edite o cadastro do sort antes de aplicá-lo.');
+        }
+        if (!targetClasses.length) throw new Error('O sort não tem turmas ativas nos subgrupos.');
+        const occurrences = Number(sort.ocorrencias);
+        if (!Number.isInteger(occurrences) || occurrences < 1) throw new Error('A quantidade de horários do sort é inválida.');
+        const consecutive = Number(sort.consecutivas) === 1;
+        const scheduleSlots = readRecords(KEYS.horarios).filter(function (slot) {
+            return String(slot.tipo || 'Aula').toLowerCase() === 'aula';
+        });
+        const existingProtections = getGradeProtections(semester);
+        const plannedProtections = [];
+        const failures = [];
+        subgroups.forEach(function (group) {
+            const groupClasses = group.turma_ids.map(function (id) { return activeClassMap.get(String(id)); });
+            const groupSelections = selectSortGroupSchedules(
+                groupClasses, scheduleSlots, occurrences, consecutive, existingProtections
+            );
+            if (!groupSelections) {
+                failures.push(group.nome + ' (' + groupClasses.map(function (turma) {
+                    return turma.nome || 'Turma ' + turma.id;
+                }).join(', ') + ')');
+                return;
+            }
+            groupSelections.forEach(function (selectedSlots, turmaId) {
+                selectedSlots.forEach(function (slot) {
+                    plannedProtections.push({
+                        id: null,
+                        sort_aplicacao_id: '',
+                        tipo_marcacao: 'sort',
+                        semestre_letivo: semester,
+                        turma_id: Number(turmaId),
+                        dia_semana: slot.dia_semana,
+                        horario_id: Number(slot.id),
+                        sort_id: Number(sort.id),
+                        sort_nome: sort.nome || 'Sort',
+                        sort_subgrupo_nome: group.nome,
+                        peculiaridade_nome: sort.nome || 'Sort',
+                        sort_descricao: sort.descricao || ''
+                    });
+                });
+            });
+        });
+        if (failures.length) {
+            throw new Error('Sort cancelado sem alterar turmas: não foi possível encontrar horários ' +
+                (consecutive ? 'consecutivos' : 'não consecutivos') + ' distintos para todas as turmas em ' +
+                failures.join('; ') + '.');
+        }
+        const protections = readRecords(KEYS.protecoesGrade);
+        let nextProtectionId = nextId(protections);
+        const applicationId = 'sort_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        plannedProtections.forEach(function (protection) {
+            protection.id = nextProtectionId;
+            protection.sort_aplicacao_id = applicationId;
+            nextProtectionId += 1;
+        });
+        saveRecords(KEYS.protecoesGrade, protections.concat(plannedProtections), 'ProtecoesGrade');
+        const dialog = document.getElementById('sort-apply-dialog');
+        if (dialog && dialog.open) dialog.close();
+        render();
+        notify('Sort "' + (sort.nome || 'Sort') + '" aplicado aleatoriamente em ' + targetClasses.length + ' turma(s).', 'success');
+    }
+
+    function removeAppliedSort(applicationId) {
+        const id = String(applicationId || '');
+        if (!id) throw new Error('Não foi possível identificar a aplicação do sort.');
+        const protections = readRecords(KEYS.protecoesGrade);
+        const selected = protections.filter(function (protection) {
+            return protection.tipo_marcacao === 'sort' && String(protection.sort_aplicacao_id) === id;
+        });
+        if (!selected.length) throw new Error('A aplicação do sort não foi encontrada.');
+        const sortName = selected[0].sort_nome || 'Sort';
+        if (!window.confirm('Remover todas as reservas de "' + sortName + '" deste semestre?')) return;
+        saveRecords(KEYS.protecoesGrade, protections.filter(function (protection) {
+            return !(protection.tipo_marcacao === 'sort' && String(protection.sort_aplicacao_id) === id);
+        }), 'ProtecoesGrade');
+        const dialog = document.getElementById('sort-apply-dialog');
+        if (dialog && dialog.open) dialog.close();
+        render();
+        notify('Reservas do sort removidas.', 'success');
+    }
+
     function renderSlotProtectionDialog() {
         const peculiarities = readRecords(KEYS.peculiaridades).slice().sort(function (a, b) {
             return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
@@ -2661,6 +3092,9 @@
                 String(item.dia_semana) === day &&
                 String(item.horario_id) === slotId;
         });
+        if (alreadyProtected && alreadyProtected.tipo_marcacao === 'sort') {
+            throw new Error('Este horário foi reservado por um Sort (beta). Remova a aplicação no botão Aplicar sort (beta).');
+        }
         const occupied = state.assignments.some(function (assignment) {
             return String(assignment.turma_id) === turmaId &&
                 String(assignment.dia_semana) === day &&
@@ -2942,8 +3376,11 @@
             return '<tr><th>' + h(professor.nome || 'Professor') + (inactive ? ' <span class="badge text-bg-secondary">Inativo</span>' : '') + '</th><td><div class="d-flex justify-content-between gap-2"><span>' + teacherAssignments.length + ' / ' + weeklyLimit + '</span>' + status + '</div>' +
                 '<div class="meter mt-2"><span class="' + (teacherAssignments.length > weeklyLimit ? 'meter-over' : '') + '" style="width:' + percent + '%"></span></div></td><td>' + dailyStatus + '</td></tr>';
         }).join('');
-        return '<div class="card mb-3"><div class="card-header"><strong>Carga dos professores</strong><span class="small text-muted ms-2">Aulas atribuídas / limite semanal e maior carga em um dia / limite diário</span></div>' +
-            '<div class="card-body pb-2"><div class="row g-2 align-items-end">' +
+        return '<div class="card mb-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"><div><strong>Carga dos professores</strong><span class="small text-muted ms-2">Aulas atribuídas / limite semanal e maior carga em um dia / limite diário</span></div>' +
+            '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-teacher-workload" aria-controls="teacher-workload-content" aria-expanded="' +
+            String(!workloadPanelCollapsed) + '"><i class="bi ' + (workloadPanelCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
+            ' me-1" aria-hidden="true"></i>' + (workloadPanelCollapsed ? 'Mostrar carga dos professores' : 'Recolher carga dos professores') +
+            '</button></div><div id="teacher-workload-content" class="data-section-content"' + (workloadPanelCollapsed ? ' hidden' : '') + '><div class="card-body pb-2"><div class="row g-2 align-items-end">' +
             '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-teacher-filter">Professor</label><select class="form-select form-select-sm" id="workload-teacher-filter">' + teacherOptions + '</select></div>' +
             '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-course-filter">Curso</label><select class="form-select form-select-sm" id="workload-course-filter">' + courseOptions + '</select></div>' +
             '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-class-filter">Turma</label><select class="form-select form-select-sm" id="workload-class-filter">' + classOptions + '</select></div>' +
@@ -2953,7 +3390,7 @@
             '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Professor</th><th>Carga semanal</th><th>Máximo diário</th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="3" class="text-center text-muted py-4">' +
                 (sortedTeachers.length ? 'Nenhum professor corresponde ao filtro.' : 'Cadastre professores para acompanhar a carga.') + '</td></tr>') +
-            '</tbody></table></div></div>';
+            '</tbody></table></div></div></div>';
     }
 
     function renderVinculoCoverage() {
@@ -3018,10 +3455,11 @@
         const emptyDemand = !demandedIds.size
             ? '<div class="alert alert-warning">Não há demandas de disciplinas para as turmas deste curso no semestre selecionado. Confira as demandas e o semestre.</div>'
             : '';
-        return '<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Cobertura dos vínculos</strong><span class="badge text-bg-primary">Semestre ' + h(getSemester()) + '</span></div>' +
+        return '<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Cobertura dos vínculos</strong><div class="d-flex align-items-center gap-2"><span class="badge text-bg-primary">Semestre ' + h(getSemester()) + '</span>' +
+            renderDataSectionToggle('vinculo-coverage', 'Mostrar detalhes', 'Recolher detalhes') + '</div></div>' +
             '<div class="card-body">' + courseSelector + '<p class="small text-muted">Curso: ' + h(course ? course.nome : '') + ' · ' + classes.length + ' turma(s) ativa(s) · ' + demandedIds.size + ' disciplina(s) demandada(s)</p>' + emptyDemand +
-            '<div class="row g-4"><div class="col-md-6"><h2 class="h6">Professores sem vínculo com as disciplinas do curso (' + (demandedIds.size ? teachersWithoutDiscipline.length : '—') + ')</h2>' + (demandedIds.size ? missingTeachers : '') + '</div>' +
-            '<div class="col-md-6"><h2 class="h6">Disciplinas demandadas sem professor (' + disciplinesWithoutTeacher.length + ')</h2>' + missingDisciplines + '</div></div></div></div>';
+            renderDataSectionContent('vinculo-coverage', '<div class="row g-4"><div class="col-md-6"><h2 class="h6">Professores sem vínculo com as disciplinas do curso (' + (demandedIds.size ? teachersWithoutDiscipline.length : '—') + ')</h2>' + (demandedIds.size ? missingTeachers : '') + '</div>' +
+            '<div class="col-md-6"><h2 class="h6">Disciplinas demandadas sem professor (' + disciplinesWithoutTeacher.length + ')</h2>' + missingDisciplines + '</div></div>') + '</div></div>';
     }
 
     function getQdpConfig() {
@@ -3375,37 +3813,54 @@
                     return String(assignment.turma_id) === String(turma.id);
                 }));
         });
+        const scheduleDescription = editable
+            ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.'
+            : 'Duplo clique em um período para aplicar ou alterar uma peculiaridade ou evento.';
+        function collapsibleSchedule(title, description, content) {
+            return '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><div><strong>' +
+                h(title) + '</strong><span class="text-muted small ms-2">' + description + '</span></div>' +
+                '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-grade-schedule" aria-controls="grade-schedule-content" aria-expanded="' +
+                String(!gradeScheduleCollapsed) + '"><i class="bi ' + (gradeScheduleCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
+                ' me-1" aria-hidden="true"></i>' + (gradeScheduleCollapsed ? 'Expandir grade' : 'Recolher grade') +
+                '</button></div><div id="grade-schedule-content" class="card-body p-2 data-section-content"' + (gradeScheduleCollapsed ? ' hidden' : '') + '>' +
+                content + '</div></section>';
+        }
         const scheduleView = gradeDisciplineFilter
-            ? '<div class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Disciplina por professor</strong>' +
-                '<span class="text-muted small">' + h(nameById(KEYS.disciplinas, gradeDisciplineFilter, 'Disciplina')) +
-                (selectedFilterTurma ? ' · ' + h(selectedFilterTurma.nome) : ' · todas as turmas') +
-                (gradeTeacherFilter ? ' · ' + h(nameById(KEYS.professores, gradeTeacherFilter, 'Professor')) : '') +
-                (editable ? ' · clique em uma aula para editar' : '') + '</span></div><div class="card-body">' +
-                renderDisciplineTeacherSchedules(slots, filteredAssignments, gradeDisciplineFilter, gradeTurmaFilter, teachers, editable) + '</div></div>'
+            ? collapsibleSchedule('Disciplina por professor',
+                h(nameById(KEYS.disciplinas, gradeDisciplineFilter, 'Disciplina')) +
+                    (selectedFilterTurma ? ' · ' + h(selectedFilterTurma.nome) : ' · todas as turmas') +
+                    (gradeTeacherFilter ? ' · ' + h(nameById(KEYS.professores, gradeTeacherFilter, 'Professor')) : '') +
+                    (editable ? ' · clique em uma aula para editar' : ''),
+                renderDisciplineTeacherSchedules(slots, filteredAssignments, gradeDisciplineFilter, gradeTurmaFilter, teachers, editable))
             : !selectedFilterTurma
-                ? '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
-                    '<div><strong>Grade de todas as turmas</strong><span class="text-muted small ms-2">' +
-                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma peculiaridade ou evento.') +
-                    '</span></div><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-grade-all-classes" aria-controls="grade-all-classes-content" aria-expanded="' +
-                    String(!gradeAllClassesCollapsed) + '"><i class="bi ' + (gradeAllClassesCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
-                    ' me-1" aria-hidden="true"></i>' + (gradeAllClassesCollapsed ? 'Expandir grade' : 'Recolher grade') +
-                    '</button></div><div id="grade-all-classes-content" class="card-body p-2"' + (gradeAllClassesCollapsed ? ' hidden' : '') + '>' +
-                    ((gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
+                ? collapsibleSchedule('Grade de todas as turmas', scheduleDescription,
+                    (gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
                         ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
-                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable)) +
-                    '</div></section>'
-                : '<div class="mb-2"><strong>Grade da turma ' + h(selectedFilterTurma.nome) +
-                    '</strong><span class="text-muted small ms-2">' +
-                    (editable ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.' : 'Duplo clique em um período para aplicar ou alterar uma peculiaridade ou evento.') +
-                    '</span></div>' +
-                ((gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
-                    ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
-                    : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable));
+                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable))
+                : collapsibleSchedule('Grade da turma ' + (selectedFilterTurma.nome || ''),
+                    scheduleDescription,
+                    (gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
+                        ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
+                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable));
         const gradeEditing = state.assignments.find(function (item) { return String(item.id) === String(gradeEditingId); }) || null;
         const manual = editable ? renderManualAssignment(selectedTurma, slots, gradeEditing, gradeFocusDay, gradeFocusSlotId) : '';
         const workload = renderTeacherWorkload(readRecords(KEYS.professores), assignments);
         const declarationControls = editable ? '' : renderDeclarationControls(semester, assignments);
         const substitutionPanel = renderTeacherSubstitutionPanel(semester, assignments, turmas);
+        const sortDefinitions = readRecords(KEYS.sorts);
+        const appliedSorts = getGradeProtections(semester).some(function (protection) {
+            return protection.tipo_marcacao === 'sort';
+        });
+        const activeClassIds = new Set(activeRecords(KEYS.turmas, ['ativa', 'ativo']).map(function (turma) {
+            return String(turma.id);
+        }));
+        const hasAvailableSort = sortDefinitions.some(function (sort) {
+            return getSortSubgroups(sort).some(function (group) {
+                return (Array.isArray(group.turma_ids) ? group.turma_ids : []).some(function (id) {
+                    return activeClassIds.has(String(id));
+                });
+            });
+        });
         const title = editable ? 'Ajustes manuais' : 'Grade oficial';
         const description = editable
             ? 'Arraste uma aula para outro horário vazio ou clique nela para editar. Com filtro por disciplina, selecione também uma turma para arrastar.'
@@ -3414,14 +3869,17 @@
             ? '<a class="btn btn-outline-secondary" href="#/grade"><i class="bi bi-arrow-left me-1"></i>Voltar à Grade oficial</a>'
             : '<a class="btn btn-outline-primary" href="#/ajustes"><i class="bi bi-pencil-square me-1"></i>Ajustes manuais</a>';
         const generationButton = editable ? '' :
-            '<button class="btn btn-primary" type="button" data-action="generate-grade"><i class="bi bi-magic me-1"></i>Gerar grade automaticamente (QDP)</button>';
+            '<button class="btn btn-primary" type="button" data-action="generate-grade"><i class="bi bi-magic me-1"></i>Gerar grade automaticamente (QDP)</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-action="open-sort-dialog"' +
+                (hasAvailableSort || appliedSorts ? '' : ' disabled') + '><i class="bi bi-shuffle me-1"></i>Aplicar sort (beta)</button>';
         return pageHeader(title, 'bi-calendar3', description) +
             '<div class="card mb-3"><div class="card-body d-flex flex-wrap justify-content-between align-items-end gap-3">' +
             semesterForm + '<div class="d-flex flex-wrap align-items-end gap-2">' + pdfExportControls + generationButton + navigation + '<button class="btn btn-outline-primary" type="button" data-action="export-grade">Exportar JSON</button>' +
             '<button class="btn btn-outline-secondary" type="button" data-action="print">Imprimir</button>' +
             '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button></div></div></div>' +
             '<div class="card mb-3"><div class="card-body d-flex align-items-end justify-content-between flex-wrap gap-3">' + turmaFilter + disciplineFilter + teacherFilter + completionFilter + legend + '</div></div>' +
-            scheduleView + (!editable ? renderSlotProtectionDialog() : '') + declarationControls + substitutionPanel + workload + manual +
+            scheduleView + (!editable ? renderSlotProtectionDialog() + renderSortApplyDialog(sortDefinitions, semester, assignments.length > 0) : '') +
+            declarationControls + substitutionPanel + workload + manual +
             '<p class="small text-muted mt-3"><i class="bi bi-info-circle me-1"></i>' + (editable
                 ? 'As alterações manuais são gravadas neste navegador. Confira as orientações de demanda e disponibilidade no formulário de cada aula.'
                 : 'Use os ajustes manuais em uma tela separada para corrigir ou complementar a grade automática.') + '</p>';
@@ -3501,9 +3959,11 @@
             '<div class="col-md-4 d-flex gap-2"><button class="btn btn-outline-primary flex-grow-1" type="submit"' + (assignments.length ? '' : ' disabled') +
             '><i class="bi bi-arrow-left-right me-1"></i>' + (editingSubstitution ? 'Salvar alterações' : 'Registrar substituição') + '</button>' +
             (editingSubstitution ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-teacher-substitution-edit">Cancelar</button>' : '') + '</div></form>' +
-            '<div class="table-responsive mt-4"><table class="table table-sm table-hover align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Substituição</th><th>Vigência</th><th>Aulas afetadas</th><th></th></tr></thead><tbody>' +
+            '<div class="d-flex justify-content-between align-items-center gap-2 mt-4 mb-2"><strong>Substituições registradas (' + substitutions.length + ')</strong>' +
+            renderDataSectionToggle('teacher-substitutions', 'Mostrar substituições', 'Recolher substituições') + '</div>' +
+            renderDataSectionContent('teacher-substitutions', '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Substituição</th><th>Vigência</th><th>Aulas afetadas</th><th></th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="6" class="text-center text-muted py-3">Nenhuma substituição registrada para ' + h(semester) + '.</td></tr>') +
-            '</tbody></table></div></div></section>';
+            '</tbody></table></div>') + '</div></section>';
     }
 
     function renderSubstitutionSelectOptions(records, placeholder, selectedId) {
@@ -4144,10 +4604,12 @@
             '<button class="btn btn-outline-warning" type="button" data-action="delete-selected-storage">Excluir selecionadas</button>' +
             '<button class="btn btn-danger" type="button" data-action="clear-storage">Limpar dados Owltime</button>' +
             '<input id="backup-file" class="d-none" type="file" accept=".json,application/json"></div>' +
-            '<div class="card"><div class="card-header d-flex justify-content-between"><strong>Chaves locais (' + items.length + ')</strong><button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-storage-checks">Selecionar tudo</button></div>' +
-            '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th></th><th>Chave</th><th>Módulo</th><th class="text-end">Tamanho</th><th></th></tr></thead><tbody>' +
+            '<div class="card"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Chaves locais (' + items.length + ')</strong><div class="d-flex gap-2">' +
+            renderDataSectionToggle('local-storage-keys', 'Mostrar chaves', 'Recolher chaves') +
+            '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-storage-checks">Selecionar tudo</button></div></div>' +
+            renderDataSectionContent('local-storage-keys', '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th></th><th>Chave</th><th>Módulo</th><th class="text-end">Tamanho</th><th></th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-hdd"></i>Nenhum dado Owltime salvo neste navegador.</div></td></tr>') +
-            '</tbody></table></div></div>';
+            '</tbody></table></div>') + '</div>';
     }
 
     function formatBytes(bytes) {
@@ -4407,10 +4869,12 @@
                     nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção');
                 return '<li><strong>' + h(protection.dia_semana || 'Dia não informado') + h(time) +
                     '</strong><span class="report-protection-kind">' +
-                    (protection.tipo_marcacao === 'evento' ? 'Evento: ' : 'Proteção: ') + h(name) + '</span></li>';
+                    (protection.tipo_marcacao === 'evento'
+                        ? 'Evento: '
+                        : protection.tipo_marcacao === 'sort' ? 'Sort (beta): ' : 'Proteção: ') + h(name) + '</span></li>';
             }).join('');
-            const protectionSummary = '<section class="report-class-protections" aria-label="Peculiaridades e eventos da turma ' +
-                h(turma.nome || 'Turma') + '"><h3><i class="bi bi-shield-exclamation" aria-hidden="true"></i>Peculiaridades e eventos' +
+            const protectionSummary = '<section class="report-class-protections" aria-label="Proteções, eventos e sorts da turma ' +
+                h(turma.nome || 'Turma') + '"><h3><i class="bi bi-shield-exclamation" aria-hidden="true"></i>Proteções, eventos e sorts' +
                 (classProtections.length ? ' <span>' + classProtections.length + '</span>' : '') + '</h3>' +
                 (protectionList ? '<ul>' + protectionList + '</ul>' :
                     '<p>Nenhum horário protegido para esta turma neste semestre.</p>') + '</section>';
@@ -4460,7 +4924,9 @@
         const generationPendingSection = lastReport
             ? '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Pendências da última geração e possíveis causas</strong>' +
                 '<span class="badge text-bg-' + (Number(lastReport.totalPendentes || 0) ? 'warning' : 'success') + '">' +
-                h(lastReport.totalPendentes || 0) + ' aula(s) pendente(s)</span></div><div class="card-body">' +
+                h(lastReport.totalPendentes || 0) + ' aula(s) pendente(s)</span>' +
+                renderDataSectionToggle('report-pending-details', 'Mostrar detalhes', 'Recolher detalhes') + '</div>' +
+                renderDataSectionContent('report-pending-details', '<div class="card-body">' +
                 (Number(lastReport.totalPendentes || 0) === 0
                     ? '<p class="text-success mb-0">A última geração não deixou pendências.</p>'
                     : recordedGenerationFailures.length
@@ -4469,7 +4935,7 @@
                                 generationFailureRows + '</tbody></table></div>'
                             : '<p class="text-muted mb-0">Nenhuma pendência corresponde aos filtros atuais.</p>')
                         : '<div class="alert alert-warning mb-0">Esta geração não guardou o detalhamento das causas. Gere a grade novamente para registrar o diagnóstico das pendências.</div>') +
-                '</div></section>'
+                '</div>') + '</section>'
             : '';
         const reportTeacherOptions = '<option value="">Todos os professores</option>' + reportTeachers.map(function (teacher) {
             return '<option value="' + h(teacher.id) + '"' + (String(teacher.id) === reportTeacherFilter ? ' selected' : '') + '>' +
@@ -4524,8 +4990,11 @@
             '<div class="row g-3 mb-3"><div class="col-xl-6">' + teacherRankingSection + '</div>' +
             '<div class="col-xl-6">' + pieChart('Distribuição de aulas por disciplina', disciplineRanking, function (item) { return subjectColor(item.id); }) + '</div></div></div>' +
             generationPendingSection +
-            '<section class="report-class-list"><div class="report-class-list-heading"><h2>Resumo por turma</h2><p>Disciplinas, aulas previstas e professores responsáveis.</p></div>' +
-            (classSummaries || '<div class="empty-state"><i class="bi bi-journal-x"></i>Nenhuma turma ou demanda corresponde aos filtros selecionados.</div>') + '</section>';
+            '<section class="report-class-list"><div class="report-class-list-heading d-flex justify-content-between align-items-center gap-2 flex-wrap"><div><h2>Resumo por turma</h2><p>Disciplinas, aulas previstas e professores responsáveis.</p></div>' +
+            renderDataSectionToggle('report-class-summaries', 'Mostrar turmas', 'Recolher turmas') + '</div>' +
+            renderDataSectionContent('report-class-summaries',
+                classSummaries || '<div class="empty-state"><i class="bi bi-journal-x"></i>Nenhuma turma ou demanda corresponde aos filtros selecionados.</div>',
+                'report-class-items') + '</section>';
     }
 
     function renderHelp() {
@@ -4597,6 +5066,17 @@
     function collectForm(form, fields) {
         const values = {};
         fields.forEach(function (field) {
+            if (field.type === 'sort-groups') {
+                values[field.name] = Array.from(form.querySelectorAll('[data-sort-subgroup]')).map(function (row) {
+                    return {
+                        nome: String(row.querySelector('[data-sort-subgroup-name]').value || '').trim(),
+                        turma_ids: Array.from(row.querySelectorAll('input[name="sort-subgroup-turmas"]:checked')).map(function (input) {
+                            return Number(input.value);
+                        })
+                    };
+                });
+                return;
+            }
             if (field.type === 'multi-check') {
                 values[field.name] = Array.from(form.querySelectorAll('input[name="' + field.name + '"]:checked')).map(function (input) {
                     return Number(input.value);
@@ -4698,9 +5178,26 @@
             });
             if (duplicate) throw new Error(route === 'eventos' ? 'Já existe um evento com esse nome.' : 'Já existe uma proteção com esse nome.');
         }
+        if (route === 'sorts') {
+            values.nome = String(values.nome || '').trim();
+            values.descricao = String(values.descricao || '').trim();
+            values.ocorrencias = Number(values.ocorrencias);
+            values.consecutivas = Number(values.consecutivas) === 1 ? 1 : 0;
+            values.subgrupos = normalizeSortSubgroups(values.subgrupos);
+            if (!values.nome) throw new Error('Informe o nome do sort.');
+            if (!Number.isInteger(values.ocorrencias) || values.ocorrencias < 1) {
+                throw new Error('Informe uma quantidade inteira de horários maior que zero.');
+            }
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    normalizeCatalogValue(row.nome) === normalizeCatalogValue(values.nome);
+            });
+            if (duplicate) throw new Error('Já existe um sort com esse nome.');
+        }
         const records = readRecords(spec.key);
         const oldRecord = editing && editing.route === route ? records.find(function (row) { return String(row.id) === String(editing.id); }) : null;
         const record = Object.assign({}, oldRecord || {}, values);
+        if (route === 'sorts') delete record.turma_ids;
         if (route === 'disponibilidade' && record.tipo === 'prd') {
             record.horario_id = null;
             record.disponivel = 0;
@@ -4742,6 +5239,11 @@
         })) {
             throw new Error('Este evento está aplicado a uma ou mais turmas. Remova as marcações na Grade oficial antes de excluí-lo.');
         }
+        if (route === 'sorts' && readRecords(KEYS.protecoesGrade).some(function (protection) {
+            return protection.tipo_marcacao === 'sort' && String(protection.sort_id) === String(id);
+        })) {
+            throw new Error('Este sort está aplicado na Grade oficial. Remova a aplicação antes de excluí-lo.');
+        }
         const label = record.nome || record.titulo || record.dia_semana || 'este registro';
         if (!window.confirm('Excluir ' + label + '? Esta ação não pode ser desfeita sem um backup.')) return;
         saveRecords(spec.key, readRecords(spec.key).filter(function (item) { return String(item.id) !== String(id); }), spec.module);
@@ -4774,6 +5276,24 @@
                     })
                 });
             }), 'Grupos');
+            saveRecords(KEYS.sorts, readRecords(KEYS.sorts).map(function (sort) {
+                if (!Array.isArray(sort.subgrupos)) {
+                    return Object.assign({}, sort, {
+                        turma_ids: (Array.isArray(sort.turma_ids) ? sort.turma_ids : []).filter(function (turmaId) {
+                            return String(turmaId) !== String(id);
+                        })
+                    });
+                }
+                return Object.assign({}, sort, {
+                    subgrupos: sort.subgrupos.map(function (group) {
+                        return Object.assign({}, group, {
+                            turma_ids: (Array.isArray(group.turma_ids) ? group.turma_ids : []).filter(function (turmaId) {
+                                return String(turmaId) !== String(id);
+                            })
+                        });
+                    }).filter(function (group) { return group.turma_ids.length; })
+                });
+            }), 'Sorts');
         }
         if (route === 'horarios') {
             saveRecords(KEYS.disponibilidade, readRecords(KEYS.disponibilidade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProfessorDisponibilidade');
@@ -4816,7 +5336,7 @@
             const slot = slotMap[String(protection.horario_id)] || {};
             rows.push([
                 semester,
-                protection.tipo_marcacao === 'evento' ? 'Evento' : 'Peculiaridade',
+                gradeProtectionTypeLabel(protection),
                 nameById(KEYS.turmas, protection.turma_id, 'Turma'),
                 protection.dia_semana || '',
                 slot.hora_inicio || '',
@@ -4885,7 +5405,7 @@
                 const slot = schedule.slots[String(protection.horario_id)] || {};
                 return [
                     schedule.semester,
-                    protection.tipo_marcacao === 'evento' ? 'Evento' : 'Peculiaridade',
+                    gradeProtectionTypeLabel(protection),
                     schedule.entity.nome,
                     protection.dia_semana || '',
                     slot.hora_inicio || '',
@@ -4950,7 +5470,9 @@
                     });
                     row.push(protection
                         ? {
-                            text: (protection.tipo_marcacao === 'evento' ? 'EVENTO ESCOLAR\n' : 'HORÁRIO PROTEGIDO\n') + (protection.peculiaridade_nome ||
+                            text: (protection.tipo_marcacao === 'evento'
+                                ? 'EVENTO ESCOLAR\n'
+                                : protection.tipo_marcacao === 'sort' ? 'SORT (BETA)\n' : 'HORÁRIO PROTEGIDO\n') + (protection.peculiaridade_nome ||
                                 nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção')),
                             style: 'protectionCell'
                         }
@@ -5720,8 +6242,16 @@
                 clearTutorialState();
                 render();
                 notify('Tutorial encerrado. Os cadastros feitos permanecem neste navegador.', 'info');
-            } else if (action === 'toggle-grade-all-classes') {
-                gradeAllClassesCollapsed = !gradeAllClassesCollapsed;
+            } else if (action === 'toggle-data-section') {
+                const section = button.dataset.section;
+                if (!section) throw new Error('Não foi possível identificar a seção de dados.');
+                collapsedDataSections[section] = !collapsedDataSections[section];
+                render();
+            } else if (action === 'toggle-grade-schedule') {
+                gradeScheduleCollapsed = !gradeScheduleCollapsed;
+                render();
+            } else if (action === 'toggle-teacher-workload') {
+                workloadPanelCollapsed = !workloadPanelCollapsed;
                 render();
             } else if (action === 'toggle-grade-legend') {
                 gradeLegendCollapsed = !gradeLegendCollapsed;
@@ -5729,6 +6259,15 @@
             } else if (action === 'toggle-report-teacher-ranking') {
                 reportTeacherRankingCollapsed = !reportTeacherRankingCollapsed;
                 render();
+            } else if (action === 'open-sort-dialog') {
+                const dialog = document.getElementById('sort-apply-dialog');
+                if (!dialog) throw new Error('O formulário de Sort (beta) não está disponível.');
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'close-sort-dialog') {
+                const dialog = document.getElementById('sort-apply-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'remove-applied-sort') {
+                removeAppliedSort(button.dataset.sortApplicationId);
             } else if (action === 'close-slot-protection') {
                 const dialog = document.getElementById('slot-protection-dialog');
                 if (dialog && dialog.open) dialog.close();
@@ -5772,6 +6311,24 @@
                 const checkboxes = Array.from(document.querySelectorAll('#bulk-demand-form input[name="turma_ids"]'));
                 const shouldCheck = checkboxes.some(function (checkbox) { return !checkbox.checked; });
                 checkboxes.forEach(function (checkbox) { checkbox.checked = shouldCheck; });
+            } else if (action === 'add-sort-subgroup') {
+                const editor = document.getElementById('field-subgrupos');
+                const list = editor && editor.querySelector('.sort-subgroup-list');
+                if (!list) throw new Error('Não foi possível localizar os subgrupos deste sort.');
+                const index = list.querySelectorAll('[data-sort-subgroup]').length;
+                list.insertAdjacentHTML('beforeend', renderSortSubgroupRow({
+                    nome: 'Subgrupo ' + (index + 1),
+                    turma_ids: []
+                }, index));
+            } else if (action === 'remove-sort-subgroup') {
+                const row = button.closest('[data-sort-subgroup]');
+                const editor = document.getElementById('field-subgrupos');
+                if (!row || !editor) throw new Error('Não foi possível localizar o subgrupo para remover.');
+                row.remove();
+                editor.querySelectorAll('[data-sort-subgroup]').forEach(function (subgroup, index) {
+                    const heading = subgroup.querySelector('strong');
+                    if (heading) heading.textContent = 'Subgrupo ' + (index + 1);
+                });
             } else if (action === 'clear-record-filters') {
                 document.querySelectorAll('.record-filter-control').forEach(function (control) { control.value = ''; });
                 const search = document.getElementById('table-search');
@@ -5851,11 +6408,21 @@
                     notify(error.message || 'Não foi possível gerar a declaração docente.', 'danger');
                 });
             } else if (action === 'clear-grade') {
-                if (window.confirm('Limpar todas as aulas e o relatório deste semestre?')) {
+                if (window.confirm('Limpar todos os dados da grade deste semestre? Aulas, relatório, proteções, eventos e substituições serão removidos.')) {
+                    const semester = getSemester();
                     gradeEditingId = null;
                     gradeFocusDay = '';
                     gradeFocusSlotId = '';
-                    saveSimulation(getSemester(), { activeTurmaId: '', assignments: [], lastGenerationReport: null, qdpInfo: null, metodo: null });
+                    saveSimulation(semester, { activeTurmaId: '', assignments: [], lastGenerationReport: null, qdpInfo: null, metodo: null });
+                    saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (record) {
+                        return String(record.semestre_letivo || '') !== semester;
+                    }), 'ProtecoesGrade');
+                    saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (record) {
+                        return String(record.semestre_letivo || '') !== semester;
+                    }), 'EventosGrade');
+                    saveRecords(KEYS.substituicoes, readRecords(KEYS.substituicoes).filter(function (record) {
+                        return String(record.semestre_letivo || '') !== semester;
+                    }), 'SubstituicoesDocentes');
                     render();
                     notify('Grade do semestre limpa.', 'success');
                 }
@@ -5978,6 +6545,9 @@
             } else if (form.id === 'slot-protection-form') {
                 event.preventDefault();
                 saveSlotProtection(form);
+            } else if (form.id === 'sort-apply-form') {
+                event.preventDefault();
+                applySortFromForm(form);
             } else if (form.id === 'semester-form') {
                 event.preventDefault();
                 applySemesterFrom('semester-input');
