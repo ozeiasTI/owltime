@@ -5509,7 +5509,7 @@
                 phone: '+55 69 8442-5575',
                 phoneLink: '+556984425575',
                 email: 'biancademarco_smg@hotmail.com',
-                role: 'Visão prática escolar',
+                role: 'QA (Quality Assurance)',
                 description: 'Contribui com sua experiência na geração de horários e na carga horária docente, trazendo a realidade do dia a dia escolar para o projeto.',
                 color: 'about-person-practice'
             }
