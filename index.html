@@ -28,10 +28,9 @@
             </a>
         </div>
         <div class="topbar-right">
-            <span class="local-badge"><i class="bi bi-shield-check"></i> Dados neste navegador</span>
-            <button type="button" class="btn btn-sm btn-outline-light" data-action="export-backup">
-                <i class="bi bi-download"></i><span class="d-none d-sm-inline"> Backup</span>
-            </button>
+            <span class="active-semester-display" id="active-semester-display">
+                <i class="bi bi-calendar2-week" aria-hidden="true"></i> Semestre ativo
+            </span>
         </div>
     </header>
 
@@ -52,8 +51,7 @@
                 escola</a>
             <a class="side-link" href="#/demandas" data-route="demandas"><i class="bi bi-journal-plus"></i> Demandas das
                 turmas</a>
-            <a class="side-link" href="#/vinculos" data-route="vinculos"><i class="bi bi-link-45deg"></i> Vínculos
-                professor × disciplina</a>
+            <a class="side-link" href="#/vinculos" data-route="vinculos"><i class="bi bi-link-45deg"></i> Vincular Professor</a>
             <a class="side-link" href="#/disponibilidade" data-route="disponibilidade"><i
                     class="bi bi-calendar2-check"></i> PRD e disponibilidade</a>
             <a class="side-link" href="#/peculiaridades" data-route="peculiaridades"><i
@@ -69,12 +67,9 @@
                 manuais</a>
             <a class="side-link" href="#/relatorios" data-route="relatorios"><i class="bi bi-bar-chart"></i>
                 Relatórios</a>
-            <a class="side-link" href="#/notas" data-route="notas"><i class="bi bi-journal-text"></i> Bloco de notas</a>
-
             <div class="nav-group-label">Sistema</div>
             <a class="side-link" href="#/armazenamento" data-route="armazenamento"><i class="bi bi-hdd-stack"></i>
                 Armazenamento e backup</a>
-            <a class="side-link" href="#/ajuda" data-route="ajuda"><i class="bi bi-question-circle"></i> Ajuda</a>
             <a class="side-link" href="#/sobre" data-route="sobre"><i class="bi bi-info-circle"></i> Sobre</a>
         </aside>
 
@@ -84,6 +79,11 @@
             <footer class="app-footer">Owltime Local <span>·</span> executado no seu navegador</footer>
         </main>
     </div>
+
+    <button class="back-to-top no-print" id="back-to-top" type="button" aria-label="Voltar ao topo"
+        title="Voltar ao topo" hidden>
+        <i class="bi bi-arrow-up" aria-hidden="true"></i>
+    </button>
 
     <script src="assets/js/qdp_engine.js"></script>
     <script src="assets/js/catalog-storage.js"></script>

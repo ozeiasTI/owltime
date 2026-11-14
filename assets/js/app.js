@@ -39,6 +39,7 @@
     let gradeScheduleCollapsed = false;
     let workloadPanelCollapsed = false;
     let gradeLegendCollapsed = true;
+    let manualLegendCollapsed = true;
     let reportTeacherRankingCollapsed = true;
     let workloadTeacherFilter = '';
     let workloadCourseFilter = '';
@@ -909,23 +910,44 @@
         }
     };
 
-    const navLabels = {
-        dashboard: ['Painel', 'bi-grid-1x2'],
-        grade: ['Grade oficial', 'bi-calendar3'],
-        relatorios: ['Relatórios', 'bi-bar-chart'],
-        armazenamento: ['Armazenamento e backup', 'bi-hdd-stack'],
-        ajuda: ['Ajuda', 'bi-question-circle']
-    };
-
     function formatDate(value) {
         if (!value) return '—';
         const date = new Date(value);
         return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('pt-BR');
     }
 
-    function pageHeader(title, icon, description, actions) {
+    function pageHeader(title, icon, description, actions, printScope, hidePrint) {
+        const hasDedicatedPdf = ['Grade oficial', 'Ajustes manuais', 'Relatórios'].includes(title);
+        const printAction = hasDedicatedPdf || hidePrint ? '' :
+            '<button class="btn btn-sm btn-danger no-print" type="button" data-action="print-module-pdf" data-print-scope="' +
+            h(printScope || 'page') + '" data-print-title="' + h(title) +
+            '" title="Na janela de impressão, escolha Salvar como PDF."><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Gerar PDF</button>';
+        const pageActions = actions || printAction
+            ? '<div class="page-heading-actions">' + (actions || '') + printAction + '</div>'
+            : '';
         return '<div class="page-heading"><div><h1><i class="bi ' + h(icon) + ' page-icon"></i>' + h(title) + '</h1>' +
-            (description ? '<p>' + h(description) + '</p>' : '') + '</div>' + (actions || '') + '</div>';
+            (description ? '<p>' + h(description) + '</p>' : '') +
+            '<p class="module-print-meta print-only">Documento gerado pelo Owltime em ' + h(new Date().toLocaleDateString('pt-BR')) + '.</p>' +
+            '</div>' + pageActions + '</div>';
+    }
+
+    function printModulePdf(scope, title) {
+        const recordsOnly = scope === 'records';
+        const previousTitle = document.title;
+        document.body.classList.toggle('print-records-only', recordsOnly);
+        const cleanup = function () {
+            document.body.classList.remove('print-records-only');
+            document.title = previousTitle;
+        };
+        window.addEventListener('afterprint', cleanup, { once: true });
+        document.title = 'Owltime - ' + String(title || 'Módulo');
+        try {
+            window.print();
+        } catch (error) {
+            window.removeEventListener('afterprint', cleanup);
+            cleanup();
+            throw error;
+        }
     }
 
     function renderDataSectionToggle(key, showLabel, hideLabel) {
@@ -994,7 +1016,7 @@
             renderDataSectionContent('dashboard-availability', '<div class="card-body">' + (dayRows
                 ? '<div class="dashboard-availability-days">' + dayRows + '</div>'
                 : '<div class="empty-state py-3"><i class="bi bi-calendar2-check"></i>Nenhuma indisponibilidade ou PRD cadastrado para ' + h(getSemester()) + '.</div>') +
-            '</div>') + '</div>';
+                '</div>') + '</div>';
     }
 
     function renderDashboard() {
@@ -1018,24 +1040,41 @@
         ].map(function (item) {
             return '<div class="col-sm-6 col-xl-3"><a class="quick-link" href="#/' + item[2] + '"><i class="bi ' + item[1] + '"></i><strong>' + item[0] + '</strong></a></div>';
         }).join('');
+        const developmentMilestones = [
+            ['Novembro de 2025', 'Idealização do projeto'],
+            ['Janeiro de 2026', 'Projeção de Módulos'],
+            ['Fevereiro de 2026', 'Escolha de Tecnologias'],
+            ['Março de 2026', 'Definição de Hospedagem e Armazenamento'],
+            ['Março a novembro de 2026', 'Construção base do QDP'],
+            ['Maio de 2026', 'Construção de Classes de Relatórios'],
+            ['Novembro de 2026', 'Repaginação com novos módulos'],
+            ['Novembro de 2026', 'Estilização final'],
+            ['Novembro de 2026', 'Submissão de pedido de certificação INPI']
+        ].map(function (milestone) {
+            return '<li><span class="development-timeline-date">' + h(milestone[0]) +
+                '</span><strong>' + h(milestone[1]) + '</strong></li>';
+        }).join('');
         const recentNotes = readRecords(KEYS.notas).slice().sort(function (a, b) {
             return String(b.updated_at || '').localeCompare(String(a.updated_at || ''));
         }).slice(0, 4);
         const lastGenerationCard = lastGeneration
             ? '<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Última grade gerada pelo QDP</strong><a class="btn btn-sm btn-outline-primary" href="#/grade">Abrir grade oficial</a></div>' +
-                '<div class="card-body"><div class="row g-3"><div class="col-sm-6 col-lg-3"><span class="text-muted small">Gerada em</span><div class="fw-semibold">' + h(formatDate(lastGeneration.geradoEm)) + '</div></div>' +
-                '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas previstas</span><div class="fw-semibold">' + h(lastGeneration.totalPrevistas || 0) + '</div></div>' +
-                '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas alocadas</span><div class="fw-semibold">' + h(lastGeneration.totalAtendidas || 0) + '</div></div>' +
-                '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Pendências</span><div class="fw-semibold">' + h(lastGeneration.totalPendentes || 0) + ' · ' + h(lastGeneration.percentual || 0) + '% atendidas</div></div></div>' +
-                (gradeState.assignments.length ? '<div class="small text-muted mt-3">A grade atual contém ' + gradeState.assignments.length + ' aula(s), incluindo ajustes manuais posteriores.</div><a class="btn btn-sm btn-outline-secondary mt-2" href="#/ajustes">Abrir ajustes manuais</a>' : '') + '</div></div>'
+            '<div class="card-body"><div class="row g-3"><div class="col-sm-6 col-lg-3"><span class="text-muted small">Gerada em</span><div class="fw-semibold">' + h(formatDate(lastGeneration.geradoEm)) + '</div></div>' +
+            '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas previstas</span><div class="fw-semibold">' + h(lastGeneration.totalPrevistas || 0) + '</div></div>' +
+            '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas alocadas</span><div class="fw-semibold">' + h(lastGeneration.totalAtendidas || 0) + '</div></div>' +
+            '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Pendências</span><div class="fw-semibold">' + h(lastGeneration.totalPendentes || 0) + ' · ' + h(lastGeneration.percentual || 0) + '% atendidas</div></div></div>' +
+            (gradeState.assignments.length ? '<div class="small text-muted mt-3">A grade atual contém ' + gradeState.assignments.length + ' aula(s), incluindo ajustes manuais posteriores.</div><a class="btn btn-sm btn-outline-secondary mt-2" href="#/ajustes">Abrir ajustes manuais</a>' : '') + '</div></div>'
             : '<div class="alert alert-info mb-4">Ainda não há uma grade QDP gerada para este semestre. <a href="#/grade" class="alert-link">Acesse a Grade oficial</a> para gerar.</div>';
-        return pageHeader('Painel', 'bi-grid-1x2', 'Organize dados escolares e monte grades com armazenamento local.', '<span class="badge text-bg-primary align-self-center">Semestre ' + h(getSemester()) + '</span>') +
+        return pageHeader('Painel', 'bi-grid-1x2', 'Organize dados escolares e monte grades com armazenamento local.', '<span class="badge text-bg-primary align-self-center">Semestre ' + h(getSemester()) + '</span>', '', true) +
             '<div class="alert local-callout"><i class="bi bi-shield-check me-2"></i>Sem conta e sem servidor: seus registros ficam no armazenamento deste navegador. Faça backups periódicos em Armazenamento e backup.</div>' +
             '<div class="row g-3 mb-4">' + stats + '</div>' +
             '<div class="row g-3 mb-4"><div class="col-12">' + renderAvailabilityDashboardCard() + '</div></div>' +
             lastGenerationCard +
-            '<div class="d-flex align-items-center justify-content-between mb-2"><h2 class="h5 mb-0">Acesso rápido</h2><a href="#/ajuda" class="small">Como funciona</a></div>' +
+            '<div class="d-flex align-items-center justify-content-between mb-2"><h2 class="h5 mb-0">Acesso rápido</h2><a href="#/sobre" class="small">Como funciona</a></div>' +
             '<div class="row g-3 mb-4">' + links + '</div>' +
+            '<section class="card development-timeline-card mb-4"><div class="card-header d-flex align-items-center gap-2">' +
+            '<i class="bi bi-clock-history" aria-hidden="true"></i><strong>Linha do tempo do desenvolvimento</strong></div>' +
+            '<div class="card-body"><ol class="development-timeline">' + developmentMilestones + '</ol></div></section>' +
             '<div class="card"><div class="card-header d-flex justify-content-between align-items-center gap-2"><span>Notas recentes</span><div class="d-flex gap-2">' +
             renderDataSectionToggle('dashboard-recent-notes', 'Mostrar notas', 'Recolher notas') +
             '<a class="btn btn-sm btn-outline-primary" href="#/notas">Abrir bloco de notas</a></div></div>' +
@@ -1177,7 +1216,7 @@
         }
         const label = field.type === 'multi-check' || field.type === 'sort-groups'
             ? '<div class="form-label" id="' + (field.type === 'sort-groups' ? id + '-label' : id) + '">' +
-                h(field.label) + (field.required ? ' *' : '') + '</div>'
+            h(field.label) + (field.required ? ' *' : '') + '</div>'
             : '<label class="form-label" for="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</label>';
         return '<div class="' + (field.type === 'sort-groups' ? 'col-12' : 'col-md-6') + '">' + label + control +
             (field.help ? '<div class="form-text">' + h(field.help) + '</div>' : '') + '</div>';
@@ -2069,7 +2108,7 @@
             const label = row.record
                 ? route === 'vinculos'
                     ? (row.professorName || nameById(KEYS.professores, row.record.professor_id, 'Professor')) + ' · ' +
-                        (row.disciplineName || nameById(KEYS.disciplinas, row.record.disciplina_id, 'Disciplina'))
+                    (row.disciplineName || nameById(KEYS.disciplinas, row.record.disciplina_id, 'Disciplina'))
                     : row.record.nome || row.record.titulo || row.record.dia_semana || ('ID ' + row.record.id)
                 : '—';
             const actionLabel = row.error ? 'Erro' : row.update ? 'Atualizar' : 'Novo';
@@ -2246,8 +2285,8 @@
         }).join('');
         const missingDisciplines = scope.unlinkedDisciplines.length
             ? '<div class="alert alert-warning py-2 mb-3"><strong>Disciplinas sem professor vinculado:</strong> ' +
-                scope.unlinkedDisciplines.map(function (demand) { return h(demand.disciplina_nome); }).join(', ') +
-                '. Vincule professores para incluí-los no acompanhamento de PRD.</div>'
+            scope.unlinkedDisciplines.map(function (demand) { return h(demand.disciplina_nome); }).join(', ') +
+            '. Vincule professores para incluí-los no acompanhamento de PRD.</div>'
             : '';
         const summary = !availabilityCourseId
             ? '<div class="empty-state py-3"><i class="bi bi-funnel"></i>Selecione um curso para ver professores vinculados às disciplinas demandadas.</div>'
@@ -2258,9 +2297,9 @@
                     : '';
         const assignmentForm = availabilityCourseId && scope.teachers.length
             ? '<form id="prd-form" class="prd-assignment-form"><div><label class="form-label" for="prd-professor">Professor vinculado</label><select class="form-select" id="prd-professor" name="professor_id" required><option value="">Selecione</option>' +
-                teacherOptions + '</select></div><div><label class="form-label" for="prd-day">Dia de PRD</label><select class="form-select" id="prd-day" name="dia_semana" required>' +
-                DAYS.map(function (day) { return '<option value="' + h(day) + '">' + h(day) + '</option>'; }).join('') +
-                '</select></div><button type="submit" class="btn btn-primary align-self-end"><i class="bi bi-calendar-plus me-1"></i>Atribuir PRD</button></form>'
+            teacherOptions + '</select></div><div><label class="form-label" for="prd-day">Dia de PRD</label><select class="form-select" id="prd-day" name="dia_semana" required>' +
+            DAYS.map(function (day) { return '<option value="' + h(day) + '">' + h(day) + '</option>'; }).join('') +
+            '</select></div><button type="submit" class="btn btn-primary align-self-end"><i class="bi bi-calendar-plus me-1"></i>Atribuir PRD</button></form>'
             : '';
         return '<section class="card mb-4 prd-planning"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><div><strong>Plano de Trabalho Docente (PRD)</strong>' +
             '<div class="small text-muted fw-normal">Registre atividades de ensino, pesquisa e extensão em dias sem aulas; cada PRD bloqueia o dia inteiro na geração da grade.</div></div>' +
@@ -2275,8 +2314,8 @@
             missingDisciplines + assignmentForm + summary +
             (availabilityCourseId && scope.teachers.length
                 ? '<div class="d-flex justify-content-between align-items-center gap-2 mt-3 mb-2"><h2 class="h6 mb-0">Acompanhamento dos professores (' +
-                    scope.teachers.length + ')</h2>' + renderDataSectionToggle('availability-teachers', 'Mostrar professores', 'Recolher professores') + '</div>' +
-                    renderDataSectionContent('availability-teachers', '<div class="prd-teacher-list">' + teacherRows + '</div>')
+                scope.teachers.length + ')</h2>' + renderDataSectionToggle('availability-teachers', 'Mostrar professores', 'Recolher professores') + '</div>' +
+                renderDataSectionContent('availability-teachers', '<div class="prd-teacher-list">' + teacherRows + '</div>')
                 : '') +
             '</div></section>';
     }
@@ -2377,7 +2416,7 @@
                 const minutes = Math.max(0, (Number(String(slot.hora_fim || '').slice(0, 2)) * 60 +
                     Number(String(slot.hora_fim || '').slice(3, 5))) -
                     (Number(String(slot.hora_inicio || '').slice(0, 2)) * 60 +
-                    Number(String(slot.hora_inicio || '').slice(3, 5))));
+                        Number(String(slot.hora_inicio || '').slice(3, 5))));
                 const conflict = conflicts.has(String(slot.id));
                 return '<div class="schedule-period' + (conflict ? ' has-conflict' : '') + '"><div class="schedule-period-time">' +
                     '<strong>' + h(slot.hora_inicio || '—') + '–' + h(slot.hora_fim || '—') + '</strong>' +
@@ -2394,8 +2433,8 @@
             '<div class="d-flex flex-wrap align-items-center gap-2"><span class="schedule-type-badge schedule-type-class">Aula</span><span class="schedule-type-badge schedule-type-break">Intervalo</span>' +
             renderDataSectionToggle('schedule-planning', 'Mostrar horários', 'Recolher horários') + '</div></div>' +
             renderDataSectionContent('schedule-planning', '<div class="card-body"><div class="row g-2 mb-3">' + stats + '</div>' +
-            (conflicts.size ? '<div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle me-1"></i>Há horários sobrepostos no mesmo dia. Edite os períodos destacados para evitar conflitos na grade.</div>' : '') +
-            '<div class="schedule-week-grid">' + dayCards + '</div></div>') + '</section>';
+                (conflicts.size ? '<div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle me-1"></i>Há horários sobrepostos no mesmo dia. Edite os períodos destacados para evitar conflitos na grade.</div>' : '') +
+                '<div class="schedule-week-grid">' + dayCards + '</div></div>') + '</section>';
     }
 
     function noteStatusLabel(status) {
@@ -2436,8 +2475,8 @@
                 const priority = note.prioridade || 'media';
                 const due = note.prazo
                     ? '<span class="note-due' + (note.status !== 'concluido' && note.prazo < today ? ' is-overdue' : '') + '">' +
-                        '<i class="bi bi-calendar-event"></i>' + h(new Date(note.prazo + 'T00:00:00').toLocaleDateString('pt-BR')) +
-                        (note.status !== 'concluido' && note.prazo < today ? ' · vencida' : '') + '</span>'
+                    '<i class="bi bi-calendar-event"></i>' + h(new Date(note.prazo + 'T00:00:00').toLocaleDateString('pt-BR')) +
+                    (note.status !== 'concluido' && note.prazo < today ? ' · vencida' : '') + '</span>'
                     : '';
                 const nextStatus = column[0] === 'standby' ? 'andamento' : column[0] === 'andamento' ? 'concluido' : 'standby';
                 const nextLabel = column[0] === 'concluido' ? 'Reabrir' : column[0] === 'andamento' ? 'Concluir' : 'Iniciar';
@@ -2564,16 +2603,16 @@
         }, 0);
         const scheduleCopy = route === 'horarios'
             ? '<div class="card mb-4"><div class="card-header">Duplicar horários de um dia</div><div class="card-body">' +
-                '<p class="text-muted">Copie todos os períodos, incluindo intervalos, para outros dias. Horários que coincidirem ou se sobrepuserem aos já cadastrados serão ignorados.</p>' +
-                '<form id="copy-schedule-form"><div class="row g-3 align-items-end">' +
-                '<div class="col-md-4"><label class="form-label" for="copy-schedule-source">Copiar horários de</label><select class="form-select" id="copy-schedule-source" name="source" required>' +
-                DAYS.map(function (day) { return '<option value="' + h(day) + '">' + h(day) + '</option>'; }).join('') +
-                '</select></div><fieldset class="col-md-8"><legend class="form-label">Duplicar para</legend><div class="d-flex flex-wrap gap-3">' +
-                DAYS.map(function (day) {
-                    return '<label class="form-check"><input class="form-check-input" type="checkbox" name="target" value="' + h(day) + '"><span class="form-check-label">' + h(day) + '</span></label>';
-                }).join('') +
-                '</div></fieldset><div class="col-12"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-copy me-1"></i>Duplicar horários</button></div>' +
-                '</div></form></div></div>'
+            '<p class="text-muted">Copie todos os períodos, incluindo intervalos, para outros dias. Horários que coincidirem ou se sobrepuserem aos já cadastrados serão ignorados.</p>' +
+            '<form id="copy-schedule-form"><div class="row g-3 align-items-end">' +
+            '<div class="col-md-4"><label class="form-label" for="copy-schedule-source">Copiar horários de</label><select class="form-select" id="copy-schedule-source" name="source" required>' +
+            DAYS.map(function (day) { return '<option value="' + h(day) + '">' + h(day) + '</option>'; }).join('') +
+            '</select></div><fieldset class="col-md-8"><legend class="form-label">Duplicar para</legend><div class="d-flex flex-wrap gap-3">' +
+            DAYS.map(function (day) {
+                return '<label class="form-check"><input class="form-check-input" type="checkbox" name="target" value="' + h(day) + '"><span class="form-check-label">' + h(day) + '</span></label>';
+            }).join('') +
+            '</div></fieldset><div class="col-12"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-copy me-1"></i>Duplicar horários</button></div>' +
+            '</div></form></div></div>'
             : '';
         const schedulePlanning = route === 'horarios' ? renderSchedulePlanning(records) : '';
         const bulkDemandForm = route === 'demandas' ? renderBulkDemandForm() : '';
@@ -2591,18 +2630,18 @@
             : 'No XLSX, o status também tem lista suspensa.';
         const importTools = catalogImportSchemas[route]
             ? '<div class="card mb-4"><div class="card-header">Importar cadastro por planilha</div><div class="card-body">' +
-                '<p class="text-muted">Baixe um modelo, preencha uma linha por registro e envie o arquivo para revisar antes de importar. Se a planilha tiver a coluna ID, IDs existentes atualizam os registros; deixe o ID vazio para criar novos.</p>' +
-                '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-catalog-template" data-format="xlsx"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar modelo XLSX com listas</button>' +
-                '<button class="btn btn-outline-secondary" type="button" data-action="download-catalog-template" data-format="csv"><i class="bi bi-download me-1"></i>Baixar modelo CSV</button>' +
-                '<button class="btn btn-primary" type="button" data-action="pick-catalog-import"><i class="bi bi-upload me-1"></i>Enviar CSV ou XLSX</button>' +
-                '<input id="catalog-import-file" class="d-none" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div>' +
-                '<div class="form-text mt-2">' + h(importGuidance) + (route === 'professores' ? ' Para professores, o XLSX também oferece listas de titulação, carga semanal e limite diário.' : '') + ' CSV não oferece menus suspensos.</div></div></div>'
+            '<p class="text-muted">Baixe um modelo, preencha uma linha por registro e envie o arquivo para revisar antes de importar. Se a planilha tiver a coluna ID, IDs existentes atualizam os registros; deixe o ID vazio para criar novos.</p>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-catalog-template" data-format="xlsx"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar modelo XLSX com listas</button>' +
+            '<button class="btn btn-outline-secondary" type="button" data-action="download-catalog-template" data-format="csv"><i class="bi bi-download me-1"></i>Baixar modelo CSV</button>' +
+            '<button class="btn btn-primary" type="button" data-action="pick-catalog-import"><i class="bi bi-upload me-1"></i>Enviar CSV ou XLSX</button>' +
+            '<input id="catalog-import-file" class="d-none" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div>' +
+            '<div class="form-text mt-2">' + h(importGuidance) + (route === 'professores' ? ' Para professores, o XLSX também oferece listas de titulação, carga semanal e limite diário.' : '') + ' CSV não oferece menus suspensos.</div></div></div>'
             : '';
         const semesterTools = ['grupos', 'demandas', 'vinculos', 'disponibilidade', 'eventos'].includes(route)
             ? renderSemesterTools()
             : '';
         const semesterDialog = semesterTools ? renderSemesterCopyDialog(getSemester()) : '';
-        return pageHeader(spec.title, spec.icon, descriptionFor(route)) +
+        return pageHeader(spec.title, spec.icon, descriptionFor(route), '', 'records') +
             semesterTools +
             availabilityPlanning +
             importTools +
@@ -2617,18 +2656,18 @@
             '<div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (isEditing ? 'Salvar alterações' : 'Salvar') + '</button>' +
             (isEditing ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-edit">Cancelar</button>' : '') + '</div></form></div></div>' +
             scheduleCopy +
-            '<div class="card"><div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap"><strong>Registros (<span id="table-visible-count">' + records.length + '</span>)' +
+            '<div class="card module-records-card"><div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap"><strong>Registros (<span id="table-visible-count">' + records.length + '</span>)' +
             (route === 'demandas' ? ' · <span id="demand-visible-lessons">' + totalDemandLessons + '</span> aulas semanais previstas' : '') + '</strong>' +
-            '<div class="d-flex flex-wrap align-items-center gap-2">' +
+            '<div class="d-flex flex-wrap align-items-center gap-2 no-print">' +
             '<input id="table-search" class="form-control form-control-sm" style="max-width:260px" type="search" placeholder="Filtrar registros" aria-label="Filtrar registros">' +
             renderDataSectionToggle('records-' + route, 'Mostrar registros', 'Recolher registros') + '</div></div>' +
             recordFilters +
             renderDataSectionContent('records-' + route,
                 '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr>' +
-            spec.columns.map(function (column) { return '<th>' + h(column[1]) + '</th>'; }).join('') + '<th class="text-end">Ações</th></tr></thead><tbody>' +
-            (rows || '<tr><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-inbox"></i>Nenhum registro. Use o formulário acima para começar.</div></td></tr>') +
-            (rows ? '<tr id="record-filter-empty" hidden><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-funnel"></i>Nenhum registro encontrado com esses filtros.</div></td></tr>' : '') +
-            '</tbody></table></div>') + '</div>' + semesterDialog;
+                spec.columns.map(function (column) { return '<th>' + h(column[1]) + '</th>'; }).join('') + '<th class="text-end">Ações</th></tr></thead><tbody>' +
+                (rows || '<tr><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-inbox"></i>Nenhum registro. Use o formulário acima para começar.</div></td></tr>') +
+                (rows ? '<tr id="record-filter-empty" hidden><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-funnel"></i>Nenhum registro encontrado com esses filtros.</div></td></tr>' : '') +
+                '</tbody></table></div>') + '</div>' + semesterDialog;
     }
 
     function getRecordFilterDefinitions(route) {
@@ -2778,7 +2817,7 @@
                 h(filter.name) + '" type="' + inputType + '" placeholder="' +
                 h(filter.type === 'time' ? 'Qualquer horário' : filter.type === 'date' ? 'Qualquer data' : 'Contém...') + '"></div>';
         }).join('');
-        return '<div class="record-filter-panel px-3 pt-3"><div class="row g-2 align-items-end">' + controls +
+        return '<div class="record-filter-panel px-3 pt-3 no-print"><div class="row g-2 align-items-end">' + controls +
             '<div class="col-sm-6 col-lg-3"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="clear-record-filters">' +
             '<i class="bi bi-x-circle me-1"></i>Limpar filtros</button></div></div></div>';
     }
@@ -3020,10 +3059,10 @@
                     : '';
                 const protectionTarget = allowProtection && turmaId
                     ? ' data-protection-class-id="' + h(turmaId) + '" data-protection-day="' + h(day) +
-                        '" data-protection-slot-id="' + h(slot.id) + '" title="' +
-                        (protection && protection.tipo_marcacao === 'sort'
-                            ? 'Horário reservado pelo sort; remova a aplicação no botão correspondente'
-                            : 'Clique duas vezes para proteger ou alterar este horário') + '"'
+                    '" data-protection-slot-id="' + h(slot.id) + '" title="' +
+                    (protection && protection.tipo_marcacao === 'sort'
+                        ? 'Horário reservado pelo sort; remova a aplicação no botão correspondente'
+                        : 'Clique duas vezes para proteger ou alterar este horário') + '"'
                     : '';
                 const atSlot = assignments.filter(function (item) {
                     return String(item.horario_id) === String(slot.id) && String(item.dia_semana) === day &&
@@ -3032,18 +3071,18 @@
                 if (!atSlot.length) {
                     const emptyContent = protection
                         ? '<div class="grade-protection-entry"><strong>' +
-                            h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
-                                '</strong><small>' + (protection.tipo_marcacao === 'evento'
-                                    ? 'Evento aplicado às turmas do mesmo turno'
-                                    : protection.tipo_marcacao === 'sort'
-                                        ? 'Horário reservado'
-                                        : 'Horário protegido') +
-                                    (allowProtection && protection.tipo_marcacao !== 'sort' ? ' · duplo clique para alterar' : '') + '</small></div>'
+                        h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
+                        '</strong><small>' + (protection.tipo_marcacao === 'evento'
+                            ? 'Evento aplicado às turmas do mesmo turno'
+                            : protection.tipo_marcacao === 'sort'
+                                ? 'Horário reservado'
+                                : 'Horário protegido') +
+                        (allowProtection && protection.tipo_marcacao !== 'sort' ? ' · duplo clique para alterar' : '') + '</small></div>'
                         : editable && turmaId
-                        ? '<button class="grade-empty" type="button" data-action="select-slot" data-class-id="' + h(turmaId) + '" data-day="' + h(day) + '" data-slot-id="' + h(slot.id) + '" aria-label="Adicionar aula em ' + h(day) + ' às ' + h(slot.hora_inicio) + '"></button>'
-                        : allowProtection && turmaId
-                            ? '<span class="grade-protection-hint">Duplo clique para proteger</span>'
-                            : '<span class="text-muted">—</span>';
+                            ? '<button class="grade-empty" type="button" data-action="select-slot" data-class-id="' + h(turmaId) + '" data-day="' + h(day) + '" data-slot-id="' + h(slot.id) + '" aria-label="Adicionar aula em ' + h(day) + ' às ' + h(slot.hora_inicio) + '"></button>'
+                            : allowProtection && turmaId
+                                ? '<span class="grade-protection-hint">Duplo clique para proteger</span>'
+                                : '<span class="text-muted">—</span>';
                     return '<td' + dropTarget + protectionTarget + '>' + emptyContent + '</td>';
                 }
                 const entries = atSlot.map(function (assignment) {
@@ -3051,11 +3090,11 @@
                     const disciplineName = assignment.disciplina_nome || nameById(KEYS.disciplinas, disciplineId, 'Disciplina');
                     const teacherName = assignment.professor_nome || nameById(KEYS.professores, assignment.professor_id, 'Professor');
                     const className = nameById(KEYS.turmas, assignment.turma_id, 'Turma');
-                const entry = '<strong>' + h(disciplineName) + '</strong><small>' + (turmaId ? h(teacherName) : h(className + ' · ' + teacherName)) + '</small>';
-                return editable
-                    ? '<button class="grade-entry" type="button"' + (canDrag ? ' draggable="true" data-drag-assignment-id="' + h(assignment.id) + '"' : '') + ' data-action="edit-assignment" data-id="' + h(assignment.id) + '" style="--grade-subject-color:' + subjectColor(disciplineId) + '" title="' + (canDrag ? 'Arraste para mudar de horário ou clique para editar' : 'Editar aula') + '">' +
-                    entry + '</button>'
-                    : '<div class="grade-entry" style="--grade-subject-color:' + subjectColor(disciplineId) + '">' + entry + '</div>';
+                    const entry = '<strong>' + h(disciplineName) + '</strong><small>' + (turmaId ? h(teacherName) : h(className + ' · ' + teacherName)) + '</small>';
+                    return editable
+                        ? '<button class="grade-entry" type="button"' + (canDrag ? ' draggable="true" data-drag-assignment-id="' + h(assignment.id) + '"' : '') + ' data-action="edit-assignment" data-id="' + h(assignment.id) + '" style="--grade-subject-color:' + subjectColor(disciplineId) + '" title="' + (canDrag ? 'Arraste para mudar de horário ou clique para editar' : 'Editar aula') + '">' +
+                        entry + '</button>'
+                        : '<div class="grade-entry" style="--grade-subject-color:' + subjectColor(disciplineId) + '">' + entry + '</div>';
                 }).join('');
                 return '<td' + dropTarget + protectionTarget + '><div class="grade-cell-entries">' + entries + '</div></td>';
             }).join('');
@@ -3073,9 +3112,9 @@
             const pending = Math.max(0, demand - turmaAssignments.length);
             const status = teacherId ? '<span class="badge text-bg-info">Professor filtrado</span>'
                 : !demand ? '<span class="badge text-bg-secondary">Sem demanda</span>'
-                : pending ? '<span class="badge text-bg-warning">' + pending + ' pendente(s)</span>'
-                    : turmaAssignments.length > demand ? '<span class="badge text-bg-info">Excedente</span>'
-                        : '<span class="badge text-bg-success">Completa</span>';
+                    : pending ? '<span class="badge text-bg-warning">' + pending + ' pendente(s)</span>'
+                        : turmaAssignments.length > demand ? '<span class="badge text-bg-info">Excedente</span>'
+                            : '<span class="badge text-bg-success">Completa</span>';
             const classSummary = teacherId ? turmaAssignments.length + ' aula(s) do professor' : turmaAssignments.length + ' / ' + demand + ' aula(s)';
             return '<section class="card grade-class-card"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
                 '<strong>' + h(turma.nome) + '</strong><span class="small text-muted">' + classSummary + '</span>' + status + '</div>' +
@@ -3159,7 +3198,7 @@
             (hasAssignments ? '<div class="alert alert-warning">Limpe as aulas desta Grade oficial antes de aplicar um sort. As reservas já aplicadas podem ser removidas abaixo.</div>' : '') +
             (availableSorts.length
                 ? '<form id="sort-apply-form"><div class="mb-3"><label class="form-label" for="sort-apply-select">Sort</label><select class="form-select" id="sort-apply-select" name="sort_id" required><option value="">Selecione</option>' +
-                    options + '</select></div><button class="btn btn-primary" type="submit"' + (hasAssignments ? ' disabled' : '') + '>Sortear horários</button></form>'
+                options + '</select></div><button class="btn btn-primary" type="submit"' + (hasAssignments ? ' disabled' : '') + '>Sortear horários</button></form>'
                 : '<div class="alert alert-info mb-0">Cadastre um sort com turmas ativas antes de aplicá-lo.</div>') +
             (currentApplications ? '<hr><h3 class="h6">Reservas aplicadas neste semestre</h3><ul class="list-group">' + currentApplications + '</ul>' : '') +
             '<div class="d-flex justify-content-end mt-3"><button class="btn btn-outline-secondary" type="button" data-action="close-sort-dialog">Fechar</button></div></dialog>';
@@ -3770,7 +3809,7 @@
             renderDataSectionToggle('vinculo-coverage', 'Mostrar detalhes', 'Recolher detalhes') + '</div></div>' +
             '<div class="card-body">' + courseSelector + '<p class="small text-muted">Curso: ' + h(course ? course.nome : '') + ' · ' + classes.length + ' turma(s) ativa(s) · ' + demandedIds.size + ' disciplina(s) demandada(s)</p>' + emptyDemand +
             renderDataSectionContent('vinculo-coverage', '<div class="row g-4"><div class="col-md-6"><h2 class="h6">Professores sem vínculo com as disciplinas do curso (' + (demandedIds.size ? teachersWithoutDiscipline.length : '—') + ')</h2>' + (demandedIds.size ? missingTeachers : '') + '</div>' +
-            '<div class="col-md-6"><h2 class="h6">Disciplinas demandadas sem professor (' + disciplinesWithoutTeacher.length + ')</h2>' + missingDisciplines + '</div></div>') + '</div></div>';
+                '<div class="col-md-6"><h2 class="h6">Disciplinas demandadas sem professor (' + disciplinesWithoutTeacher.length + ')</h2>' + missingDisciplines + '</div></div>') + '</div></div>';
     }
 
     function getQdpConfig() {
@@ -4053,25 +4092,25 @@
         if (!pdfExportId && pdfRecords.length) pdfExportId = String(pdfRecords[0].id);
         const pdfExportControls = !editable
             ? '<div class="d-flex flex-wrap align-items-end gap-2 no-print"><div><label class="form-label mb-1" for="pdf-export-type">Exportar por</label><select class="form-select form-select-sm" id="pdf-export-type"><option value="turma"' + (pdfExportType === 'turma' ? ' selected' : '') + '>Turma</option><option value="professor"' + (pdfExportType === 'professor' ? ' selected' : '') + '>Professor</option></select></div>' +
-                '<div><label class="form-label mb-1" for="pdf-export-entity">' + (pdfExportType === 'turma' ? 'Turma' : 'Professor') + '</label><select class="form-select form-select-sm" id="pdf-export-entity">' +
-                (pdfExportType === 'turma' ? '<option value="todas"' + (pdfExportId === 'todas' ? ' selected' : '') + '>Todas as turmas</option>' : '') +
-                (pdfRecords.length ? pdfRecords.map(function (item) {
-                    return '<option value="' + h(item.id) + '"' + (String(item.id) === pdfExportId ? ' selected' : '') + '>' + h(item.nome) + '</option>';
-                }).join('') : '<option value="">Nenhum registro cadastrado</option>') + '</select></div>' +
-                '<button class="btn btn-sm btn-outline-primary" type="button" data-action="print-schedule-pdf"' + (pdfRecords.length ? '' : ' disabled') + '><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' +
-                '<button class="btn btn-sm btn-outline-primary" type="button" data-action="export-individual-schedule-csv"' +
-                    (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-filetype-csv me-1"></i>Baixar CSV individual</button>' +
-                '<button class="btn btn-sm btn-outline-primary" type="button" data-action="download-individual-schedule-pdf"' +
-                    (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-file-earmark-pdf me-1"></i>Baixar PDF individual</button>' +
-                '<button class="btn btn-sm btn-outline-primary" type="button" data-action="share-individual-schedule-pdf"' +
-                    (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-share me-1"></i>Compartilhar PDF</button>' +
-                (pdfExportType === 'turma' && pdfExportId === 'todas'
-                    ? '<button class="btn btn-sm btn-outline-primary" type="button" data-action="share-complete-schedule-pdf"' +
-                        (pdfRecords.length ? '' : ' disabled') + '><i class="bi bi-collection me-1"></i>Compartilhar grade completa</button>'
-                    : '') +
-                '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="share-individual-schedule"' +
-                    (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-share me-1"></i>Compartilhar resumo</button></div>' +
-                '<p class="form-text no-print mb-0">PDFs individuais ou a grade de todas as turmas podem ser enviados como arquivo pelo menu de compartilhamento do dispositivo. O Owltime mantém os dados localmente; publicação por link requer um serviço externo.</p>'
+            '<div><label class="form-label mb-1" for="pdf-export-entity">' + (pdfExportType === 'turma' ? 'Turma' : 'Professor') + '</label><select class="form-select form-select-sm" id="pdf-export-entity">' +
+            (pdfExportType === 'turma' ? '<option value="todas"' + (pdfExportId === 'todas' ? ' selected' : '') + '>Todas as turmas</option>' : '') +
+            (pdfRecords.length ? pdfRecords.map(function (item) {
+                return '<option value="' + h(item.id) + '"' + (String(item.id) === pdfExportId ? ' selected' : '') + '>' + h(item.nome) + '</option>';
+            }).join('') : '<option value="">Nenhum registro cadastrado</option>') + '</select></div>' +
+            '<button class="btn btn-sm btn-danger" type="button" data-action="print-schedule-pdf"' + (pdfRecords.length ? '' : ' disabled') + '><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="export-individual-schedule-csv"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-filetype-csv me-1"></i>Baixar CSV individual</button>' +
+            '<button class="btn btn-sm btn-danger" type="button" data-action="download-individual-schedule-pdf"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-file-earmark-pdf me-1"></i>Baixar PDF individual</button>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="share-individual-schedule-pdf"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-share me-1"></i>Compartilhar PDF</button>' +
+            (pdfExportType === 'turma' && pdfExportId === 'todas'
+                ? '<button class="btn btn-sm btn-outline-primary" type="button" data-action="share-complete-schedule-pdf"' +
+                (pdfRecords.length ? '' : ' disabled') + '><i class="bi bi-collection me-1"></i>Compartilhar grade completa</button>'
+                : '') +
+            '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="share-individual-schedule"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-share me-1"></i>Compartilhar resumo</button></div>' +
+            '<p class="form-text no-print mb-0">PDFs individuais ou a grade de todas as turmas podem ser enviados como arquivo pelo menu de compartilhamento do dispositivo. O Owltime mantém os dados localmente; publicação por link requer um serviço externo.</p>'
             : '';
         const turmaFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-turma-filter">Filtrar turma</label><select class="form-select" id="grade-turma-filter">' +
             '<option value="">Todas as turmas</option>' +
@@ -4089,20 +4128,19 @@
                 return '<option value="' + h(teacher.id) + '"' + (String(gradeTeacherFilter) === String(teacher.id) ? ' selected' : '') + '>' + h(teacher.nome) + '</option>';
             }).join('') + '</select></div>';
         const completionFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-completion-filter">Situação da grade</label><select class="form-select" id="grade-completion-filter">' +
-                '<option value=""' + (!effectiveCompletionFilter ? ' selected' : '') + '>Todas as grades</option>' +
-                '<option value="complete"' + (effectiveCompletionFilter === 'complete' ? ' selected' : '') + '>Grades completas</option>' +
-                '<option value="pending"' + (effectiveCompletionFilter === 'pending' ? ' selected' : '') + '>Com pendências</option>' +
-                '</select></div>';
+            '<option value=""' + (!effectiveCompletionFilter ? ' selected' : '') + '>Todas as grades</option>' +
+            '<option value="complete"' + (effectiveCompletionFilter === 'complete' ? ' selected' : '') + '>Grades completas</option>' +
+            '<option value="pending"' + (effectiveCompletionFilter === 'pending' ? ' selected' : '') + '>Com pendências</option>' +
+            '</select></div>';
         const legendContent = '<div class="grade-discipline-legend">' + disciplines.map(function (discipline) {
             return '<span class="grade-discipline-chip"><i style="--grade-subject-color:' + subjectColor(discipline.id) + '"></i>' + h(discipline.nome) + '</span>';
         }).join('') + '</div>';
-        const legend = editable
-            ? legendContent
-            : '<div class="grade-legend-panel"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-grade-legend" aria-controls="grade-discipline-legend-content" aria-expanded="' +
-                String(!gradeLegendCollapsed) + '"><i class="bi ' + (gradeLegendCollapsed ? 'bi-palette' : 'bi-chevron-up') +
-                ' me-1" aria-hidden="true"></i>' + (gradeLegendCollapsed ? 'Mostrar cores e disciplinas' : 'Ocultar cores e disciplinas') +
-                '</button><div id="grade-discipline-legend-content" class="mt-2"' + (gradeLegendCollapsed ? ' hidden' : '') + '>' +
-                legendContent + '</div></div>';
+        const legendCollapsed = editable ? manualLegendCollapsed : gradeLegendCollapsed;
+        const legend = '<div class="grade-legend-panel"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-grade-legend" aria-controls="grade-discipline-legend-content" aria-expanded="' +
+            String(!legendCollapsed) + '"><i class="bi ' + (legendCollapsed ? 'bi-palette' : 'bi-chevron-up') +
+            ' me-1" aria-hidden="true"></i>' + (legendCollapsed ? 'Mostrar disciplinas e cores' : 'Recolher disciplinas e cores') +
+            '</button><div id="grade-discipline-legend-content" class="mt-2"' + (legendCollapsed ? ' hidden' : '') + '>' +
+            legendContent + '</div></div>';
         const selectedFilterTurma = turmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); });
         const completionClassIds = new Set(turmas.filter(function (turma) {
             const demandedLessons = getDemandsForClass(turma.id, semester).reduce(function (total, demand) {
@@ -4143,9 +4181,9 @@
         const scheduleView = gradeDisciplineFilter
             ? collapsibleSchedule('Disciplina por professor',
                 h(nameById(KEYS.disciplinas, gradeDisciplineFilter, 'Disciplina')) +
-                    (selectedFilterTurma ? ' · ' + h(selectedFilterTurma.nome) : ' · todas as turmas') +
-                    (gradeTeacherFilter ? ' · ' + h(nameById(KEYS.professores, gradeTeacherFilter, 'Professor')) : '') +
-                    (editable ? ' · clique em uma aula para editar' : ''),
+                (selectedFilterTurma ? ' · ' + h(selectedFilterTurma.nome) : ' · todas as turmas') +
+                (gradeTeacherFilter ? ' · ' + h(nameById(KEYS.professores, gradeTeacherFilter, 'Professor')) : '') +
+                (editable ? ' · clique em uma aula para editar' : ''),
                 renderDisciplineTeacherSchedules(slots, filteredAssignments, gradeDisciplineFilter, gradeTurmaFilter, teachers, editable))
             : !selectedFilterTurma
                 ? collapsibleSchedule('Grade de todas as turmas', scheduleDescription,
@@ -4184,14 +4222,18 @@
             ? '<a class="btn btn-outline-secondary" href="#/grade"><i class="bi bi-arrow-left me-1"></i>Voltar à Grade oficial</a>'
             : '<a class="btn btn-outline-primary" href="#/ajustes"><i class="bi bi-pencil-square me-1"></i>Ajustes manuais</a>';
         const generationButton = editable ? '' :
-            '<button class="btn btn-primary" type="button" data-action="generate-grade"><i class="bi bi-magic me-1"></i>Gerar grade automaticamente (QDP)</button>' +
+            '<button class="btn btn-primary" type="button" data-action="generate-grade"><i class="bi bi-magic me-1"></i>Gerar grade</button>' +
             '<button class="btn btn-outline-primary" type="button" data-action="open-sort-dialog"' +
-                (hasAvailableSort || appliedSorts ? '' : ' disabled') + '><i class="bi bi-shuffle me-1"></i>Aplicar sort</button>';
+            (hasAvailableSort || appliedSorts ? '' : ' disabled') + '><i class="bi bi-shuffle me-1"></i>Aplicar sort</button>';
+        const primaryGradeActions = '<div class="grade-primary-actions">' + generationButton + navigation +
+            (editable ? '<button class="btn btn-outline-primary" type="button" data-action="export-grade">Exportar JSON</button>' : '') +
+            (editable ? '<button class="btn btn-danger" type="button" data-action="print"><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' : '') +
+            '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button></div>';
         return pageHeader(title, 'bi-calendar3', description) +
-            '<div class="card mb-3"><div class="card-body d-flex flex-wrap justify-content-between align-items-end gap-3">' +
-            semesterForm + '<div class="d-flex flex-wrap align-items-end gap-2">' + pdfExportControls + generationButton + navigation + '<button class="btn btn-outline-primary" type="button" data-action="export-grade">Exportar JSON</button>' +
-            '<button class="btn btn-outline-secondary" type="button" data-action="print">Imprimir</button>' +
-            '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button></div></div></div>' +
+            '<div class="card mb-3 grade-controls"><div class="card-body grade-controls-body">' +
+            primaryGradeActions +
+            '<div class="grade-secondary-controls d-flex flex-wrap justify-content-between align-items-end gap-3">' +
+            semesterForm + pdfExportControls + '</div></div></div>' +
             '<div class="card mb-3"><div class="card-body d-flex align-items-end justify-content-between flex-wrap gap-3">' + turmaFilter + disciplineFilter + teacherFilter + completionFilter + legend + '</div></div>' +
             scheduleView + (!editable ? renderSlotProtectionDialog() + renderSortApplyDialog(sortDefinitions, semester, assignments.length > 0) +
                 renderSemesterCopyDialog() : '') +
@@ -4257,7 +4299,7 @@
                 h(record.id) + '" aria-label="Editar substituição"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" type="button" data-action="delete-teacher-substitution" data-id="' +
                 h(record.id) + '" aria-label="Excluir substituição"><i class="bi bi-trash"></i></button></div></td></tr>';
         }).join('');
-        return '<section class="card mb-3 no-print"><div class="card-header"><strong>Vigências e substituições</strong></div><div class="card-body">' +
+        return '<section class="card mb-3 no-print teacher-substitution-beta"><div class="card-header d-flex align-items-center gap-2"><strong>Vigências e substituições</strong><span class="badge teacher-substitution-beta-badge">Beta · em desenvolvimento</span></div><div class="card-body">' +
             '<p class="small text-muted">Registre a substituição para uma turma e disciplina específicas. A grade original não é alterada; no PDF, o substituto assume essas aulas somente durante o período informado, sem duplicar a carga do titular.</p>' +
             '<form id="teacher-substitution-form" class="row g-3 align-items-end" data-edit-id="' + h(editingSubstitution ? editingSubstitution.id : '') + '">' +
             '<div class="col-md-3"><label class="form-label" for="substitution-class">Turma</label><select class="form-select" id="substitution-class" name="turma_id" required>' +
@@ -4278,8 +4320,8 @@
             '<div class="d-flex justify-content-between align-items-center gap-2 mt-4 mb-2"><strong>Substituições registradas (' + substitutions.length + ')</strong>' +
             renderDataSectionToggle('teacher-substitutions', 'Mostrar substituições', 'Recolher substituições') + '</div>' +
             renderDataSectionContent('teacher-substitutions', '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Substituição</th><th>Vigência</th><th>Aulas afetadas</th><th></th></tr></thead><tbody>' +
-            (rows || '<tr><td colspan="6" class="text-center text-muted py-3">Nenhuma substituição registrada para ' + h(semester) + '.</td></tr>') +
-            '</tbody></table></div>') + '</div></section>';
+                (rows || '<tr><td colspan="6" class="text-center text-muted py-3">Nenhuma substituição registrada para ' + h(semester) + '.</td></tr>') +
+                '</tbody></table></div>') + '</div></section>';
     }
 
     function renderSubstitutionSelectOptions(records, placeholder, selectedId) {
@@ -5039,8 +5081,8 @@
             renderDataSectionToggle('local-storage-keys', 'Mostrar chaves', 'Recolher chaves') +
             '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-storage-checks">Selecionar tudo</button></div></div>' +
             renderDataSectionContent('local-storage-keys', '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th></th><th>Chave</th><th>Módulo</th><th class="text-end">Tamanho</th><th></th></tr></thead><tbody>' +
-            (rows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-hdd"></i>Nenhum dado Owltime salvo neste navegador.</div></td></tr>') +
-            '</tbody></table></div>') + '</div>' + renderSemesterCopyDialog();
+                (rows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-hdd"></i>Nenhum dado Owltime salvo neste navegador.</div></td></tr>') +
+                '</tbody></table></div>') + '</div>' + renderSemesterCopyDialog();
     }
 
     function formatBytes(bytes) {
@@ -5324,10 +5366,10 @@
         }).join('');
         const generationCard = lastReport
             ? '<div class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Última geração automática</strong><span class="badge text-bg-' +
-                (lastReport.completo ? 'success' : 'warning') + '">' + (lastReport.completo ? 'Completa' : 'Com pendências') + '</span></div><div class="card-body d-flex flex-wrap gap-4">' +
-                '<span>Gerada em <strong>' + h(formatDate(lastReport.geradoEm || lastReport.generatedAt)) + '</strong></span><span>Previstas <strong>' +
-                h(lastReport.totalPrevistas || 0) + '</strong></span><span>Preenchidas <strong>' + h(lastReport.totalAtendidas || 0) +
-                '</strong></span><span>Pendentes na geração <strong>' + h(lastReport.totalPendentes || 0) + '</strong></span></div></div>'
+            (lastReport.completo ? 'success' : 'warning') + '">' + (lastReport.completo ? 'Completa' : 'Com pendências') + '</span></div><div class="card-body d-flex flex-wrap gap-4">' +
+            '<span>Gerada em <strong>' + h(formatDate(lastReport.geradoEm || lastReport.generatedAt)) + '</strong></span><span>Previstas <strong>' +
+            h(lastReport.totalPrevistas || 0) + '</strong></span><span>Preenchidas <strong>' + h(lastReport.totalAtendidas || 0) +
+            '</strong></span><span>Pendentes na geração <strong>' + h(lastReport.totalPendentes || 0) + '</strong></span></div></div>'
             : '';
         const recordedGenerationFailures = lastReport && Array.isArray(lastReport.falhas) ? lastReport.falhas : [];
         const visibleGenerationFailures = recordedGenerationFailures.filter(function (failure) {
@@ -5361,16 +5403,16 @@
         }).join('');
         const generationPendingSection = lastReport
             ? '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Pendências da última geração e possíveis causas</strong>' +
-                '<span class="badge text-bg-' + (Number(lastReport.totalPendentes || 0) ? 'warning' : 'success') + '">' +
-                h(lastReport.totalPendentes || 0) + ' aula(s) pendente(s)</span>' +
-                renderDataSectionToggle('report-pending-details', 'Mostrar detalhes', 'Recolher detalhes') + '</div>' +
-                renderDataSectionContent('report-pending-details', '<div class="card-body">' +
+            '<span class="badge text-bg-' + (Number(lastReport.totalPendentes || 0) ? 'warning' : 'success') + '">' +
+            h(lastReport.totalPendentes || 0) + ' aula(s) pendente(s)</span>' +
+            renderDataSectionToggle('report-pending-details', 'Mostrar detalhes', 'Recolher detalhes') + '</div>' +
+            renderDataSectionContent('report-pending-details', '<div class="card-body">' +
                 (Number(lastReport.totalPendentes || 0) === 0
                     ? '<p class="text-success mb-0">A última geração não deixou pendências.</p>'
                     : recordedGenerationFailures.length
                         ? (generationFailureRows
                             ? '<div class="table-responsive"><table class="table table-sm table-striped align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Previstas</th><th>Alocadas</th><th>Faltantes</th><th>Possível causa</th></tr></thead><tbody>' +
-                                generationFailureRows + '</tbody></table></div>'
+                            generationFailureRows + '</tbody></table></div>'
                             : '<p class="text-muted mb-0">Nenhuma pendência corresponde aos filtros atuais.</p>')
                         : '<div class="alert alert-warning mb-0">Esta geração não guardou o detalhamento das causas. Gere a grade novamente para registrar o diagnóstico das pendências.</div>') +
                 '</div>') + '</section>'
@@ -5405,7 +5447,7 @@
             '<div class="report-print-header"><span>OWLTIME · GESTÃO ESCOLAR</span><h1>Relatório de aulas por turma</h1><p>Semestre ' + h(semester) +
             ' · Emitido em ' + h(new Date().toLocaleDateString('pt-BR')) + '</p></div>' +
             '<div class="card mb-3 no-print"><div class="card-body d-flex flex-wrap align-items-end gap-3"><div><label class="form-label" for="report-semester">Semestre</label><input class="form-control" id="report-semester" value="' + h(semester) + '" pattern="\\d{4}/[12]" placeholder="AAAA/1"></div>' +
-            '<button class="btn btn-outline-primary" type="button" data-action="report-apply">Aplicar</button><button class="btn btn-outline-secondary" type="button" data-action="print"><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-action="report-apply">Aplicar</button><button class="btn btn-danger" type="button" data-action="print"><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' +
             '<button class="btn btn-outline-success" type="button" data-action="export-csv">Exportar grade CSV</button></div></div>' +
             '<div class="card mb-3 no-print"><div class="card-header d-flex align-items-center gap-2"><i class="bi bi-funnel"></i>Filtros dos relatórios</div><div class="card-body"><div class="row g-3 align-items-end">' +
             '<div class="col-md-6 col-xl-4"><label class="form-label" for="report-search">Buscar por professor, turma ou disciplina</label><input class="form-control" id="report-search" type="search" value="' + h(reportSearchQuery) + '" placeholder="Digite um nome"></div>' +
@@ -5439,25 +5481,34 @@
     function renderAbout() {
         const contributors = [
             {
-                name: 'Ozeias Souza',
+                name: 'Ozeias Meira Santos de Souza',
                 department: 'Gabinete',
-                icon: 'bi-code-slash',
-                role: 'Desenvolvedor',
+                photo: 'assets/img/fotos/ozeias.png',
+                phone: '+55 69 9272-6386',
+                phoneLink: '+556992726386',
+                email: 'ozeeiiaass@gmail.com',
+                role: 'Desenvolvedor FullStack',
                 description: 'Responsável pela construção e evolução do software.',
                 color: 'about-person-developer'
             },
             {
-                name: 'Welligton Dias',
+                name: 'Wellington Dias Lima',
                 department: 'Gabinete',
-                icon: 'bi-speedometer2',
+                photo: 'assets/img/fotos/well.jpg',
+                phone: '+55 69 9307-9832',
+                phoneLink: '+556993079832',
+                email: 'wellington.lima@ifro.edu.br',
                 role: 'Analista de performance',
                 description: 'Avalia a eficiência, a usabilidade e o desempenho da ferramenta.',
                 color: 'about-person-performance'
             },
             {
-                name: 'Bianca de Marco',
+                name: 'Bianca Luzia Carvalho de Marco',
                 department: 'SUPAE',
-                icon: 'bi-calendar2-week',
+                photo: 'assets/img/fotos/bianca.png',
+                phone: '+55 69 8442-5575',
+                phoneLink: '+556984425575',
+                email: 'biancademarco_smg@hotmail.com',
                 role: 'Visão prática escolar',
                 description: 'Contribui com sua experiência na geração de horários e na carga horária docente, trazendo a realidade do dia a dia escolar para o projeto.',
                 color: 'about-person-practice'
@@ -5465,39 +5516,131 @@
         ];
         const people = contributors.map(function (person) {
             return '<div class="col-md-6 col-xl-4"><article class="card about-person-card ' + person.color + '">' +
-                '<div class="card-body"><div class="about-person-icon"><i class="bi ' + person.icon + '" aria-hidden="true"></i></div>' +
-                '<h3 class="h5 mb-1">' + h(person.name) + '</h3>' +
-                '<span class="badge about-department-badge">Assistente de Administração · ' + h(person.department) + '</span>' +
+                '<div class="card-body"><div class="about-person-heading"><img class="about-person-photo" src="' + h(person.photo) +
+                '" alt="Foto de ' + h(person.name) + '" loading="lazy"><div><h3 class="h5 mb-1">' + h(person.name) + '</h3>' +
+                '<span class="badge about-department-badge">Assistente de Administração · ' + h(person.department) + '</span></div></div>' +
                 '<div class="about-project-role">' + h(person.role) + '</div>' +
-                '<p class="text-muted mb-0">' + h(person.description) + '</p></div></article></div>';
+                '<p class="text-muted about-person-description">' + h(person.description) + '</p>' +
+                '<div class="about-person-contacts"><a href="tel:' + h(person.phoneLink) + '"><i class="bi bi-telephone" aria-hidden="true"></i>' +
+                '<span>' + h(person.phone) + '</span></a><a href="mailto:' + h(person.email) + '"><i class="bi bi-envelope" aria-hidden="true"></i>' +
+                '<span>' + h(person.email) + '</span></a></div></div></article></div>';
+        }).join('');
+        const workflow = [
+            {
+                icon: 'bi-calendar2-range',
+                title: 'Organize o semestre',
+                description: 'Na Grade oficial, escolha o período letivo em que você vai trabalhar.',
+                items: [
+                    'Inicie o semestre sem copiar dados ou escolha qualquer semestre disponível como origem.',
+                    'Selecione quais grupos, demandas, vínculos e PRDs/disponibilidades deseja reaproveitar.',
+                    'A cópia cria registros no novo período e mantém o semestre de origem intacto.'
+                ]
+            },
+            {
+                icon: 'bi-people',
+                title: 'Monte a estrutura escolar',
+                description: 'Cadastre os elementos que identificam a organização da escola.',
+                items: [
+                    'Cursos e disciplinas formam a estrutura curricular.',
+                    'Professores podem ter cargas horárias e limites diários registrados.',
+                    'Turmas reúnem curso, ano, turno e matriz curricular; cadastros também podem ser importados por planilhas.'
+                ]
+            },
+            {
+                icon: 'bi-journal-check',
+                title: 'Prepare a distribuição das aulas',
+                description: 'Defina o que precisa ser ofertado e quem pode assumir cada aula.',
+                items: [
+                    'Cadastre os horários de aula e intervalos em cada dia da semana.',
+                    'Nas demandas, indique as disciplinas e a quantidade semanal prevista para cada turma.',
+                    'Vincule professores às disciplinas e registre PRDs e indisponibilidades para orientar a disponibilidade.'
+                ]
+            },
+            {
+                icon: 'bi-sliders',
+                title: 'Acrescente regras da escola',
+                description: 'Use os recursos opcionais para representar combinações e exceções da rotina escolar.',
+                items: [
+                    'Grupos organizam turmas relacionadas e podem delimitar vínculos de professores.',
+                    'Peculiaridades protegem horários específicos; eventos marcam períodos que se repetem na grade.',
+                    'Sort reserva horários para subgrupos de turmas e evita coincidências dentro do mesmo subgrupo.'
+                ]
+            },
+            {
+                icon: 'bi-magic',
+                title: 'Gere a grade e faça os ajustes',
+                description: 'O QDP calcula uma proposta usando as informações e restrições cadastradas.',
+                items: [
+                    'A geração distribui as aulas conforme as demandas, horários, vínculos e disponibilidades.',
+                    'Confira aulas preenchidas e pendências para identificar o que ainda precisa de atenção.',
+                    'Em Ajustes manuais, inclua, edite, mova ou remova aulas quando necessário.'
+                ]
+            },
+            {
+                icon: 'bi-file-earmark-bar-graph',
+                title: 'Acompanhe e proteja os dados',
+                description: 'Depois de gerar a grade, acompanhe os resultados e mantenha uma cópia segura do trabalho.',
+                items: [
+                    'Relatórios ajudam a verificar cobertura das demandas, pendências e distribuição da carga docente.',
+                    'Consulte ou exporte horários individuais, declarações e outros arquivos disponíveis no sistema.',
+                    'Os dados ficam no navegador atual: faça backups em Armazenamento e backup para poder restaurá-los.'
+                ]
+            }
+        ];
+        const workflowSteps = workflow.map(function (step, index) {
+            const items = step.items.map(function (item) {
+                return '<li>' + h(item) + '</li>';
+            }).join('');
+            return '<li class="about-flow-step"><div class="about-flow-card-heading"><span class="about-flow-icon"><i class="bi ' +
+                step.icon + '" aria-hidden="true"></i></span><span class="about-flow-number">ETAPA ' +
+                String(index + 1).padStart(2, '0') + '</span></div><div class="about-flow-copy"><h3>' + h(step.title) +
+                '</h3><p>' + h(step.description) + '</p><ul>' + items + '</ul></div></li>';
+        }).join('');
+        const projectDetails = [
+            { icon: 'bi-tag', label: 'Versão', value: '1.0.0', detail: 'Criado em Novembro de 2026' },
+            { icon: 'bi-code-slash', label: 'Tecnologias', value: 'JavaScript · HTML · CSS', detail: 'Lógica, marcação e apresentação da interface' },
+            { icon: 'bi-globe2', label: 'Hospedagem', value: 'GitHub Pages', detail: 'Aplicação web publicada como site estático' },
+            { icon: 'bi-database', label: 'Armazenamento', value: 'localStorage', detail: 'Dados guardados no navegador deste dispositivo' }
+        ];
+        const projectDetailCards = projectDetails.map(function (item) {
+            return '<article class="about-detail-card"><span class="about-detail-icon"><i class="bi ' + item.icon +
+                '" aria-hidden="true"></i></span><div><span class="about-detail-label">' + h(item.label) +
+                '</span><h3>' + h(item.value) + '</h3><p>' + h(item.detail) + '</p></div></article>';
         }).join('');
         return pageHeader('Sobre', 'bi-info-circle', 'As pessoas por trás do Owltime e as contribuições de cada uma.') +
             '<section class="about-page">' +
             '<div class="about-hero"><div class="about-hero-brand"><img src="assets/img/logo.png" alt="Logo do Owltime">' +
             '<div><span class="about-eyebrow">Projeto · 2026</span><h2>Owltime</h2>' +
-            '<p class="mb-0">Organização escolar com tecnologia e conhecimento da rotina educacional.</p></div></div>' +
+            '<p class="mb-2">Organização escolar com tecnologia e conhecimento da rotina educacional.</p>' +
+            '<a class="about-project-email" href="mailto:owltimesistema@gmail.com"><i class="bi bi-envelope" aria-hidden="true"></i> owltimesistema@gmail.com</a></div></div>' +
             '<div class="about-institution"><i class="bi bi-mortarboard" aria-hidden="true"></i>' +
             '<span>IFRO · Campus Colorado do Oeste</span></div></div>' +
             '<div class="about-team-heading"><div><span class="about-eyebrow">Nossa equipe</span>' +
             '<h2 class="h4 mb-1">Experiências que se complementam</h2>' +
             '<p class="text-muted mb-0">Desenvolvimento, desempenho e prática escolar reunidos em um só projeto.</p></div></div>' +
-            '<div class="row g-3">' + people + '</div></section>';
-    }
-
-    function renderHelp() {
-        return pageHeader('Ajuda e privacidade', 'bi-question-circle', 'O que significa operar o Owltime totalmente no navegador?') +
-            '<div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-header">Como seus dados funcionam</div><div class="card-body">' +
-            '<ul class="mb-0"><li class="mb-2">Cadastros, vínculos, demandas, notas e grades são salvos no <code>localStorage</code> deste navegador.</li>' +
-            '<li class="mb-2">O Owltime não envia seus cadastros para um servidor. Os dados não são sincronizados entre dispositivos e não podem ser recuperados pelo administrador do site.</li>' +
-            '<li class="mb-2">Use <strong>Armazenamento e backup → Exportar backup</strong> para baixar uma cópia e importe o arquivo para restaurá-la.</li>' +
-            '<li>Se limpar os dados do navegador ou trocar de perfil/dispositivo, importe um backup para recuperar o trabalho.</li></ul></div></div></div>' +
-            '<div class="col-lg-5"><div class="card"><div class="card-header">Limites importantes</div><div class="card-body"><div class="alert danger-callout mb-0">' +
-            'Sem servidor, login e senhas não oferecem autenticação segura. Qualquer pessoa com acesso ao mesmo perfil do navegador pode abrir e alterar os dados. Não use este app para guardar informações que exijam controle de acesso ou sigilo.' +
-            '</div></div></div></div>';
+            '<div class="row g-3">' + people + '</div>' +
+            '<section class="about-workflow"><div class="about-team-heading"><div><span class="about-eyebrow">Do planejamento ao acompanhamento</span>' +
+            '<h2 class="h4 mb-1">Como o Owltime funciona</h2><p class="text-muted mb-0">Conheça as etapas para sair dos cadastros e chegar à grade pronta para acompanhar.</p></div></div>' +
+            '<ol class="about-flow-list">' + workflowSteps + '</ol>' +
+            '<section class="about-project-details"><div class="about-team-heading"><div><span class="about-eyebrow">Sobre a aplicação</span>' +
+            '<h2 class="h4 mb-1">Tecnologia e funcionamento</h2><p class="text-muted mb-0">Uma aplicação web leve, acessada pelo navegador.</p></div></div>' +
+            '<div class="about-details-grid">' + projectDetailCards + '</div></section></section>' +
+            '<section class="about-data-section"><div class="about-team-heading"><div><span class="about-eyebrow">Privacidade e segurança</span>' +
+            '<h2 class="h4 mb-1">Sobre os seus dados</h2><p class="text-muted mb-0">Entenda onde as informações ficam e como evitar perdê-las.</p></div></div>' +
+            '<div class="about-data-grid"><article class="about-data-card"><span class="about-detail-icon"><i class="bi bi-device-hdd" aria-hidden="true"></i></span>' +
+            '<div><h3>Salvos neste navegador</h3><p>Cadastros, vínculos, demandas, notas e grades ficam no armazenamento local do navegador deste dispositivo. Os dados não são sincronizados entre dispositivos e o Owltime não os envia para um servidor.</p></div></article>' +
+            '<article class="about-data-card"><span class="about-detail-icon"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i></span>' +
+            '<div><h3>Faça backups regularmente</h3><p>Em <strong>Armazenamento e backup</strong>, exporte uma cópia e guarde-a em local seguro. Se limpar os dados do navegador ou trocar de dispositivo, importe o backup para recuperar o trabalho.</p></div></article>' +
+            '<article class="about-data-card about-data-warning"><span class="about-detail-icon"><i class="bi bi-shield-exclamation" aria-hidden="true"></i></span>' +
+            '<div><h3>Limites de acesso</h3><p>O Owltime não tem login nem controle de acesso. Qualquer pessoa que use o mesmo perfil do navegador pode ver ou alterar os registros. Evite armazenar informações que exijam sigilo ou proteção especial.</p></div></article></div></section></section>';
     }
 
     function render() {
         const route = (window.location.hash.replace(/^#\/?/, '').split('/')[0] || 'dashboard');
+        if (route === 'ajuda') {
+            window.location.hash = '#/sobre';
+            return;
+        }
         if (spreadsheetImport && spreadsheetImport.route !== route) spreadsheetImport = null;
         if (route !== 'grade' && route !== 'ajustes') {
             gradeEditingId = null;
@@ -5510,6 +5653,9 @@
         });
         try {
             if (!semesterMigrationComplete) migrateLegacySemesterRecords();
+            const activeSemesterDisplay = document.getElementById('active-semester-display');
+            if (activeSemesterDisplay) activeSemesterDisplay.innerHTML =
+                '<i class="bi bi-calendar2-week" aria-hidden="true"></i> Semestre ativo: ' + h(getSemester());
             editing = editing && editing.route === route ? editing : null;
             if (route === 'notas') view.innerHTML = renderNotes();
             else if (specs[route]) view.innerHTML = renderCrud(route);
@@ -5518,7 +5664,6 @@
             else if (route === 'ajustes') view.innerHTML = renderGrade(true);
             else if (route === 'relatorios') view.innerHTML = renderReports();
             else if (route === 'armazenamento') view.innerHTML = renderStorage();
-            else if (route === 'ajuda') view.innerHTML = renderHelp();
             else if (route === 'sobre') view.innerHTML = renderAbout();
             else view.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-circle"></i>Página não encontrada.</div>';
             sortSelectOptions(view);
@@ -5964,7 +6109,7 @@
                             text: (protection.tipo_marcacao === 'evento'
                                 ? 'EVENTO ESCOLAR\n'
                                 : protection.tipo_marcacao === 'sort' ? 'SORT\n' : 'HORÁRIO PROTEGIDO\n') + (protection.peculiaridade_nome ||
-                                nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção')),
+                                    nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção')),
                             style: 'protectionCell'
                         }
                         : { text: '—', color: '#94a3b8', alignment: 'center' });
@@ -6004,9 +6149,11 @@
             {
                 columns: [
                     { text: 'Semestre ' + schedule.semester, style: 'meta' },
-                    { text: lessons.length + (lessons.length === 1 ? ' aula' : ' aulas') + ' · ' +
-                        schedule.protections.length + (schedule.protections.length === 1 ? ' horário protegido' : ' horários protegidos'),
-                        style: 'meta', alignment: 'right' }
+                    {
+                        text: lessons.length + (lessons.length === 1 ? ' aula' : ' aulas') + ' · ' +
+                            schedule.protections.length + (schedule.protections.length === 1 ? ' horário protegido' : ' horários protegidos'),
+                        style: 'meta', alignment: 'right'
+                    }
                 ],
                 margin: [0, 0, 0, 18]
             }
@@ -6731,7 +6878,7 @@
         notify(summary.length
             ? 'Semestre ' + target + ' selecionado. Copiados: ' + summary.join(', ') + '.' + existingGroups + skippedEvents
             : 'Semestre ' + target + ' selecionado. Nenhum registro novo foi copiado; os registros existentes foram preservados.' + existingGroups + skippedEvents,
-        'success');
+            'success');
     }
 
     function handleClick(event) {
@@ -6753,7 +6900,8 @@
                 workloadPanelCollapsed = !workloadPanelCollapsed;
                 render();
             } else if (action === 'toggle-grade-legend') {
-                gradeLegendCollapsed = !gradeLegendCollapsed;
+                if (window.location.hash === '#/ajustes') manualLegendCollapsed = !manualLegendCollapsed;
+                else gradeLegendCollapsed = !gradeLegendCollapsed;
                 render();
             } else if (action === 'toggle-report-teacher-ranking') {
                 reportTeacherRankingCollapsed = !reportTeacherRankingCollapsed;
@@ -6946,6 +7094,8 @@
                 }
             } else if (action === 'export-grade') {
                 exportJson('owltime_grade_' + getSemester().replace('/', '-') + '.json', readSimulation(getSemester()));
+            } else if (action === 'print-module-pdf') {
+                printModulePdf(button.dataset.printScope || 'page', button.dataset.printTitle || '');
             } else if (action === 'print') window.print();
             else if (action === 'apply-report-filters') {
                 reportSearchQuery = document.getElementById('report-search').value.trim();
@@ -7346,6 +7496,22 @@
             console.error('Falha ao mover aula:', error);
             notify(error.message || 'Não foi possível mover a aula.', 'warning');
         }
+    }
+
+    const backToTopButton = document.getElementById('back-to-top');
+    function updateBackToTopVisibility() {
+        if (backToTopButton) backToTopButton.hidden = window.scrollY < 320;
+    }
+
+    if (backToTopButton) {
+        backToTopButton.addEventListener('click', function () {
+            const prefersReducedMotion = window.matchMedia &&
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        });
+        window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
+        window.addEventListener('resize', updateBackToTopVisibility);
+        updateBackToTopVisibility();
     }
 
     document.addEventListener('click', handleClick);
