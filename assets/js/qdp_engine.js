@@ -369,6 +369,66 @@ class QDPEngine {
     ).length;
   }
 
+  _pontuarAgrupamentoProfessorDisciplina(
+    assignments,
+    professorId,
+    disciplinaId,
+    dia,
+    horarioId,
+    horariosDoDia,
+  ) {
+    const ordemAtual = horariosDoDia.findIndex(
+      (horario) => Number(horario.id) === Number(horarioId),
+    );
+    if (ordemAtual < 0) return 0;
+
+    const aulasDaDisciplina = assignments.filter(
+      (aula) =>
+        Number(aula.professor_id) === Number(professorId) &&
+        Number(aula.disciplina_id) === Number(disciplinaId),
+    );
+    const aulasDaDisciplinaNoDia = aulasDaDisciplina.filter(
+      (aula) => aula.dia_semana === dia,
+    );
+    const diasDaDisciplina = new Set(
+      aulasDaDisciplina.map((aula) => aula.dia_semana),
+    );
+    let score = 0;
+
+    if (aulasDaDisciplinaNoDia.length) {
+      score += 8000 + Math.min(aulasDaDisciplinaNoDia.length, 3) * 3000;
+    } else if (diasDaDisciplina.size) {
+      score -= Math.min(diasDaDisciplina.size, 3) * 3500;
+    }
+
+    for (const aula of aulasDaDisciplinaNoDia) {
+      const ordemExistente = horariosDoDia.findIndex(
+        (horario) => Number(horario.id) === Number(aula.horario_id),
+      );
+      if (ordemExistente < 0) continue;
+      const distancia = Math.abs(ordemExistente - ordemAtual);
+      if (distancia === 1) score += 14000;
+      else if (distancia === 2) score -= 1500;
+    }
+
+    const aulasDoProfessorNoDia = assignments.filter(
+      (aula) =>
+        Number(aula.professor_id) === Number(professorId) &&
+        aula.dia_semana === dia &&
+        Number(aula.disciplina_id) !== Number(disciplinaId),
+    );
+    for (const aula of aulasDoProfessorNoDia) {
+      const ordemExistente = horariosDoDia.findIndex(
+        (horario) => Number(horario.id) === Number(aula.horario_id),
+      );
+      if (ordemExistente >= 0 && Math.abs(ordemExistente - ordemAtual) === 1) {
+        score += 3500;
+      }
+    }
+
+    return score;
+  }
+
   // ==========================================
   // CORREÇÃO: Verificação de alocação com limite flexível
   // ==========================================
@@ -640,7 +700,9 @@ class QDPEngine {
 
     const horariosPorDia = {};
     this.dias.forEach((dia) => {
-        horariosPorDia[dia] = this.horarios.filter((h) => h.dia_semana === dia);
+        horariosPorDia[dia] = this.horarios
+            .filter((h) => h.dia_semana === dia)
+            .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
     });
 
     let totalAlocadas = 0;
@@ -755,35 +817,14 @@ class QDPEngine {
                         ).length;
                         score -= aulasTurmaDia * 1000;
 
-                        // Preferir horários adjacentes às aulas já atribuídas ao professor.
-                        const periodosOrdenados = horariosDoDia.slice().sort(
-                            (a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)),
+                        score += this._pontuarAgrupamentoProfessorDisciplina(
+                            assignments,
+                            primario.id,
+                            demanda.disciplinaId,
+                            dia,
+                            horario.id,
+                            horariosDoDia,
                         );
-                        const ordemAtual = periodosOrdenados.findIndex(
-                            (item) => Number(item.id) === Number(horario.id),
-                        );
-                        const temAulaConsecutivaDoProfessor = ordemAtual >= 0 && assignments.some((a) => {
-                            if (Number(a.professor_id) !== Number(primario.id) || a.dia_semana !== dia) return false;
-                            const ordemExistente = periodosOrdenados.findIndex(
-                                (item) => Number(item.id) === Number(a.horario_id),
-                            );
-                            return ordemExistente >= 0 && Math.abs(ordemExistente - ordemAtual) === 1;
-                        });
-                        if (temAulaConsecutivaDoProfessor) score += 6500;
-
-                        // Distribuir ao longo da semana
-                        const diasComAula = new Set();
-                        assignments
-                            .filter(
-                                (a) =>
-                                    Number(a.turma_id) === Number(demanda.turmaId) &&
-                                    Number(a.disciplina_id) === Number(demanda.disciplinaId),
-                            )
-                            .forEach((a) => diasComAula.add(a.dia_semana));
-
-                        if (diasComAula.size < 3 && aulasJaAlocadas > 0) {
-                            score += 1000;
-                        }
 
                         score += Math.random() * 0.1;
 
@@ -927,7 +968,9 @@ class QDPEngine {
 
     const horariosPorDia = {};
     this.dias.forEach((dia) => {
-        horariosPorDia[dia] = this.horarios.filter((h) => h.dia_semana === dia);
+        horariosPorDia[dia] = this.horarios
+            .filter((h) => h.dia_semana === dia)
+            .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
     });
 
     let fallbackAlocadas = 0;
@@ -983,7 +1026,7 @@ class QDPEngine {
         }
 
         for (let aula = 0; aula < faltam; aula++) {
-            let slotEncontrado = null;
+            const candidatos = [];
 
             for (const dia of this.dias) {
                 const horariosDoDia = horariosPorDia[dia] || [];
@@ -1024,7 +1067,8 @@ class QDPEngine {
                     )
                         continue;
 
-                    for (const prof of profsOrdenados) {
+                    for (let indiceProf = 0; indiceProf < profsOrdenados.length; indiceProf++) {
+                        const prof = profsOrdenados[indiceProf];
                         if (!this._professorDisponivel(prof.id, dia, horario.id))
                             continue;
 
@@ -1053,14 +1097,43 @@ class QDPEngine {
                         )
                             continue;
 
-                        slotEncontrado = { dia, horarioId: horario.id, professor: prof };
-                        break;
+                        const aulasProfDia = assignments.filter(
+                            (a) =>
+                                Number(a.professor_id) === Number(prof.id) &&
+                                a.dia_semana === dia,
+                        ).length;
+                        const aulasTurmaDia = assignments.filter(
+                            (a) =>
+                                Number(a.turma_id) === Number(demanda.turmaId) &&
+                                a.dia_semana === dia,
+                        ).length;
+                        candidatos.push({
+                            dia,
+                            horarioId: horario.id,
+                            professor: prof,
+                            prioridadeProfessor: indiceProf,
+                            score:
+                                Math.min(aulasProfDia, 3) * 2500 -
+                                aulasTurmaDia * 1000 +
+                                this._pontuarAgrupamentoProfessorDisciplina(
+                                    assignments,
+                                    prof.id,
+                                    demanda.disciplinaId,
+                                    dia,
+                                    horario.id,
+                                    horariosDoDia,
+                                ) +
+                                Math.random() * 0.1,
+                        });
                     }
-
-                    if (slotEncontrado) break;
                 }
-                if (slotEncontrado) break;
             }
+            candidatos.sort(
+                (a, b) =>
+                    a.prioridadeProfessor - b.prioridadeProfessor ||
+                    b.score - a.score,
+            );
+            const slotEncontrado = candidatos[0] || null;
 
             if (slotEncontrado) {
                 const assignment = {

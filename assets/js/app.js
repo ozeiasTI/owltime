@@ -599,7 +599,7 @@
             ]
         },
         sorts: {
-            title: 'Sort (beta)', icon: 'bi-shuffle', key: KEYS.sorts, module: 'Sort (beta)',
+            title: 'Sort', icon: 'bi-shuffle', key: KEYS.sorts, module: 'Sort',
             fields: [
                 { name: 'nome', label: 'Nome', required: true, placeholder: 'Ex.: Aula vaga' },
                 { name: 'descricao', label: 'Descrição', placeholder: 'Descreva esta reserva de horários' },
@@ -2710,7 +2710,7 @@
                     ? ' data-protection-class-id="' + h(turmaId) + '" data-protection-day="' + h(day) +
                         '" data-protection-slot-id="' + h(slot.id) + '" title="' +
                         (protection && protection.tipo_marcacao === 'sort'
-                            ? 'Horário reservado pelo Sort (beta); remova a aplicação no botão correspondente'
+                            ? 'Horário reservado pelo sort; remova a aplicação no botão correspondente'
                             : 'Clique duas vezes para proteger ou alterar este horário') + '"'
                     : '';
                 const atSlot = assignments.filter(function (item) {
@@ -2720,12 +2720,11 @@
                 if (!atSlot.length) {
                     const emptyContent = protection
                         ? '<div class="grade-protection-entry"><strong>' +
-                            (protection.tipo_marcacao === 'sort' ? 'Sort (beta): ' : '') +
                             h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
                                 '</strong><small>' + (protection.tipo_marcacao === 'evento'
                                     ? 'Evento aplicado às turmas do mesmo turno'
                                     : protection.tipo_marcacao === 'sort'
-                                        ? 'Sort (beta) · horário reservado'
+                                        ? 'Horário reservado'
                                         : 'Horário protegido') +
                                     (allowProtection && protection.tipo_marcacao !== 'sort' ? ' · duplo clique para alterar' : '') + '</small></div>'
                         : editable && turmaId
@@ -2795,7 +2794,7 @@
 
     function gradeProtectionTypeLabel(protection) {
         if (protection.tipo_marcacao === 'evento') return 'Evento';
-        if (protection.tipo_marcacao === 'sort') return 'Sort (beta)';
+        if (protection.tipo_marcacao === 'sort') return 'Sort';
         return 'Peculiaridade';
     }
 
@@ -2842,7 +2841,7 @@
                 h(entry[0]) + '">Remover</button></li>';
         }).join('');
         return '<dialog class="assignment-dialog" id="sort-apply-dialog" aria-labelledby="sort-apply-title">' +
-            '<div class="assignment-dialog-header"><div><h2 id="sort-apply-title">Aplicar Sort (beta)</h2>' +
+            '<div class="assignment-dialog-header"><div><h2 id="sort-apply-title">Aplicar sort</h2>' +
             '<p class="mb-0 text-muted">Os horários são sorteados por turma e ficam protegidos durante a próxima geração.</p></div>' +
             '<button type="button" class="btn-close" data-action="close-sort-dialog" aria-label="Fechar"></button></div>' +
             (hasAssignments ? '<div class="alert alert-warning">Limpe as aulas desta Grade oficial antes de aplicar um sort. As reservas já aplicadas podem ser removidas abaixo.</div>' : '') +
@@ -3093,7 +3092,7 @@
                 String(item.horario_id) === slotId;
         });
         if (alreadyProtected && alreadyProtected.tipo_marcacao === 'sort') {
-            throw new Error('Este horário foi reservado por um Sort (beta). Remova a aplicação no botão Aplicar sort (beta).');
+            throw new Error('Este horário foi reservado por um sort. Remova a aplicação no botão Aplicar sort.');
         }
         const occupied = state.assignments.some(function (assignment) {
             return String(assignment.turma_id) === turmaId &&
@@ -3871,7 +3870,7 @@
         const generationButton = editable ? '' :
             '<button class="btn btn-primary" type="button" data-action="generate-grade"><i class="bi bi-magic me-1"></i>Gerar grade automaticamente (QDP)</button>' +
             '<button class="btn btn-outline-primary" type="button" data-action="open-sort-dialog"' +
-                (hasAvailableSort || appliedSorts ? '' : ' disabled') + '><i class="bi bi-shuffle me-1"></i>Aplicar sort (beta)</button>';
+                (hasAvailableSort || appliedSorts ? '' : ' disabled') + '><i class="bi bi-shuffle me-1"></i>Aplicar sort</button>';
         return pageHeader(title, 'bi-calendar3', description) +
             '<div class="card mb-3"><div class="card-body d-flex flex-wrap justify-content-between align-items-end gap-3">' +
             semesterForm + '<div class="d-flex flex-wrap align-items-end gap-2">' + pdfExportControls + generationButton + navigation + '<button class="btn btn-outline-primary" type="button" data-action="export-grade">Exportar JSON</button>' +
@@ -4871,7 +4870,7 @@
                     '</strong><span class="report-protection-kind">' +
                     (protection.tipo_marcacao === 'evento'
                         ? 'Evento: '
-                        : protection.tipo_marcacao === 'sort' ? 'Sort (beta): ' : 'Proteção: ') + h(name) + '</span></li>';
+                        : protection.tipo_marcacao === 'sort' ? 'Sort: ' : 'Proteção: ') + h(name) + '</span></li>';
             }).join('');
             const protectionSummary = '<section class="report-class-protections" aria-label="Proteções, eventos e sorts da turma ' +
                 h(turma.nome || 'Turma') + '"><h3><i class="bi bi-shield-exclamation" aria-hidden="true"></i>Proteções, eventos e sorts' +
@@ -5472,7 +5471,7 @@
                         ? {
                             text: (protection.tipo_marcacao === 'evento'
                                 ? 'EVENTO ESCOLAR\n'
-                                : protection.tipo_marcacao === 'sort' ? 'SORT (BETA)\n' : 'HORÁRIO PROTEGIDO\n') + (protection.peculiaridade_nome ||
+                                : protection.tipo_marcacao === 'sort' ? 'SORT\n' : 'HORÁRIO PROTEGIDO\n') + (protection.peculiaridade_nome ||
                                 nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção')),
                             style: 'protectionCell'
                         }
@@ -5768,7 +5767,11 @@
                 table: {
                     widths: ['*', 'auto'],
                     body: [[
-                        { text: teacher.nome || 'Professor', style: 'teacherName' },
+                        {
+                            text: (teacher.nome || 'Professor') + ' - ' + item.total + ' ' +
+                                (item.total === 1 ? 'Aula' : 'Aulas'),
+                            style: 'teacherName'
+                        },
                         { text: teacher.matricula ? 'Matrícula: ' + teacher.matricula : 'Matrícula não informada', style: 'meta', alignment: 'right' }
                     ]]
                 },
@@ -5803,19 +5806,18 @@
             });
             const isCorrect = item.difference === 0;
             const isOverDeclared = item.difference > 0;
-            let comparison;
-            if (item.declared == null) comparison = 'Carga semanal declarada: não informada no cadastro.';
-            else if (isCorrect) comparison = 'CORRETO · ' + item.total + ' aula(s) atribuída(s) de ' + item.declared + ' declarada(s).';
-            else if (isOverDeclared) comparison = 'DIVERGÊNCIA · ' + item.total + ' aula(s) atribuída(s) para ' +
-                item.declared + ' declarada(s) (excedente de ' + item.difference + ' aula(s)).';
-            else comparison = 'AJUSTE NECESSÁRIO · ' + item.total + ' aula(s) atribuída(s) para ' +
-                item.declared + ' declarada(s) (faltam ' + Math.abs(item.difference) + ' aula(s)).';
-            content.push({
-                text: comparison,
-                style: item.declared == null ? 'comparisonUnknown' : isCorrect ? 'comparisonCorrect' :
-                    isOverDeclared ? 'comparisonMismatch' : 'comparisonAdjustment',
-                margin: [0, 0, 0, 10]
-            });
+            if (item.declared == null || item.difference >= 0) {
+                let comparison;
+                if (item.declared == null) comparison = 'Carga semanal declarada: não informada no cadastro.';
+                else if (isCorrect) comparison = 'CORRETO · ' + item.total + ' aula(s) atribuída(s) de ' + item.declared + ' declarada(s).';
+                else if (isOverDeclared) comparison = 'DIVERGÊNCIA · ' + item.total + ' aula(s) atribuída(s) para ' +
+                    item.declared + ' declarada(s) (excedente de ' + item.difference + ' aula(s)).';
+                content.push({
+                    text: comparison,
+                    style: item.declared == null ? 'comparisonUnknown' : isCorrect ? 'comparisonCorrect' : 'comparisonMismatch',
+                    margin: [0, 0, 0, 10]
+                });
+            }
         });
         const substitutionItems = substitutions.slice().sort(function (a, b) {
             return String(a.data_inicio || '').localeCompare(String(b.data_inicio || '')) ||
@@ -5976,7 +5978,6 @@
                 tableHeader: { bold: true, fontSize: 7.5, color: '#23486f', fillColor: '#eaf1f8', alignment: 'center' },
                 comparisonCorrect: { bold: true, color: '#176b42', fillColor: '#e8f5ed', fontSize: 8.5, margin: [6, 5, 6, 5] },
                 comparisonMismatch: { bold: true, color: '#a33131', fillColor: '#fdecec', fontSize: 8.5, margin: [6, 5, 6, 5] },
-                comparisonAdjustment: { bold: true, color: '#765b13', fillColor: '#fff7df', fontSize: 8.5, margin: [6, 5, 6, 5] },
                 comparisonUnknown: { bold: true, color: '#765b13', fillColor: '#fff7df', fontSize: 8.5, margin: [6, 5, 6, 5] },
                 sectionTitle: { fontSize: 10, bold: true, color: '#1d4e89' },
                 substitutionEyebrow: { fontSize: 7, bold: true, color: '#5380a8', characterSpacing: 1.1 },
@@ -6261,7 +6262,7 @@
                 render();
             } else if (action === 'open-sort-dialog') {
                 const dialog = document.getElementById('sort-apply-dialog');
-                if (!dialog) throw new Error('O formulário de Sort (beta) não está disponível.');
+                if (!dialog) throw new Error('O formulário de Sort não está disponível.');
                 if (!dialog.open) dialog.showModal();
             } else if (action === 'close-sort-dialog') {
                 const dialog = document.getElementById('sort-apply-dialog');
