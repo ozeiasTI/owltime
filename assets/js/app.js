@@ -25,65 +25,7 @@
     const PERIODOS = ['Matutino', 'Vespertino', 'Integral', 'Noturno', 'EAD'];
     const SUBJECT_COLORS = ['#dceeff', '#fce4ec', '#e4f4e8', '#fff0d6', '#ece5ff', '#dff5f3', '#f7e8d8', '#e7eafc', '#f3e5f5', '#e8f0df', '#ffe8dc', '#dcecf2'];
     const DECLARATION_INSTITUTION_KEY = 'owltime_declaracao_instituicao_v1';
-    const TUTORIAL_STORAGE_KEY = 'owltime_tutorial_state';
     const PLAIN_TEXT_PREFERENCE_KEYS = ['owltime_fixture_profile_id', KEYS.semestre, DECLARATION_INSTITUTION_KEY];
-    const TUTORIAL_STEPS = [
-        {
-            route: 'cursos', title: 'Cadastre o curso', description: 'Crie o curso fictício que será usado nas demais etapas.',
-            instructions: ['Abra o formulário “Novo registro” e preencha Nome e Sigla; mantenha o status Ativo.', 'Salve o curso antes de seguir: as próximas etapas precisam dele para associar disciplinas e turmas.', 'Confira se “Tecnologia em Gestão Pública” aparece na tabela de registros.'],
-            values: [['Nome', 'Tecnologia em Gestão Pública'], ['Sigla', 'TGP'], ['Status', 'Ativo']]
-        },
-        {
-            route: 'disciplinas', title: 'Cadastre as disciplinas', description: 'Selecione o curso criado na etapa anterior para cada disciplina.',
-            instructions: ['Cadastre Políticas Públicas e Administração Pública como dois registros separados.', 'Em cada cadastro, selecione Tecnologia em Gestão Pública no campo Curso e mantenha o status Ativa.', 'Se o curso ainda não aparecer na lista, volte a Cursos e conclua o cadastro.'],
-            values: [['Disciplina 1', 'Políticas Públicas'], ['Disciplina 2', 'Administração Pública'], ['Curso', 'Tecnologia em Gestão Pública · selecione na lista']]
-        },
-        {
-            route: 'professores', title: 'Cadastre os professores', description: 'Use os valores fictícios nos campos de texto; escolha titulação e status nos menus.',
-            instructions: ['Cadastre Ana e Bruno em registros separados; disciplina de ingresso é texto livre, não é um vínculo.', 'Use uma titulação disponível na lista, informe carga e limite diário e mantenha os dois como Ativos.', 'Confira a lista depois de salvar cada professor; os vínculos por semestre serão feitos mais adiante.'],
-            values: [['Professora 1', 'Ana Exemplo'], ['Ingresso 1', 'Políticas públicas'], ['Professor 2', 'Bruno Exemplo'], ['Ingresso 2', 'Gestão administrativa'], ['Carga semanal', '20'], ['Limite diário', '4']]
-        },
-        {
-            route: 'turmas', title: 'Cadastre a turma', description: 'Associe a turma ao curso e ao semestre usado neste tutorial.',
-            instructions: ['Crie uma turma ativa, selecione o curso e o turno Noturno.', 'Informe ano letivo 2026 e semestre letivo 2026/2 para manter a turma alinhada com demandas e vínculos.', 'A turma salva será selecionada nas etapas de demandas e grade.'],
-            values: [['Turma', '1º semestre - demonstração'], ['Ano letivo', '2026'], ['Período/turno', 'Noturno'], ['Semestre', '2026/2'], ['Curso', 'Tecnologia em Gestão Pública · selecione na lista']]
-        },
-        {
-            route: 'horarios', title: 'Configure os horários', description: 'Cadastre os períodos da segunda-feira. Depois use “Duplicar horários de um dia” para copiar para terça a sexta.',
-            instructions: ['Crie dois períodos do tipo Aula e um período do tipo Intervalo, sem sobreposição.', 'Use a ferramenta de duplicação para copiar os períodos de segunda para terça, quarta, quinta e sexta.', 'Verifique o resumo semanal: devem existir dez períodos de aula disponíveis para a turma.'],
-            values: [['Segunda · aula 1', '18:30–19:20'], ['Segunda · intervalo', '19:20–19:30'], ['Segunda · aula 2', '19:30–20:20'], ['Duplicar para', 'Terça, Quarta, Quinta e Sexta']]
-        },
-        {
-            route: 'demandas', title: 'Informe as demandas', description: 'Crie as demandas para a turma de demonstração e use o semestre 2026/2.',
-            instructions: ['Selecione a turma de demonstração e cadastre uma demanda para cada disciplina.', 'Defina cinco aulas semanais por disciplina e semestre 2026/2 (dez aulas no total).', 'Confira os registros para confirmar que turma, disciplina e semestre estão corretos antes de vincular professores.'],
-            values: [['Demanda 1', 'Políticas Públicas · 5 aulas semanais'], ['Demanda 2', 'Administração Pública · 5 aulas semanais'], ['Semestre', '2026/2'], ['Turma', '1º semestre - demonstração · selecione na lista']]
-        },
-        {
-            route: 'vinculos', title: 'Vincule professores', description: 'Selecione o curso e o semestre 2026/2; associe cada professor à sua disciplina.',
-            instructions: ['Filtre primeiro pelo curso Tecnologia em Gestão Pública e pelo semestre 2026/2.', 'Crie o vínculo de Ana com Políticas Públicas e de Bruno com Administração Pública.', 'Confira a cobertura: as disciplinas demandadas devem ter professor e os dois professores devem aparecer vinculados.'],
-            values: [['Vínculo 1', 'Ana Exemplo → Políticas Públicas'], ['Vínculo 2', 'Bruno Exemplo → Administração Pública'], ['Semestre', '2026/2'], ['Curso', 'Tecnologia em Gestão Pública · selecione na lista']]
-        },
-        {
-            route: 'disponibilidade', title: 'Consulte PRD e disponibilidade', description: 'Selecione semestre e curso. O PRD é opcional; se quiser testar, escolha um dia sem aulas cadastradas.',
-            instructions: ['Selecione 2026/2 e o curso para consultar os professores relacionados às demandas.', 'PRD bloqueia o dia inteiro; use apenas se houver um dia reservado a outras atividades docentes.', 'Neste exemplo, o Domingo não tem períodos de aula, então o PRD é opcional e não interfere na geração.'],
-            values: [['Semestre', '2026/2'], ['Curso', 'Tecnologia em Gestão Pública · selecione na lista'], ['Dia de exemplo', 'Domingo · sem horários de aula cadastrados']]
-        },
-        {
-            route: 'grade', title: 'Gere a grade', description: 'Confirme o semestre e gere a proposta automática. As dez aulas demandadas cabem nos dez períodos semanais configurados.',
-            instructions: ['Confirme que existem demandas, vínculos e períodos de aula para o semestre 2026/2.', 'Gere a grade automática e leia o resumo: compare aulas previstas, preenchidas e pendentes.', 'A geração pode ser repetida; revise o resultado antes de compartilhar ou exportar os horários.'],
-            values: [['Semestre', '2026/2'], ['Aulas previstas', '10 (5 por disciplina)'], ['Professores', 'Ana Exemplo e Bruno Exemplo']]
-        },
-        {
-            route: 'ajustes', title: 'Revise os ajustes manuais', description: 'Confira as aulas, abra uma turma e veja os períodos vazios. Não é necessário alterar a grade para avançar.',
-            instructions: ['Escolha a turma para ver sua grade e comparar as aulas alocadas com as demandas.', 'Clique em uma aula para editar; em modo de ajustes, também é possível arrastar uma aula para um período vazio.', 'Só salve mudanças necessárias: qualquer edição atualiza a grade deste semestre no navegador.'],
-            values: [['Turma', '1º semestre - demonstração'], ['Verifique', 'Professor, disciplina, dia e horário de cada aula']]
-        },
-        {
-            route: 'relatorios', title: 'Confira relatórios', description: 'Veja a cobertura por turma, a distribuição de aulas e exporte o relatório para PDF ou CSV.',
-            instructions: ['Selecione 2026/2 para ver os indicadores do semestre trabalhado.', 'Confira aulas preenchidas e previstas, disciplinas e professores por turma.', 'O relatório ajuda a detectar pendências antes da distribuição da grade.'],
-            values: [['Semestre', '2026/2'], ['Resultado esperado', '10 aulas previstas e até 10 preenchidas']]
-        }
-    ];
     const view = document.getElementById('view');
     const alertBox = document.getElementById('app-alert');
     let editing = null;
@@ -119,6 +61,7 @@
     let availabilitySemester = getSemester();
     let catalogImport = null;
     let spreadsheetImport = null;
+    let semesterMigrationComplete = false;
     let alertTimer = 0;
     let generationSummaryTimer = 0;
     let qdpGenerationInProgress = false;
@@ -176,126 +119,7 @@
         }, 6500);
     }
 
-    function readTutorialState() {
-        const raw = sessionStorage.getItem(TUTORIAL_STORAGE_KEY);
-        if (!raw) return null;
-        const state = JSON.parse(raw);
-        if (!state || !Number.isInteger(state.step) || state.step < 0 || state.step >= TUTORIAL_STEPS.length) {
-            throw new Error('O estado do tutorial está inválido. Encerre o tutorial e inicie novamente.');
-        }
-        return state;
-    }
-
-    function saveTutorialState(state) {
-        sessionStorage.setItem(TUTORIAL_STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function clearTutorialState() {
-        sessionStorage.removeItem(TUTORIAL_STORAGE_KEY);
-    }
-
-    function renderTutorialGuide(route) {
-        const banner = document.getElementById('tutorial-environment-banner');
-        const previousGuide = document.getElementById('tutorial-guide');
-        if (previousGuide) previousGuide.remove();
-        let state;
-        try {
-            state = readTutorialState();
-        } catch (error) {
-            console.error('Falha ao carregar o estado do tutorial:', error);
-            clearTutorialState();
-            if (banner) banner.hidden = true;
-            notify(error.message, 'danger');
-            return;
-        }
-        if (banner) banner.hidden = !state;
-        if (!state) return;
-
-        const currentRouteIndex = TUTORIAL_STEPS.findIndex(function (item) { return item.route === route; });
-        if (currentRouteIndex >= 0 && currentRouteIndex !== state.step) {
-            state.step = currentRouteIndex;
-            saveTutorialState(state);
-        }
-        const step = TUTORIAL_STEPS[state.step];
-        const onStepPage = currentRouteIndex === state.step;
-        const minimized = Boolean(state.minimized);
-        const values = onStepPage ? step.values.map(function (item) {
-            return '<li><span><small>' + h(item[0]) + '</small><code>' + h(item[1]) + '</code></span>' +
-                '<button type="button" class="btn btn-sm btn-light" data-action="copy-tutorial-value" data-copy-value="' +
-                h(item[1]) + '" aria-label="Copiar ' + h(item[0]) + '"><i class="bi bi-clipboard"></i><span>Copiar</span></button></li>';
-        }).join('') : '';
-        const guide = document.createElement('aside');
-        guide.id = 'tutorial-guide';
-        guide.className = 'tutorial-guide';
-        guide.setAttribute('role', 'region');
-        guide.setAttribute('aria-label', 'Tutorial guiado');
-        guide.innerHTML = '<header class="tutorial-guide-drag-handle"><div><span class="tutorial-guide-kicker">TUTORIAL GUIADO · PASSO ' +
-            (state.step + 1) + ' DE ' + TUTORIAL_STEPS.length + '</span><h2>' + h(step.title) + '</h2></div>' +
-            '<div class="tutorial-guide-controls"><button type="button" class="btn btn-sm btn-light" data-action="toggle-tutorial-minimize" aria-label="' +
-                (minimized ? 'Expandir tutorial' : 'Minimizar tutorial') + '" title="' + (minimized ? 'Expandir' : 'Minimizar') +
-                '"><i class="bi ' + (minimized ? 'bi-arrows-angle-expand' : 'bi-dash-lg') + '"></i></button>' +
-            '<button type="button" class="btn btn-sm btn-light" data-action="stop-tutorial" aria-label="Encerrar tutorial" title="Encerrar tutorial"><i class="bi bi-x-lg"></i></button></div></header>' +
-            (minimized ? '' :
-                '<div class="tutorial-guide-progress" role="progressbar" aria-valuenow="' + Math.round((state.step + 1) / TUTORIAL_STEPS.length * 100) +
-                '" aria-valuemin="0" aria-valuemax="100"><span style="width:' + Math.round((state.step + 1) / TUTORIAL_STEPS.length * 100) + '%"></span></div>' +
-                '<div class="tutorial-guide-body">' + (onStepPage
-                    ? '<p>' + h(step.description) + '</p><h3>O que fazer nesta etapa</h3><ol class="tutorial-guide-instructions">' +
-                        step.instructions.map(function (instruction) { return '<li>' + h(instruction) + '</li>'; }).join('') +
-                        '</ol><p class="tutorial-guide-hint"><i class="bi bi-info-circle"></i>Preencha os campos manualmente; use “Copiar” e cole com Ctrl+V. O tutorial não cria nem remove cadastros.</p>' +
-                        '<ul class="tutorial-guide-values">' + values + '</ul>'
-                    : '<p>Esta etapa é feita em <strong>' + h(step.route === 'ajustes' ? 'Ajustes manuais' : step.route) +
-                        '</strong>. Você pode continuar navegando; as orientações e os exemplos desta etapa aparecerão quando chegar à página correspondente.</p>') +
-                '</div><footer>' + (onStepPage
-                ? '<button type="button" class="btn btn-primary btn-sm" data-action="next-tutorial-step">' +
-                    (state.step === TUTORIAL_STEPS.length - 1 ? 'Finalizar tutorial' : 'Próxima etapa') +
-                    '<i class="bi bi-arrow-right ms-1"></i></button>'
-                : '<button type="button" class="btn btn-primary btn-sm" data-action="go-tutorial-step">Abrir esta etapa<i class="bi bi-arrow-right ms-1"></i></button>') +
-                '<span>Os exemplos são fictícios.</span></footer>');
-        document.body.appendChild(guide);
-        if (Number.isFinite(state.x) && Number.isFinite(state.y)) {
-            guide.style.left = Math.max(0, Math.min(state.x, window.innerWidth - guide.offsetWidth)) + 'px';
-            guide.style.top = Math.max(0, Math.min(state.y, window.innerHeight - guide.offsetHeight)) + 'px';
-            guide.style.right = 'auto';
-            guide.style.bottom = 'auto';
-        }
-        attachTutorialDrag(guide);
-    }
-
-    function attachTutorialDrag(guide) {
-        const handle = guide.querySelector('.tutorial-guide-drag-handle');
-        if (!handle) return;
-        handle.addEventListener('pointerdown', function (event) {
-            if (event.target.closest('button') || (event.pointerType === 'mouse' && event.button !== 0)) return;
-            event.preventDefault();
-            const rect = guide.getBoundingClientRect();
-            const offsetX = event.clientX - rect.left;
-            const offsetY = event.clientY - rect.top;
-            guide.style.left = rect.left + 'px';
-            guide.style.top = rect.top + 'px';
-            guide.style.right = 'auto';
-            guide.style.bottom = 'auto';
-            const move = function (moveEvent) {
-                const left = Math.max(0, Math.min(moveEvent.clientX - offsetX, window.innerWidth - guide.offsetWidth));
-                const top = Math.max(0, Math.min(moveEvent.clientY - offsetY, window.innerHeight - guide.offsetHeight));
-                guide.style.left = left + 'px';
-                guide.style.top = top + 'px';
-            };
-            const finish = function () {
-                document.removeEventListener('pointermove', move);
-                document.removeEventListener('pointerup', finish);
-                document.removeEventListener('pointercancel', finish);
-                const current = readTutorialState();
-                if (!current) return;
-                const finalRect = guide.getBoundingClientRect();
-                saveTutorialState(Object.assign({}, current, { x: finalRect.left, y: finalRect.top }));
-            };
-            document.addEventListener('pointermove', move);
-            document.addEventListener('pointerup', finish, { once: true });
-            document.addEventListener('pointercancel', finish, { once: true });
-        });
-    }
-
-    function copyTutorialValue(value) {
+    function copyTextToClipboard(value) {
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(value);
         }
@@ -338,6 +162,39 @@
         if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
         localStorage.setItem(KEYS.semestre, semester);
         return semester;
+    }
+
+    function previousSemester(value) {
+        const parts = /^(\d{4})\/([12])$/.exec(String(value || ''));
+        if (!parts) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+        const year = Number(parts[1]);
+        if (parts[2] === '1' && year === 0) throw new Error('Não há semestre anterior válido para 0000/1.');
+        return parts[2] === '1' ? String(year - 1).padStart(4, '0') + '/2' : String(year).padStart(4, '0') + '/1';
+    }
+
+    function semesterOf(record) {
+        return String(record && (record.semestre_letivo || record.semestre) || getSemester()).trim();
+    }
+
+    function migrateLegacySemesterRecords() {
+        [
+            [KEYS.grupos, 'Grupos'],
+            [KEYS.demandas, 'TurmaDisciplina'],
+            [KEYS.vinculos, 'ProfessorDisciplina'],
+            [KEYS.disponibilidade, 'ProfessorDisponibilidade'],
+            [KEYS.eventosGrade, 'EventosGrade']
+        ].forEach(function (item) {
+            const records = readRecords(item[0]);
+            let changed = false;
+            records.forEach(function (record) {
+                if (!String(record.semestre_letivo || record.semestre || '').trim()) {
+                    record.semestre_letivo = getSemester();
+                    changed = true;
+                }
+            });
+            if (changed) saveRecords(item[0], records, item[1]);
+        });
+        semesterMigrationComplete = true;
     }
 
     function nextId(records) {
@@ -396,11 +253,383 @@
     }
 
     function semesterMatches(record, semester) {
-        const value = String(record.semestre_letivo || record.semestre || '').trim();
         const selectedSemester = typeof semester === 'string' && semester ? semester : getSemester();
-        return !value || value === selectedSemester;
+        return semesterOf(record) === selectedSemester;
     }
 
+    function groupIdentity(group) {
+        return normalizeCatalogValue(group.nome) + '|' +
+            (Array.isArray(group.turma_ids) ? group.turma_ids.map(String).sort().join(',') : '');
+    }
+
+    function getStoredSemesters() {
+        const keys = [
+            KEYS.grupos, KEYS.demandas, KEYS.vinculos, KEYS.disponibilidade,
+            KEYS.eventosGrade, KEYS.protecoesGrade, KEYS.substituicoes
+        ];
+        const semesters = new Set([getSemester()]);
+        keys.forEach(function (key) {
+            readRecords(key).forEach(function (record) {
+                const semester = semesterOf(record);
+                if (/^\d{4}\/[12]$/.test(semester)) semesters.add(semester);
+            });
+        });
+        const simulationPrefix = 'owltime_simulacao_painel_';
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index) || '';
+            const match = new RegExp('^' + simulationPrefix + '(\\d{4}/[12])$').exec(key);
+            if (match) semesters.add(match[1]);
+        }
+        return Array.from(semesters).sort(function (a, b) { return b.localeCompare(a); });
+    }
+
+    function semesterCopyDefinitions(sourceSemester) {
+        return [
+            { key: 'grupos', label: 'Grupos', records: readRecords(KEYS.grupos) },
+            { key: 'demandas', label: 'Demandas', records: readRecords(KEYS.demandas) },
+            { key: 'vinculos', label: 'Vínculos professor-disciplina', records: readRecords(KEYS.vinculos) },
+            { key: 'disponibilidade', label: 'PRD e disponibilidade', records: readRecords(KEYS.disponibilidade) },
+            { key: 'eventos', label: 'Eventos aplicados na grade', records: readRecords(KEYS.eventosGrade) }
+        ].map(function (item) {
+            return {
+                key: item.key,
+                label: item.label,
+                count: item.records.filter(function (record) {
+                    return semesterMatches(record, sourceSemester);
+                }).length
+            };
+        });
+    }
+
+    function renderSemesterTools() {
+        return '<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">' +
+            '<span class="small text-muted">Semestre ativo: <strong>' + h(getSemester()) + '</strong></span>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="open-semester-copy" data-target-semester="' +
+            h(getSemester()) + '"><i class="bi bi-copy me-1"></i>Copiar dados de outro semestre</button></div>';
+    }
+
+    function renderSemesterCopyDialog() {
+        const moduleOptions = [
+            ['grupos', 'Grupos'],
+            ['demandas', 'Demandas'],
+            ['vinculos', 'Vínculos professor-disciplina'],
+            ['disponibilidade', 'PRD e disponibilidade'],
+            ['eventos', 'Eventos aplicados na grade']
+        ];
+        return '<dialog class="assignment-dialog" id="semester-copy-dialog" aria-labelledby="semester-copy-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="semester-copy-title">Copiar dados de outro semestre</h2>' +
+            '<p class="mb-0 text-muted" id="semester-copy-context"></p></div>' +
+            '<button type="button" class="btn-close" data-action="close-semester-copy" aria-label="Fechar"></button></div>' +
+            '<form id="semester-copy-form"><input type="hidden" name="target_semester">' +
+            '<div class="mb-3"><label class="form-label" for="semester-copy-source">Semestre de origem</label>' +
+            '<select class="form-select" id="semester-copy-source" name="source_semester"><option value="">Não copiar dados</option></select></div>' +
+            '<p>Selecione os módulos que deseja replicar. Os registros copiados recebem novos IDs e ficam associados ao semestre de destino, sem alterar a origem.</p>' +
+            '<div class="d-grid gap-2 mb-3">' + moduleOptions.map(function (item) {
+                return '<label class="form-check"><input class="form-check-input semester-copy-module" type="checkbox" name="copy_module" value="' +
+                    item[0] + '"><span class="form-check-label">' + item[1] + ' <small class="text-muted" data-copy-count="' + item[0] + '"></small></span></label>';
+            }).join('') + '</div>' +
+            '<p class="form-text">Ao copiar vínculos que usam grupos, os grupos necessários também serão copiados para manter as associações. As definições de eventos são compartilhadas; aqui são copiadas as aplicações na grade.</p>' +
+            '<div class="d-flex flex-wrap justify-content-end gap-2"><button type="button" class="btn btn-outline-secondary" data-action="close-semester-copy">Cancelar</button>' +
+            '<button type="submit" class="btn btn-primary">Continuar</button></div></form></dialog>';
+    }
+
+    function openSemesterCopyDialog(targetValue) {
+        const target = String(targetValue || '').trim();
+        if (!/^\d{4}\/[12]$/.test(target)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+        const dialog = document.getElementById('semester-copy-dialog');
+        if (!dialog) throw new Error('A janela de cópia de semestre não está disponível nesta tela.');
+        const form = document.getElementById('semester-copy-form');
+        form.elements.namedItem('target_semester').value = target;
+        const sourceSelect = document.getElementById('semester-copy-source');
+        const sourceSemesters = getStoredSemesters().filter(function (semester) { return semester !== target; });
+        sourceSelect.innerHTML = '<option value="">Não copiar dados</option>' + sourceSemesters.map(function (semester) {
+            return '<option value="' + h(semester) + '">' + h(semester) + '</option>';
+        }).join('');
+        const preferredSource = target === '0000/1' ? '' : previousSemester(target);
+        sourceSelect.value = sourceSemesters.includes(preferredSource) ? preferredSource : (sourceSemesters[0] || '');
+        const updateOptions = function () {
+            const source = sourceSelect.value;
+            document.getElementById('semester-copy-context').textContent = source
+                ? 'Origem: ' + source + ' · destino: ' + target + '.'
+                : 'Nenhum dado será copiado · destino: ' + target + '.';
+            const counts = new Map((source ? semesterCopyDefinitions(source) : []).map(function (item) {
+                return [item.key, item.count];
+            }));
+            dialog.querySelectorAll('.semester-copy-module').forEach(function (input) {
+                const count = counts.get(input.value) || 0;
+                input.checked = false;
+                input.disabled = !source || count === 0;
+                const countLabel = dialog.querySelector('[data-copy-count="' + input.value + '"]');
+                countLabel.textContent = count ? '· ' + count + ' registro(s)' : '· nenhum registro na origem';
+            });
+        };
+        if (!form.dataset.sourceChangeBound) {
+            sourceSelect.addEventListener('change', updateOptions);
+            form.dataset.sourceChangeBound = 'true';
+        }
+        updateOptions();
+        if (!dialog.open) dialog.showModal();
+    }
+
+    function copySemesterModules(source, target, selectedModules) {
+        if (!/^\d{4}\/[12]$/.test(source) || source === target) {
+            throw new Error('Selecione um semestre de origem válido e diferente do destino.');
+        }
+        const selected = new Set(selectedModules);
+        const allKeys = [KEYS.grupos, KEYS.demandas, KEYS.vinculos, KEYS.disponibilidade, KEYS.eventosGrade];
+        const lists = {};
+        allKeys.forEach(function (key) { lists[key] = readRecords(key); });
+        lists[KEYS.protecoesGrade] = readRecords(KEYS.protecoesGrade);
+        const result = {};
+        const copied = {};
+        const groupIds = new Map();
+        let nextGroupId = nextId(lists[KEYS.grupos]);
+        let nextDemandId = nextId(lists[KEYS.demandas]);
+        let nextLinkId = nextId(lists[KEYS.vinculos]);
+        let nextAvailabilityId = nextId(lists[KEYS.disponibilidade]);
+        let nextEventId = nextId(lists[KEYS.eventosGrade]);
+        let nextEventGroup = Date.now();
+        const sourceGroups = lists[KEYS.grupos].filter(function (record) {
+            return semesterMatches(record, source);
+        });
+        const sourceLinks = lists[KEYS.vinculos].filter(function (record) {
+            return semesterMatches(record, source);
+        });
+        const neededGroupIds = new Set();
+        if (selected.has('vinculos')) {
+            sourceLinks.forEach(function (link) {
+                (Array.isArray(link.grupo_ids) ? link.grupo_ids : []).forEach(function (id) {
+                    neededGroupIds.add(String(id));
+                });
+            });
+        }
+        const groupsById = new Map(lists[KEYS.grupos].map(function (group) {
+            return [String(group.id), group];
+        }));
+        const missingGroupIds = Array.from(neededGroupIds).filter(function (id) {
+            return !groupsById.has(id);
+        });
+        if (missingGroupIds.length) {
+            throw new Error('Não foi possível copiar os vínculos: há grupo(s) associado(s) que não existem mais. Corrija os grupos do semestre de origem e tente novamente.');
+        }
+        const linkedGroups = Array.from(neededGroupIds).map(function (id) { return groupsById.get(id); });
+        const groupsToCopy = selected.has('grupos')
+            ? sourceGroups.concat(linkedGroups.filter(function (group) {
+                return !sourceGroups.some(function (sourceGroup) { return String(sourceGroup.id) === String(group.id); });
+            }))
+            : linkedGroups;
+        result[KEYS.grupos] = lists[KEYS.grupos].slice();
+        copied.grupos = 0;
+        copied.gruposExistentes = 0;
+        groupsToCopy.forEach(function (group) {
+            let targetGroup = result[KEYS.grupos].find(function (candidate) {
+                return semesterMatches(candidate, target) && groupIdentity(candidate) === groupIdentity(group);
+            });
+            if (!targetGroup) {
+                targetGroup = Object.assign({}, group, { id: nextGroupId++, semestre_letivo: target });
+                result[KEYS.grupos].push(targetGroup);
+                copied.grupos += 1;
+            } else {
+                copied.gruposExistentes += 1;
+            }
+            groupIds.set(String(group.id), targetGroup.id);
+        });
+
+        result[KEYS.demandas] = lists[KEYS.demandas].slice();
+        copied.demandas = 0;
+        if (selected.has('demandas')) {
+            lists[KEYS.demandas].filter(function (record) {
+                return semesterMatches(record, source);
+            }).forEach(function (record) {
+                const exists = result[KEYS.demandas].some(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        String(candidate.turma_id) === String(record.turma_id) &&
+                        String(candidate.disciplina_id) === String(record.disciplina_id);
+                });
+                if (exists) return;
+                result[KEYS.demandas].push(Object.assign({}, record, {
+                    id: nextDemandId++,
+                    semestre_letivo: target
+                }));
+                copied.demandas += 1;
+            });
+        }
+
+        result[KEYS.vinculos] = lists[KEYS.vinculos].slice();
+        copied.vinculos = 0;
+        if (selected.has('vinculos')) {
+            sourceLinks.forEach(function (record) {
+                const exists = result[KEYS.vinculos].some(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        String(candidate.professor_id) === String(record.professor_id) &&
+                        String(candidate.disciplina_id) === String(record.disciplina_id);
+                });
+                if (exists) return;
+                result[KEYS.vinculos].push(Object.assign({}, record, {
+                    id: nextLinkId++,
+                    semestre_letivo: target,
+                    grupo_ids: (Array.isArray(record.grupo_ids) ? record.grupo_ids : []).map(function (id) {
+                        return groupIds.has(String(id)) ? groupIds.get(String(id)) : id;
+                    })
+                }));
+                copied.vinculos += 1;
+            });
+        }
+
+        result[KEYS.disponibilidade] = lists[KEYS.disponibilidade].slice();
+        copied.disponibilidade = 0;
+        if (selected.has('disponibilidade')) {
+            lists[KEYS.disponibilidade].filter(function (record) {
+                return semesterMatches(record, source);
+            }).forEach(function (record) {
+                const exists = result[KEYS.disponibilidade].some(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        String(candidate.professor_id) === String(record.professor_id) &&
+                        String(candidate.dia_semana) === String(record.dia_semana) &&
+                        String(candidate.tipo || 'indisponibilidade') === String(record.tipo || 'indisponibilidade') &&
+                        String(candidate.horario_id || '') === String(record.horario_id || '');
+                });
+                if (exists) return;
+                result[KEYS.disponibilidade].push(Object.assign({}, record, {
+                    id: nextAvailabilityId++,
+                    semestre_letivo: target
+                }));
+                copied.disponibilidade += 1;
+            });
+        }
+
+        result[KEYS.eventosGrade] = lists[KEYS.eventosGrade].slice();
+        copied.eventos = 0;
+        copied.eventosIgnorados = 0;
+        if (selected.has('eventos')) {
+            const sourceEvents = lists[KEYS.eventosGrade].filter(function (record) {
+                return semesterMatches(record, source);
+            });
+            const targetAssignments = (readSimulation(target).assignments || []);
+            const eventGroups = new Map();
+            sourceEvents.forEach(function (record) {
+                const groupKey = record.evento_grade_id
+                    ? String(record.evento_grade_id)
+                    : 'row:' + String(record.id);
+                if (!eventGroups.has(groupKey)) eventGroups.set(groupKey, []);
+                eventGroups.get(groupKey).push(record);
+            });
+            eventGroups.forEach(function (group) {
+                const fullyPresent = group.every(function (record) {
+                    return result[KEYS.eventosGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.evento_id) === String(record.evento_id) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id);
+                    });
+                });
+                if (fullyPresent) return;
+                const conflict = group.some(function (record) {
+                    const hasTargetEvent = result[KEYS.eventosGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id) &&
+                            String(candidate.evento_id) !== String(record.evento_id);
+                    });
+                    const hasProtection = lists[KEYS.protecoesGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id);
+                    });
+                    const hasLesson = targetAssignments.some(function (assignment) {
+                        return String(assignment.turma_id) === String(record.turma_id) &&
+                            String(assignment.dia_semana) === String(record.dia_semana) &&
+                            String(assignment.horario_id) === String(record.horario_id);
+                    });
+                    return hasTargetEvent || hasProtection || hasLesson;
+                });
+                if (conflict) {
+                    copied.eventosIgnorados += group.length;
+                    return;
+                }
+                const matchingEvent = result[KEYS.eventosGrade].find(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        group.some(function (record) {
+                            return String(candidate.evento_id) === String(record.evento_id) &&
+                                String(candidate.dia_semana) === String(record.dia_semana) &&
+                                String(candidate.horario_id) === String(record.horario_id);
+                        });
+                });
+                const eventGroupId = matchingEvent && matchingEvent.evento_grade_id
+                    ? matchingEvent.evento_grade_id
+                    : 'evento_copia_' + nextEventGroup++;
+                group.forEach(function (record) {
+                    const exists = result[KEYS.eventosGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.evento_id) === String(record.evento_id) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id);
+                    });
+                    if (exists) return;
+                    result[KEYS.eventosGrade].push(Object.assign({}, record, {
+                        id: nextEventId++,
+                        evento_grade_id: eventGroupId,
+                        semestre_letivo: target
+                    }));
+                    copied.eventos += 1;
+                });
+            });
+        }
+
+        const changedKeys = allKeys.filter(function (key) {
+            return (key === KEYS.grupos && copied.grupos > 0) ||
+                (key === KEYS.demandas && copied.demandas > 0) ||
+                (key === KEYS.vinculos && copied.vinculos > 0) ||
+                (key === KEYS.disponibilidade && copied.disponibilidade > 0) ||
+                (key === KEYS.eventosGrade && copied.eventos > 0);
+        });
+        const previousActiveSemester = localStorage.getItem(KEYS.semestre);
+        const previousValues = {};
+        changedKeys.forEach(function (key) { previousValues[key] = localStorage.getItem(key); });
+        try {
+            setSemester(target);
+            changedKeys.forEach(function (key) {
+                const moduleName = key === KEYS.eventosGrade ? 'EventosGrade' :
+                    key === KEYS.disponibilidade ? 'ProfessorDisponibilidade' :
+                        key === KEYS.vinculos ? 'ProfessorDisciplina' :
+                            key === KEYS.demandas ? 'TurmaDisciplina' : 'Grupos';
+                saveRecords(key, result[key], moduleName);
+            });
+        } catch (error) {
+            Object.keys(previousValues).forEach(function (key) {
+                try {
+                    if (previousValues[key] === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, previousValues[key]);
+                } catch (rollbackError) {
+                    console.error('Falha ao restaurar registros após erro na cópia:', key, rollbackError);
+                }
+            });
+            try {
+                if (previousActiveSemester === null) localStorage.removeItem(KEYS.semestre);
+                else localStorage.setItem(KEYS.semestre, previousActiveSemester);
+            } catch (rollbackError) {
+                console.error('Falha ao restaurar o semestre após erro na cópia:', rollbackError);
+            }
+            throw new Error('Não foi possível concluir a cópia do semestre. ' + error.message);
+        }
+        return copied;
+    }
+
+    function applySemesterSelection(semester) {
+        const selectedSemester = setSemester(semester);
+        availabilitySemester = selectedSemester;
+        editing = null;
+        gradeEditingId = null;
+        teacherSubstitutionEditingId = '';
+        gradeFocusDay = '';
+        gradeFocusSlotId = '';
+        render();
+        return selectedSemester;
+    }
     function getDemandsForClass(classId, semester) {
         const relations = readRecords(KEYS.demandas).filter(function (row) {
             return String(row.turma_id) === String(classId) && semesterMatches(row, semester);
@@ -423,6 +652,18 @@
                 aulas_semanais: Number(row.aulas_semanais || row.aulas_previstas || 0)
             };
         }).filter(function (row) { return row.disciplina_id && row.aulas_semanais > 0; });
+    }
+
+    function renderScheduleShortcut(entityType, record, assignments) {
+        const assignmentKey = entityType === 'professor' ? 'professor_id' : 'turma_id';
+        const hasAssignments = assignments.some(function (assignment) {
+            return String(assignment[assignmentKey]) === String(record.id);
+        });
+        if (!hasAssignments) return '';
+        const entityName = entityType === 'professor' ? 'professor' : 'turma';
+        return '<button class="btn btn-sm btn-outline-primary py-0 px-1" type="button" data-action="open-entity-schedule" data-entity-type="' +
+            entityType + '" data-entity-id="' + h(record.id) + '" aria-label="Abrir grade do ' + entityName + ' ' +
+            h(record.nome) + '" title="Abrir grade do ' + entityName + '"><i class="bi bi-calendar-week" aria-hidden="true"></i></button>';
     }
 
     const specs = {
@@ -451,9 +692,11 @@
                 { name: 'status', label: 'Status', type: 'select', defaultValue: 'Ativo', options: [['Ativo', 'Ativo'], ['Inativo', 'Inativo']] }
             ],
             columns: [
-                ['nome', 'Professor', function (value, record) {
+                ['nome', 'Professor', function (value, record, assignments) {
                     const discipline = record.disciplina_ingresso || (record.disciplina_ingresso_id ? nameById(KEYS.disciplinas, record.disciplina_ingresso_id, '') : '');
-                    return '<strong>' + h(value) + '</strong>' + (discipline ? '<div class="small text-muted">Ingresso: ' + h(discipline) + '</div>' : '');
+                    return '<span class="d-inline-flex align-items-center gap-1"><strong>' + h(value) +
+                        '</strong>' + renderScheduleShortcut('professor', record, assignments) + '</span>' +
+                        (discipline ? '<div class="small text-muted">Ingresso: ' + h(discipline) + '</div>' : '');
                 }],
                 ['matricula', 'Matrícula'], ['telefone', 'Telefone'],
                 ['carga_horaria_semanal', 'Carga/semana'], ['status', 'Status', statusBadge]
@@ -481,7 +724,11 @@
                 { name: 'status', label: 'Status', type: 'select', defaultValue: 'Ativa', options: [['Ativa', 'Ativa'], ['Inativa', 'Inativa']] }
             ],
             columns: [
-                ['nome', 'Turma'], ['curso_nome', 'Curso'],
+                ['nome', 'Turma', function (value, record, assignments) {
+                    return '<span class="d-inline-flex align-items-center gap-1"><strong>' + h(value) +
+                        '</strong>' + renderScheduleShortcut('turma', record, assignments) + '</span>';
+                }],
+                ['curso_nome', 'Curso'],
                 ['periodo', 'Período', function (value) {
                     if (!value) return '<span class="turno-badge turno-indefinido">Não informado</span>';
                     const className = 'turno-' + normalizeCatalogValue(value).replace(/[^a-z0-9]+/g, '-');
@@ -495,11 +742,13 @@
             fields: [
                 { name: 'nome', label: 'Nome do grupo', required: true, placeholder: 'Ex.: Grupo 1º Ano' },
                 { name: 'descricao', label: 'Descrição', placeholder: 'Descreva o objetivo deste grupo' },
+                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' },
                 { name: 'turma_ids', label: 'Turmas do grupo', type: 'multi-check', optionsFrom: 'turmas', help: 'Marque todas as turmas que pertencem a este grupo.' }
             ],
             columns: [
                 ['nome', 'Grupo'],
                 ['descricao', 'Descrição'],
+                ['semestre_letivo', 'Semestre'],
                 ['turma_ids', 'Turmas', function (ids) {
                     const names = (Array.isArray(ids) ? ids : []).map(function (id) {
                         return nameById(KEYS.turmas, id, '');
@@ -800,11 +1049,18 @@
         const key = KEYS[field.optionsFrom];
         if (!key) return [];
         return readRecords(key).filter(function (record) {
+            if (field.optionsFrom === 'grupos' && !semesterMatches(record, getSemester())) return false;
             return !(field.name === 'horario_id' && field.optionsFrom === 'horarios' &&
                 String(record.tipo || 'Aula').toLowerCase() !== 'aula');
         }).map(function (record) {
             let label = record.nome || record.dia_semana || ('Registro ' + record.id);
             if (field.optionsFrom === 'horarios') label = record.dia_semana + ' · ' + record.hora_inicio + '–' + record.hora_fim + ' · ' + (record.tipo || 'Aula');
+            if (field.optionsFrom === 'grupos') {
+                const turmaNames = (Array.isArray(record.turma_ids) ? record.turma_ids : [])
+                    .map(function (id) { return nameById(KEYS.turmas, id, ''); })
+                    .filter(Boolean);
+                label += ' · ' + (turmaNames.length ? turmaNames.join(', ') : 'sem turmas');
+            }
             if (field.includeIngress) {
                 const ingress = teacherIngressName(record);
                 if (ingress) label += ' · Ingresso: ' + ingress;
@@ -1156,6 +1412,7 @@
                 return String(item.ano_letivo || '') === String(record.ano_letivo) &&
                     String(item.semestre_letivo || '') === String(record.semestre_letivo);
             }
+            if (route === 'grupos') return groupIdentity(item) === groupIdentity(record);
             return true;
         }) ? 'Registro equivalente já cadastrado.' : '';
     }
@@ -1429,7 +1686,9 @@
                 if (!professorInput) throw new Error('"Professor" é obrigatório.');
                 if (!disciplineInput) throw new Error('"Disciplina" é obrigatório.');
                 if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
-                const availableGroupIds = new Set(readRecords(KEYS.grupos).map(function (group) { return String(group.id); }));
+                const availableGroupIds = new Set(readRecords(KEYS.grupos).filter(function (group) {
+                    return semesterMatches(group, semester);
+                }).map(function (group) { return String(group.id); }));
                 const groupIds = groupInput
                     ? Array.from(new Set(groupInput.split(',').map(function (id) { return id.trim(); }).filter(Boolean)))
                     : [];
@@ -1538,7 +1797,12 @@
         const header = worksheet.addRow(headers);
         header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
         header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D4E89' } };
-        const records = readRecords(spec.key);
+        let records = readRecords(spec.key);
+        if (['grupos', 'demandas', 'vinculos'].includes(route)) {
+            records = records.filter(function (record) { return semesterMatches(record, getSemester()); });
+        } else if (route === 'disponibilidade') {
+            records = records.filter(function (record) { return semesterMatches(record, availabilitySemester); });
+        }
         records.forEach(function (record) {
             worksheet.addRow([record.id].concat(spec.fields.map(function (field) {
                 return spreadsheetDisplayValue(field, record);
@@ -1597,6 +1861,7 @@
                 return positions.get('turmas');
             }
             if (position === undefined && route === 'vinculos' && field.type === 'multi-check') return null;
+            if (position === undefined && route === 'grupos' && field.name === 'semestre_letivo') return null;
             if (position === undefined) throw new Error('A planilha está sem a coluna "' + field.label + '". Baixe uma nova cópia preenchida pelo sistema.');
             return position;
         });
@@ -1625,6 +1890,12 @@
                 if (id) seenIds.add(id);
                 let oldRecord = id ? currentRecords.find(function (record) { return String(record.id) === id; }) : null;
                 if (id && !oldRecord) throw new Error('O ID ' + id + ' não existe neste cadastro. Baixe uma nova planilha antes de editar.');
+                if (oldRecord && ['grupos', 'demandas', 'vinculos', 'disponibilidade'].includes(route)) {
+                    const selectedSemester = route === 'disponibilidade' ? availabilitySemester : getSemester();
+                    if (!semesterMatches(oldRecord, selectedSemester)) {
+                        throw new Error('O ID ' + id + ' pertence a outro semestre. Abra esse semestre antes de editar o registro.');
+                    }
+                }
                 const record = Object.assign({}, oldRecord || {});
                 spec.fields.forEach(function (field, index) {
                     const input = values[fieldPositions[index]] || '';
@@ -1674,6 +1945,10 @@
                 if (route === 'grupos') {
                     record.nome = String(record.nome || '').trim();
                     if (!record.nome) throw new Error('"Nome do grupo" é obrigatório.');
+                    record.semestre_letivo = String(record.semestre_letivo || getSemester());
+                    if (!/^\d{4}\/[12]$/.test(record.semestre_letivo)) {
+                        throw new Error('O semestre do grupo deve usar o formato AAAA/1 ou AAAA/2.');
+                    }
                     if (!Array.isArray(record.turma_ids) || !record.turma_ids.length) {
                         throw new Error('Selecione ao menos uma turma para o grupo.');
                     }
@@ -1755,7 +2030,8 @@
                             semesterOf(item) === semesterOf(record);
                     }
                     if (route === 'grupos') {
-                        return normalizeCatalogValue(item.nome) === normalizeCatalogValue(record.nome);
+                        return groupIdentity(item) === groupIdentity(record) &&
+                            semesterOf(item) === semesterOf(record);
                     }
                     if (route === 'disponibilidade') {
                         return String(item.professor_id) === String(record.professor_id) &&
@@ -2199,9 +2475,34 @@
             renderDataSectionContent('notes-board', '<div class="notes-board">' + notesBoard + '</div>');
     }
 
+    function openEntitySchedule(entityType, entityId) {
+        const isProfessor = entityType === 'professor';
+        const collection = isProfessor ? KEYS.professores : entityType === 'turma' ? KEYS.turmas : '';
+        if (!collection || !findById(collection, entityId)) {
+            throw new Error('Não foi possível localizar o professor ou a turma selecionada.');
+        }
+        const assignmentKey = isProfessor ? 'professor_id' : 'turma_id';
+        const assignments = readSimulation(getSemester()).assignments || [];
+        if (!assignments.some(function (assignment) {
+            return String(assignment[assignmentKey]) === String(entityId);
+        })) {
+            throw new Error('Não há aulas atribuídas a este registro na grade do semestre atual.');
+        }
+        gradeTurmaFilter = isProfessor ? '' : String(entityId);
+        gradeTeacherFilter = isProfessor ? String(entityId) : '';
+        gradeDisciplineFilter = '';
+        gradeCompletionFilter = '';
+        gradeScheduleCollapsed = false;
+        if (window.location.hash === '#/grade') render();
+        else window.location.hash = '#/grade';
+    }
+
     function renderCrud(route) {
         const spec = specs[route];
         let records = readRecords(spec.key);
+        const scheduleAssignments = ['professores', 'turmas'].includes(route)
+            ? (readSimulation(getSemester()).assignments || [])
+            : [];
         if (route === 'disponibilidade') {
             const scopedTeacherIds = availabilityCourseId
                 ? new Set(getAvailabilityCourseScope(availabilityCourseId, availabilitySemester).teachers.map(function (entry) {
@@ -2212,6 +2513,10 @@
                 if (!semesterMatches(record, availabilitySemester)) return false;
                 if (!availabilityCourseId) return true;
                 return scopedTeacherIds.has(String(record.professor_id));
+            });
+        } else if (['grupos', 'demandas', 'vinculos'].includes(route)) {
+            records = records.filter(function (record) {
+                return semesterMatches(record, getSemester());
             });
         }
         records = records.slice().sort(function (a, b) {
@@ -2224,7 +2529,9 @@
         const isEditing = editing && editing.route === route;
         const fields = spec.fields.map(function (field) {
             let value = isEditing ? editing.record[field.name] : undefined;
-            if (route === 'disponibilidade' && field.name === 'semestre_letivo' && !isEditing) value = availabilitySemester;
+            if (field.name === 'semestre_letivo' && !isEditing) {
+                value = route === 'disponibilidade' ? availabilitySemester : getSemester();
+            }
             if (isEditing && route === 'sorts' && field.name === 'subgrupos' &&
                 !Array.isArray(value) && Array.isArray(editing.record.turma_ids)) {
                 value = getSortSubgroups(editing.record);
@@ -2237,7 +2544,7 @@
         const rows = records.map(function (record) {
             const cells = spec.columns.map(function (column) {
                 const value = record[column[0]];
-                return '<td>' + (column[2] ? column[2](value, record) : h(value == null || value === '' ? '—' : value)) + '</td>';
+                return '<td>' + (column[2] ? column[2](value, record, scheduleAssignments) : h(value == null || value === '' ? '—' : value)) + '</td>';
             }).join('');
             const filterAttributes = getRecordFilterDefinitions(route).map(function (filter) {
                 return ' data-filter-' + h(filter.name) + '="' + h(getRecordFilterValue(route, filter.name, record)) + '"';
@@ -2291,7 +2598,12 @@
                 '<input id="catalog-import-file" class="d-none" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div>' +
                 '<div class="form-text mt-2">' + h(importGuidance) + (route === 'professores' ? ' Para professores, o XLSX também oferece listas de titulação, carga semanal e limite diário.' : '') + ' CSV não oferece menus suspensos.</div></div></div>'
             : '';
+        const semesterTools = ['grupos', 'demandas', 'vinculos', 'disponibilidade', 'eventos'].includes(route)
+            ? renderSemesterTools()
+            : '';
+        const semesterDialog = semesterTools ? renderSemesterCopyDialog(getSemester()) : '';
         return pageHeader(spec.title, spec.icon, descriptionFor(route)) +
+            semesterTools +
             availabilityPlanning +
             importTools +
             spreadsheetTools +
@@ -2316,7 +2628,7 @@
             spec.columns.map(function (column) { return '<th>' + h(column[1]) + '</th>'; }).join('') + '<th class="text-end">Ações</th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-inbox"></i>Nenhum registro. Use o formulário acima para começar.</div></td></tr>') +
             (rows ? '<tr id="record-filter-empty" hidden><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-funnel"></i>Nenhum registro encontrado com esses filtros.</div></td></tr>' : '') +
-            '</tbody></table></div>') + '</div>';
+            '</tbody></table></div>') + '</div>' + semesterDialog;
     }
 
     function getRecordFilterDefinitions(route) {
@@ -3534,7 +3846,9 @@
             professores: professores,
             disciplinas: disciplinas,
             vinculos: vínculos,
-            grupos: readRecords(KEYS.grupos).map(function (group) {
+            grupos: readRecords(KEYS.grupos).filter(function (group) {
+                return semesterMatches(group, getSemester());
+            }).map(function (group) {
                 return {
                     id: Number(group.id),
                     turma_ids: Array.isArray(group.turma_ids) ? group.turma_ids.map(Number) : []
@@ -3727,9 +4041,11 @@
         if (gradeTeacherFilter && !teachers.some(function (teacher) { return String(teacher.id) === String(gradeTeacherFilter); })) gradeTeacherFilter = '';
         const selectedTurma = turmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); }) ||
             turmas.find(function (turma) { return String(turma.id) === String(state.activeTurmaId); }) || turmas[0];
-        const semesterForm = '<form id="semester-form" class="d-flex align-items-end gap-2"><div><label class="form-label mb-1" for="semester-input">Semestre</label>' +
+        const semesterForm = '<div class="d-flex flex-wrap align-items-end gap-2"><form id="semester-form" class="d-flex align-items-end gap-2"><div><label class="form-label mb-1" for="semester-input">Semestre</label>' +
             '<input id="semester-input" class="form-control form-control-sm" value="' + h(semester) + '" pattern="\\d{4}/[12]" placeholder="AAAA/1" required></div>' +
-            '<button class="btn btn-sm btn-outline-primary" type="submit">Aplicar</button></form>';
+            '<button class="btn btn-sm btn-outline-primary" type="submit">Aplicar</button></form>' +
+            '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="open-semester-copy" data-target-semester="' +
+            h(semester) + '"><i class="bi bi-copy me-1"></i>Copiar dados de outro semestre</button></div>';
         const pdfRecords = pdfExportType === 'turma'
             ? activeRecords(KEYS.turmas, ['ativa', 'ativo'])
             : activeRecords(KEYS.professores, ['ativo']);
@@ -3877,7 +4193,8 @@
             '<button class="btn btn-outline-secondary" type="button" data-action="print">Imprimir</button>' +
             '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button></div></div></div>' +
             '<div class="card mb-3"><div class="card-body d-flex align-items-end justify-content-between flex-wrap gap-3">' + turmaFilter + disciplineFilter + teacherFilter + completionFilter + legend + '</div></div>' +
-            scheduleView + (!editable ? renderSlotProtectionDialog() + renderSortApplyDialog(sortDefinitions, semester, assignments.length > 0) : '') +
+            scheduleView + (!editable ? renderSlotProtectionDialog() + renderSortApplyDialog(sortDefinitions, semester, assignments.length > 0) +
+                renderSemesterCopyDialog() : '') +
             declarationControls + substitutionPanel + workload + manual +
             '<p class="small text-muted mt-3"><i class="bi bi-info-circle me-1"></i>' + (editable
                 ? 'As alterações manuais são gravadas neste navegador. Confira as orientações de demanda e disponibilidade no formulário de cada aula.'
@@ -4565,9 +4882,123 @@
             });
             throw new Error('Não foi possível restaurar o backup. Verifique o espaço disponível no navegador. ' + error.message);
         }
+        semesterMigrationComplete = false;
         editing = null;
         render();
         notify(Object.keys(values).length + ' chave(s) restaurada(s) neste navegador.', 'success');
+    }
+
+    function deleteSemesterData(semester) {
+        const selectedSemester = String(semester || '').trim();
+        if (!/^\d{4}\/[12]$/.test(selectedSemester)) {
+            throw new Error('Selecione um semestre válido para excluir.');
+        }
+        if (selectedSemester === getSemester()) {
+            throw new Error('O semestre ativo não pode ser excluído. Selecione outro semestre antes.');
+        }
+        if (!getStoredSemesters().includes(selectedSemester)) {
+            throw new Error('O semestre selecionado não foi encontrado.');
+        }
+        if (!window.confirm(
+            'Excluir o semestre ' + selectedSemester + ' e todos os seus grupos, demandas, vínculos, PRDs/disponibilidades, eventos aplicados, peculiaridades, substituições e aulas da grade? ' +
+            'Cursos, professores, disciplinas, turmas, horários e definições de eventos e sorts serão mantidos. Esta ação não pode ser desfeita sem um backup.'
+        )) return false;
+
+        const scopedModules = [
+            [KEYS.grupos, 'Grupos'],
+            [KEYS.demandas, 'TurmaDisciplina'],
+            [KEYS.vinculos, 'ProfessorDisciplina'],
+            [KEYS.disponibilidade, 'ProfessorDisponibilidade'],
+            [KEYS.eventosGrade, 'EventosGrade'],
+            [KEYS.protecoesGrade, 'ProtecoesGrade'],
+            [KEYS.substituicoes, 'SubstituicoesDocentes']
+        ];
+        const simulationKey = 'owltime_simulacao_painel_' + selectedSemester;
+        const previousValues = {};
+        scopedModules.forEach(function (item) { previousValues[item[0]] = localStorage.getItem(item[0]); });
+        previousValues[simulationKey] = localStorage.getItem(simulationKey);
+        try {
+            scopedModules.forEach(function (item) {
+                const remaining = readRecords(item[0]).filter(function (record) {
+                    return !semesterMatches(record, selectedSemester);
+                });
+                saveRecords(item[0], remaining, item[1]);
+            });
+            localStorage.removeItem(simulationKey);
+        } catch (error) {
+            Object.keys(previousValues).forEach(function (key) {
+                try {
+                    if (previousValues[key] === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, previousValues[key]);
+                } catch (rollbackError) {
+                    console.error('Falha ao restaurar dados durante exclusão do semestre:', key, rollbackError);
+                }
+            });
+            throw new Error('Não foi possível concluir a exclusão do semestre; os dados foram restaurados quando possível. ' + error.message);
+        }
+        return true;
+    }
+
+    function renderSemesterDashboard() {
+        const scopedKeys = [
+            KEYS.grupos, KEYS.demandas, KEYS.vinculos, KEYS.disponibilidade,
+            KEYS.eventosGrade, KEYS.protecoesGrade, KEYS.substituicoes
+        ];
+        const recordsByKey = {};
+        const semesters = new Set([getSemester()]);
+        scopedKeys.forEach(function (key) {
+            recordsByKey[key] = readRecords(key);
+            recordsByKey[key].forEach(function (record) {
+                semesters.add(semesterOf(record));
+            });
+        });
+        const simulationPrefix = 'owltime_simulacao_painel_';
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index) || '';
+            const match = new RegExp('^' + simulationPrefix + '(\\d{4}/[12])$').exec(key);
+            if (match) semesters.add(match[1]);
+        }
+        const cards = Array.from(semesters).sort(function (a, b) { return b.localeCompare(a); }).map(function (semester) {
+            const count = function (key) {
+                return recordsByKey[key].filter(function (record) {
+                    return semesterMatches(record, semester);
+                }).length;
+            };
+            const dataBytes = scopedKeys.reduce(function (total, key) {
+                const records = recordsByKey[key].filter(function (record) {
+                    return semesterMatches(record, semester);
+                });
+                return total + (records.length ? new Blob([JSON.stringify(records)]).size : 0);
+            }, 0) + (localStorage.getItem(simulationKey(semester))
+                ? new Blob([localStorage.getItem(simulationKey(semester))]).size
+                : 0);
+            const lessons = readSimulation(semester).assignments || [];
+            const active = semester === getSemester();
+            return '<div class="col-md-6 col-xl-4"><article class="card h-100"><div class="card-header d-flex justify-content-between align-items-center gap-2">' +
+                '<strong>' + h(semester) + '</strong>' + (active ? '<span class="badge text-bg-primary">Ativo</span>' : '') + '</div>' +
+                '<div class="card-body"><div class="row row-cols-2 g-2 small">' +
+                '<div><strong>' + count(KEYS.grupos) + '</strong><span class="d-block text-muted">grupos</span></div>' +
+                '<div><strong>' + count(KEYS.demandas) + '</strong><span class="d-block text-muted">demandas</span></div>' +
+                '<div><strong>' + count(KEYS.vinculos) + '</strong><span class="d-block text-muted">vínculos</span></div>' +
+                '<div><strong>' + count(KEYS.disponibilidade) + '</strong><span class="d-block text-muted">PRD/disponibilidades</span></div>' +
+                '<div><strong>' + count(KEYS.eventosGrade) + '</strong><span class="d-block text-muted">marcações de eventos</span></div>' +
+                '<div><strong>' + count(KEYS.protecoesGrade) + '</strong><span class="d-block text-muted">peculiaridades</span></div>' +
+                '<div><strong>' + count(KEYS.substituicoes) + '</strong><span class="d-block text-muted">substituições</span></div>' +
+                '<div><strong>' + lessons.length + '</strong><span class="d-block text-muted">aulas na grade</span></div>' +
+                '<div class="col-12 border-top pt-2"><strong>' + formatSemesterDataSize(dataBytes) +
+                '</strong><span class="d-block text-muted">tamanho estimado dos dados</span></div>' +
+                '</div><div class="d-flex flex-wrap gap-2 mt-3"><button class="btn btn-sm ' + (active ? 'btn-outline-secondary' : 'btn-outline-primary') +
+                '" type="button" data-action="select-semester-dashboard" data-semester="' + h(semester) + '"' +
+                (active ? ' disabled' : '') + '>' + (active ? 'Semestre atual' : 'Abrir semestre') + '</button>' +
+                (active ? '' : '<button class="btn btn-sm btn-outline-danger" type="button" data-action="delete-semester" data-semester="' +
+                    h(semester) + '">Excluir semestre</button>') + '</div></div></article></div>';
+        }).join('');
+        return '<section class="mb-4"><div class="d-flex justify-content-between align-items-end gap-2 flex-wrap mb-2">' +
+            '<div><h2 class="h5 mb-1">Semestres e seus dados</h2><p class="small text-muted mb-0">Resumo dos cadastros, da grade e do tamanho estimado dos dados em cada período.</p></div>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="open-semester-copy" data-target-semester="' +
+            h(getSemester()) + '"><i class="bi bi-copy me-1"></i>Copiar dados de outro semestre</button></div>' +
+            '<div class="row g-3">' + (cards || '<div class="col-12"><div class="empty-state">Nenhum semestre com dados.</div></div>') +
+            '</div></section>';
     }
 
     function renderStorage() {
@@ -4598,6 +5029,7 @@
         }).join('');
         return pageHeader('Armazenamento e backup', 'bi-hdd-stack', 'Inspecione e proteja os registros locais. O conteúdo não é enviado para o site.') +
             '<div class="alert local-callout"><strong>Importante:</strong> o localStorage é específico deste navegador e dispositivo. Limpar os dados do navegador pode apagá-los permanentemente; mantenha cópias exportadas.</div>' +
+            renderSemesterDashboard() +
             '<div class="d-flex flex-wrap gap-2 mb-3 no-print"><button class="btn btn-primary" type="button" data-action="export-backup"><i class="bi bi-download me-1"></i>Exportar backup</button>' +
             '<button class="btn btn-outline-primary" type="button" data-action="pick-backup"><i class="bi bi-upload me-1"></i>Importar backup</button>' +
             '<button class="btn btn-outline-warning" type="button" data-action="delete-selected-storage">Excluir selecionadas</button>' +
@@ -4608,13 +5040,20 @@
             '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-storage-checks">Selecionar tudo</button></div></div>' +
             renderDataSectionContent('local-storage-keys', '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th></th><th>Chave</th><th>Módulo</th><th class="text-end">Tamanho</th><th></th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-hdd"></i>Nenhum dado Owltime salvo neste navegador.</div></td></tr>') +
-            '</tbody></table></div>') + '</div>';
+            '</tbody></table></div>') + '</div>' + renderSemesterCopyDialog();
     }
 
     function formatBytes(bytes) {
         if (!bytes) return '0 B';
         if (bytes < 1024) return bytes + ' B';
-        return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function formatSemesterDataSize(bytes) {
+        if (!bytes) return '0 KB';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
     function renderReports() {
@@ -4961,7 +5400,8 @@
             reportMinimumLessons !== '' && 'mín. ' + reportMinimumLessons + ' aulas',
             reportMaximumLessons !== '' && 'máx. ' + reportMaximumLessons + ' aulas'
         ].filter(Boolean);
-        return '<div class="report-screen-only">' + pageHeader('Relatórios', 'bi-bar-chart', 'Resumo das aulas por turma, disciplinas e professores.') + '</div>' +
+        return '<div class="report-screen-only">' + pageHeader('Relatórios', 'bi-bar-chart', 'Resumo das aulas por turma, disciplinas e professores.') +
+            renderSemesterTools() + '</div>' +
             '<div class="report-print-header"><span>OWLTIME · GESTÃO ESCOLAR</span><h1>Relatório de aulas por turma</h1><p>Semestre ' + h(semester) +
             ' · Emitido em ' + h(new Date().toLocaleDateString('pt-BR')) + '</p></div>' +
             '<div class="card mb-3 no-print"><div class="card-body d-flex flex-wrap align-items-end gap-3"><div><label class="form-label" for="report-semester">Semestre</label><input class="form-control" id="report-semester" value="' + h(semester) + '" pattern="\\d{4}/[12]" placeholder="AAAA/1"></div>' +
@@ -4993,7 +5433,55 @@
             renderDataSectionToggle('report-class-summaries', 'Mostrar turmas', 'Recolher turmas') + '</div>' +
             renderDataSectionContent('report-class-summaries',
                 classSummaries || '<div class="empty-state"><i class="bi bi-journal-x"></i>Nenhuma turma ou demanda corresponde aos filtros selecionados.</div>',
-                'report-class-items') + '</section>';
+                'report-class-items') + '</section>' + renderSemesterCopyDialog();
+    }
+
+    function renderAbout() {
+        const contributors = [
+            {
+                name: 'Ozeias Souza',
+                department: 'Gabinete',
+                icon: 'bi-code-slash',
+                role: 'Desenvolvedor',
+                description: 'Responsável pela construção e evolução do software.',
+                color: 'about-person-developer'
+            },
+            {
+                name: 'Welligton Dias',
+                department: 'Gabinete',
+                icon: 'bi-speedometer2',
+                role: 'Analista de performance',
+                description: 'Avalia a eficiência, a usabilidade e o desempenho da ferramenta.',
+                color: 'about-person-performance'
+            },
+            {
+                name: 'Bianca de Marco',
+                department: 'SUPAE',
+                icon: 'bi-calendar2-week',
+                role: 'Visão prática escolar',
+                description: 'Contribui com sua experiência na geração de horários e na carga horária docente, trazendo a realidade do dia a dia escolar para o projeto.',
+                color: 'about-person-practice'
+            }
+        ];
+        const people = contributors.map(function (person) {
+            return '<div class="col-md-6 col-xl-4"><article class="card about-person-card ' + person.color + '">' +
+                '<div class="card-body"><div class="about-person-icon"><i class="bi ' + person.icon + '" aria-hidden="true"></i></div>' +
+                '<h3 class="h5 mb-1">' + h(person.name) + '</h3>' +
+                '<span class="badge about-department-badge">Assistente de Administração · ' + h(person.department) + '</span>' +
+                '<div class="about-project-role">' + h(person.role) + '</div>' +
+                '<p class="text-muted mb-0">' + h(person.description) + '</p></div></article></div>';
+        }).join('');
+        return pageHeader('Sobre', 'bi-info-circle', 'As pessoas por trás do Owltime e as contribuições de cada uma.') +
+            '<section class="about-page">' +
+            '<div class="about-hero"><div class="about-hero-brand"><img src="assets/img/logo.png" alt="Logo do Owltime">' +
+            '<div><span class="about-eyebrow">Projeto · 2026</span><h2>Owltime</h2>' +
+            '<p class="mb-0">Organização escolar com tecnologia e conhecimento da rotina educacional.</p></div></div>' +
+            '<div class="about-institution"><i class="bi bi-mortarboard" aria-hidden="true"></i>' +
+            '<span>IFRO · Campus Colorado do Oeste</span></div></div>' +
+            '<div class="about-team-heading"><div><span class="about-eyebrow">Nossa equipe</span>' +
+            '<h2 class="h4 mb-1">Experiências que se complementam</h2>' +
+            '<p class="text-muted mb-0">Desenvolvimento, desempenho e prática escolar reunidos em um só projeto.</p></div></div>' +
+            '<div class="row g-3">' + people + '</div></section>';
     }
 
     function renderHelp() {
@@ -5005,15 +5493,7 @@
             '<li>Se limpar os dados do navegador ou trocar de perfil/dispositivo, importe um backup para recuperar o trabalho.</li></ul></div></div></div>' +
             '<div class="col-lg-5"><div class="card"><div class="card-header">Limites importantes</div><div class="card-body"><div class="alert danger-callout mb-0">' +
             'Sem servidor, login e senhas não oferecem autenticação segura. Qualquer pessoa com acesso ao mesmo perfil do navegador pode abrir e alterar os dados. Não use este app para guardar informações que exijam controle de acesso ou sigilo.' +
-            '</div></div></div></div>' +
-            '<section class="col-12 tutorial-section"><div class="tutorial-heading"><div><span class="tutorial-eyebrow">PASSO A PASSO</span><h2>Tutorial guiado: da escola à grade</h2>' +
-            '<p>Navegue pelos módulos e preencha os formulários com exemplos fictícios. Em cada etapa, o tutorial abre um painel com valores copiáveis.</p></div>' +
-            '<span class="badge text-bg-primary">11 etapas · Gestão Pública · 2026/2</span></div>' +
-            '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>O tutorial não cria uma área de teste separada. Se salvar os exemplos, eles serão gravados nos cadastros deste navegador. Faça um backup antes de começar e restaure-o ao final, se quiser removê-los.</div>' +
-            '<button type="button" class="btn btn-primary" data-action="start-tutorial"><i class="bi bi-play-circle me-1"></i>Iniciar tutorial</button></section>' +
-            '<section class="col-12"><div class="card sharing-idea"><div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3"><div><span class="tutorial-eyebrow">COMPARTILHAMENTO</span><h2>Horários individuais</h2>' +
-            '<p>Na Grade oficial, selecione uma turma ou professor para baixar um PDF bem formatado, enviá-lo diretamente pelo menu de compartilhamento do dispositivo, baixar CSV individual ou compartilhar um resumo.</p>' +
-            '<p class="small mb-2">O Owltime funciona localmente; publicação por link público requer um serviço externo.</p><a class="btn btn-sm btn-outline-primary" href="#/grade"><i class="bi bi-calendar3 me-1"></i>Abrir Grade oficial</a></div><i class="bi bi-share"></i></div></div></section>';
+            '</div></div></div></div>';
     }
 
     function render() {
@@ -5029,6 +5509,7 @@
             link.classList.toggle('active', link.dataset.route === route);
         });
         try {
+            if (!semesterMigrationComplete) migrateLegacySemesterRecords();
             editing = editing && editing.route === route ? editing : null;
             if (route === 'notas') view.innerHTML = renderNotes();
             else if (specs[route]) view.innerHTML = renderCrud(route);
@@ -5038,6 +5519,7 @@
             else if (route === 'relatorios') view.innerHTML = renderReports();
             else if (route === 'armazenamento') view.innerHTML = renderStorage();
             else if (route === 'ajuda') view.innerHTML = renderHelp();
+            else if (route === 'sobre') view.innerHTML = renderAbout();
             else view.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-circle"></i>Página não encontrada.</div>';
             sortSelectOptions(view);
             ensureInputPlaceholders();
@@ -5059,7 +5541,6 @@
                 '<div class="alert alert-danger">' + h(error.message || 'Erro inesperado ao carregar dados locais.') + '</div>' +
                 '<a class="btn btn-outline-primary" href="#/armazenamento">Abrir armazenamento e backup</a>';
         }
-        renderTutorialGuide(route);
     }
 
     function collectForm(form, fields) {
@@ -5103,6 +5584,11 @@
         if (!spec) return;
         const values = collectForm(form, spec.fields);
         if (route === 'horarios' && values.hora_fim <= values.hora_inicio) throw new Error('O horário final precisa ser posterior ao horário inicial.');
+        if (route === 'grupos') {
+            if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
+                throw new Error('Informe o semestre do grupo no formato AAAA/1 ou AAAA/2.');
+            }
+        }
         if (route === 'disponibilidade') {
             if (!DAYS.includes(values.dia_semana)) throw new Error('Selecione um dia válido.');
             if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
@@ -5139,12 +5625,14 @@
             if (duplicate) throw new Error('Este registro de disponibilidade já existe para o professor nesse dia e semestre.');
         }
         if (route === 'vinculos') {
+            if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
+                throw new Error('Informe o semestre do vínculo no formato AAAA/1 ou AAAA/2.');
+            }
             const duplicate = readRecords(spec.key).some(function (row) {
                 return String(row.id) !== String(editing && editing.id) &&
                     String(row.professor_id) === String(values.professor_id) &&
                     String(row.disciplina_id) === String(values.disciplina_id) &&
-                    (String(row.semestre_letivo || '') === String(values.semestre_letivo || '') ||
-                        (!String(row.semestre_letivo || '').trim() && values.semestre_letivo === getSemester()));
+                    semesterMatches(row, values.semestre_letivo);
             });
             if (duplicate) throw new Error('Este professor já está vinculado a essa disciplina neste semestre.');
         }
@@ -5154,17 +5642,21 @@
             if (!values.turma_ids.length) throw new Error('Marque ao menos uma turma para o grupo.');
             const duplicate = readRecords(spec.key).some(function (row) {
                 return String(row.id) !== String(editing && editing.id) &&
-                    normalizeCatalogValue(row.nome) === normalizeCatalogValue(values.nome);
+                    groupIdentity(row) === groupIdentity(values) &&
+                    semesterMatches(row, values.semestre_letivo);
             });
-            if (duplicate) throw new Error('Já existe um grupo com esse nome.');
+            if (duplicate) throw new Error('Já existe um grupo com esse nome e essas turmas neste semestre.');
         }
         if (route === 'demandas') {
+            if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
+                throw new Error('Informe o semestre da demanda no formato AAAA/1 ou AAAA/2.');
+            }
             if (!values.aulas_semanais || values.aulas_semanais < 1) throw new Error('Informe ao menos uma aula por semana.');
             const duplicate = readRecords(spec.key).some(function (row) {
                 return String(row.id) !== String(editing && editing.id) &&
                     String(row.turma_id) === String(values.turma_id) &&
                     String(row.disciplina_id) === String(values.disciplina_id) &&
-                    semesterMatches(row) && String(row.semestre_letivo || '') === String(values.semestre_letivo || '');
+                    semesterMatches(row, values.semestre_letivo);
             });
             if (duplicate) throw new Error('Já existe uma demanda dessa disciplina para a turma neste semestre. Edite o registro existente.');
         }
@@ -6125,7 +6617,7 @@
             return navigator.share({ title: heading + ' · ' + schedule.semester, text: text })
                 .then(function () { notify('Resumo compartilhado.', 'success'); });
         }
-        return copyTutorialValue(text).then(function () {
+        return copyTextToClipboard(text).then(function () {
             notify('Resumo copiado. Compartilhe-o pelo aplicativo desejado.', 'success');
         });
     }
@@ -6189,14 +6681,57 @@
     }
 
     function applySemesterFrom(inputId) {
-        const semester = setSemester(document.getElementById(inputId).value);
+        const semester = String(document.getElementById(inputId).value || '').trim();
+        if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+        if (semester !== getSemester()) {
+            openSemesterCopyDialog(semester);
+            return;
+        }
+        applySemesterSelection(semester);
+        notify('Semestre ' + semester + ' selecionado.', 'success');
+    }
+
+    function submitSemesterCopy(form) {
+        const target = String(form.elements.namedItem('target_semester').value || '').trim();
+        const source = String(form.elements.namedItem('source_semester').value || '').trim();
+        if (!/^\d{4}\/[12]$/.test(target) ||
+            (source && (!/^\d{4}\/[12]$/.test(source) || source === target || !getStoredSemesters().includes(source)))) {
+            throw new Error('A origem ou o destino da cópia de semestre é inválido. Abra a janela novamente.');
+        }
+        const modules = Array.from(form.querySelectorAll('input[name="copy_module"]:checked')).map(function (input) {
+            return input.value;
+        });
+        if (!source && modules.length) {
+            throw new Error('Selecione um semestre de origem ou desmarque os módulos para continuar sem copiar.');
+        }
+        const copied = source ? copySemesterModules(source, target, modules) : {};
+        if (!source) setSemester(target);
+        const dialog = document.getElementById('semester-copy-dialog');
+        if (dialog && dialog.open) dialog.close();
+        availabilitySemester = target;
         editing = null;
         gradeEditingId = null;
         teacherSubstitutionEditingId = '';
         gradeFocusDay = '';
         gradeFocusSlotId = '';
         render();
-        notify('Semestre ' + semester + ' selecionado.', 'success');
+        const summary = [
+            copied.grupos ? copied.grupos + ' grupo(s)' : '',
+            copied.demandas ? copied.demandas + ' demanda(s)' : '',
+            copied.vinculos ? copied.vinculos + ' vínculo(s)' : '',
+            copied.disponibilidade ? copied.disponibilidade + ' registro(s) de PRD/disponibilidade' : '',
+            copied.eventos ? copied.eventos + ' marcação(ões) de evento' : ''
+        ].filter(Boolean);
+        const existingGroups = copied.gruposExistentes
+            ? ' ' + copied.gruposExistentes + ' grupo(s) equivalente(s) do destino foram reaproveitados.'
+            : '';
+        const skippedEvents = copied.eventosIgnorados
+            ? ' ' + copied.eventosIgnorados + ' marcação(ões) de evento foram ignoradas por conflito no destino.'
+            : '';
+        notify(summary.length
+            ? 'Semestre ' + target + ' selecionado. Copiados: ' + summary.join(', ') + '.' + existingGroups + skippedEvents
+            : 'Semestre ' + target + ' selecionado. Nenhum registro novo foi copiado; os registros existentes foram preservados.' + existingGroups + skippedEvents,
+        'success');
     }
 
     function handleClick(event) {
@@ -6204,45 +6739,8 @@
         if (!button) return;
         const action = button.dataset.action;
         try {
-            if (action === 'start-tutorial') {
-                saveTutorialState({ step: 0 });
-                if (window.location.hash === '#/cursos') render();
-                else window.location.hash = '#/cursos';
-            } else if (action === 'copy-tutorial-value') {
-                copyTutorialValue(button.dataset.copyValue || '').then(function () {
-                    notify('Valor copiado. Cole-o no campo correspondente.', 'success');
-                }).catch(function (error) {
-                    console.error('Falha ao copiar valor do tutorial:', error);
-                    notify(error.message || 'Não foi possível copiar o valor.', 'danger');
-                });
-            } else if (action === 'go-tutorial-step') {
-                const state = readTutorialState();
-                const route = TUTORIAL_STEPS[state.step].route;
-                if (window.location.hash === '#/' + route) render();
-                else window.location.hash = '#/' + route;
-            } else if (action === 'toggle-tutorial-minimize') {
-                const state = readTutorialState();
-                if (!state) return;
-                state.minimized = !state.minimized;
-                saveTutorialState(state);
-                render();
-            } else if (action === 'next-tutorial-step') {
-                const state = readTutorialState();
-                if (state.step >= TUTORIAL_STEPS.length - 1) {
-                    clearTutorialState();
-                    render();
-                    notify('Tutorial concluído. Você pode iniciar novamente pela página Ajuda.', 'success');
-                } else {
-                    state.step += 1;
-                    saveTutorialState(state);
-                    const route = TUTORIAL_STEPS[state.step].route;
-                    if (window.location.hash === '#/' + route) render();
-                    else window.location.hash = '#/' + route;
-                }
-            } else if (action === 'stop-tutorial') {
-                clearTutorialState();
-                render();
-                notify('Tutorial encerrado. Os cadastros feitos permanecem neste navegador.', 'info');
+            if (action === 'open-entity-schedule') {
+                openEntitySchedule(button.dataset.entityType, button.dataset.entityId);
             } else if (action === 'toggle-data-section') {
                 const section = button.dataset.section;
                 if (!section) throw new Error('Não foi possível identificar a seção de dados.');
@@ -6260,6 +6758,19 @@
             } else if (action === 'toggle-report-teacher-ranking') {
                 reportTeacherRankingCollapsed = !reportTeacherRankingCollapsed;
                 render();
+            } else if (action === 'open-semester-copy') {
+                openSemesterCopyDialog(button.dataset.targetSemester || getSemester());
+            } else if (action === 'select-semester-dashboard') {
+                openSemesterCopyDialog(button.dataset.semester || '');
+            } else if (action === 'delete-semester') {
+                const semester = button.dataset.semester || '';
+                if (deleteSemesterData(semester)) {
+                    render();
+                    notify('Semestre ' + semester + ' e seus dados associados foram excluídos. Os catálogos globais foram mantidos.', 'success');
+                }
+            } else if (action === 'close-semester-copy') {
+                const dialog = document.getElementById('semester-copy-dialog');
+                if (dialog && dialog.open) dialog.close();
             } else if (action === 'open-sort-dialog') {
                 const dialog = document.getElementById('sort-apply-dialog');
                 if (!dialog) throw new Error('O formulário de Sort não está disponível.');
@@ -6348,7 +6859,13 @@
                 }), specs.notas.module);
                 render();
             } else if (action === 'availability-apply') {
-                availabilitySemester = setSemester(document.getElementById('availability-semester').value);
+                const requestedSemester = String(document.getElementById('availability-semester').value || '').trim();
+                if (!/^\d{4}\/[12]$/.test(requestedSemester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+                if (requestedSemester !== getSemester()) {
+                    openSemesterCopyDialog(requestedSemester);
+                    return;
+                }
+                availabilitySemester = setSemester(requestedSemester);
                 editing = null;
                 render();
                 notify('Consulta de disponibilidade atualizada para ' + availabilitySemester + '.', 'success');
@@ -6454,7 +6971,13 @@
                 render();
             }
             else if (action === 'report-apply') {
-                setSemester(document.getElementById('report-semester').value);
+                const requestedSemester = String(document.getElementById('report-semester').value || '').trim();
+                if (!/^\d{4}\/[12]$/.test(requestedSemester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+                if (requestedSemester !== getSemester()) {
+                    openSemesterCopyDialog(requestedSemester);
+                    return;
+                }
+                setSemester(requestedSemester);
                 render();
             } else if (action === 'export-csv') exportGradeCsv();
             else if (action === 'print-schedule-pdf') printSchedulePdf();
@@ -6549,6 +7072,9 @@
             } else if (form.id === 'sort-apply-form') {
                 event.preventDefault();
                 applySortFromForm(form);
+            } else if (form.id === 'semester-copy-form') {
+                event.preventDefault();
+                submitSemesterCopy(form);
             } else if (form.id === 'semester-form') {
                 event.preventDefault();
                 applySemesterFrom('semester-input');
