@@ -40,6 +40,9 @@
     let workloadPanelCollapsed = false;
     let gradeLegendCollapsed = true;
     let manualLegendCollapsed = true;
+    let laboratoryPendingTab = 'professores';
+    let laboratoryPendingCollapsed = false;
+    const laboratoryPendingFilters = { professores: '', turmas: '', disciplinas: '' };
     let reportTeacherRankingCollapsed = true;
     let workloadTeacherFilter = '';
     let workloadCourseFilter = '';
@@ -278,7 +281,7 @@
         const simulationPrefix = 'owltime_simulacao_painel_';
         for (let index = 0; index < localStorage.length; index += 1) {
             const key = localStorage.key(index) || '';
-            const match = new RegExp('^' + simulationPrefix + '(\\d{4}/[12])$').exec(key);
+            const match = new RegExp('^(?:' + simulationPrefix + '|owltime_laboratorio_)(\\d{4}/[12])$').exec(key);
             if (match) semesters.add(match[1]);
         }
         return Array.from(semesters).sort(function (a, b) { return b.localeCompare(a); });
@@ -917,7 +920,7 @@
     }
 
     function pageHeader(title, icon, description, actions, printScope, hidePrint) {
-        const hasDedicatedPdf = ['Grade oficial', 'Ajustes manuais', 'Relatórios'].includes(title);
+        const hasDedicatedPdf = ['Grade oficial', 'Laboratório', 'Relatórios'].includes(title);
         const printAction = hasDedicatedPdf || hidePrint ? '' :
             '<button class="btn btn-sm btn-danger no-print" type="button" data-action="print-module-pdf" data-print-scope="' +
             h(printScope || 'page') + '" data-print-title="' + h(title) +
@@ -1063,7 +1066,10 @@
             '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas previstas</span><div class="fw-semibold">' + h(lastGeneration.totalPrevistas || 0) + '</div></div>' +
             '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas alocadas</span><div class="fw-semibold">' + h(lastGeneration.totalAtendidas || 0) + '</div></div>' +
             '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Pendências</span><div class="fw-semibold">' + h(lastGeneration.totalPendentes || 0) + ' · ' + h(lastGeneration.percentual || 0) + '% atendidas</div></div></div>' +
-            (gradeState.assignments.length ? '<div class="small text-muted mt-3">A grade atual contém ' + gradeState.assignments.length + ' aula(s), incluindo ajustes manuais posteriores.</div><a class="btn btn-sm btn-outline-secondary mt-2" href="#/ajustes">Abrir ajustes manuais</a>' : '') + '</div></div>'
+            (gradeState.assignments.length ? '<div class="small text-muted mt-3">A grade atual contém ' + gradeState.assignments.length + ' aula(s).' +
+                (gradeState.laboratoryAdjustments && gradeState.laboratoryAdjustments.length
+                    ? ' Último ajuste no Laboratório: ' + h(formatDate(gradeState.laboratoryAdjustments[gradeState.laboratoryAdjustments.length - 1].aplicadoEm)) + '.'
+                    : '') + '</div>' : '') + '</div></div>'
             : '<div class="alert alert-info mb-4">Ainda não há uma grade QDP gerada para este semestre. <a href="#/grade" class="alert-link">Acesse a Grade oficial</a> para gerar.</div>';
         return pageHeader('Painel', 'bi-grid-1x2', 'Organize dados escolares e monte grades com armazenamento local.', '<span class="badge text-bg-primary align-self-center">Semestre ' + h(getSemester()) + '</span>', '', true) +
             '<div class="alert local-callout"><i class="bi bi-shield-check me-2"></i>Sem conta e sem servidor: seus registros ficam no armazenamento deste navegador. Faça backups periódicos em Armazenamento e backup.</div>' +
@@ -4065,7 +4071,7 @@
 
     function renderGrade(manualAdjustments) {
         const semester = getSemester();
-        const state = readSimulation(semester);
+        const state = readEditableSimulation(semester);
         const editable = Boolean(manualAdjustments);
         const turmas = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
         const slots = readRecords(KEYS.horarios).filter(function (slot) { return String(slot.tipo || 'Aula').toLowerCase() === 'aula'; });
@@ -4197,9 +4203,9 @@
                         : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable));
         const gradeEditing = state.assignments.find(function (item) { return String(item.id) === String(gradeEditingId); }) || null;
         const manual = editable ? renderManualAssignment(selectedTurma, slots, gradeEditing, gradeFocusDay, gradeFocusSlotId) : '';
-        const workload = renderTeacherWorkload(readRecords(KEYS.professores), assignments);
+        const workload = editable ? '' : renderTeacherWorkload(readRecords(KEYS.professores), assignments);
         const declarationControls = editable ? '' : renderDeclarationControls(semester, assignments);
-        const substitutionPanel = renderTeacherSubstitutionPanel(semester, assignments, turmas);
+        const substitutionPanel = editable ? '' : renderTeacherSubstitutionPanel(semester, assignments, turmas);
         const sortDefinitions = readRecords(KEYS.sorts);
         const appliedSorts = getGradeProtections(semester).some(function (protection) {
             return protection.tipo_marcacao === 'sort';
@@ -4214,33 +4220,39 @@
                 });
             });
         });
-        const title = editable ? 'Ajustes manuais' : 'Grade oficial';
+        const title = editable ? 'Laboratório' : 'Grade oficial';
         const description = editable
-            ? 'Arraste uma aula para outro horário vazio ou clique nela para editar. Com filtro por disciplina, selecione também uma turma para arrastar.'
+            ? 'Ambiente de teste isolado da Grade oficial. Experimente mover, editar, adicionar ou remover aulas; nada é aplicado antes da confirmação.'
             : 'Gere a grade automaticamente pelo QDP e acompanhe todas as turmas, demandas e cargas docentes.';
         const navigation = editable
-            ? '<a class="btn btn-outline-secondary" href="#/grade"><i class="bi bi-arrow-left me-1"></i>Voltar à Grade oficial</a>'
-            : '<a class="btn btn-outline-primary" href="#/ajustes"><i class="bi bi-pencil-square me-1"></i>Ajustes manuais</a>';
+            ? ''
+            : '<a class="btn btn-outline-primary" href="#/laboratorio"><i class="bi bi-sliders me-1"></i>Abrir Laboratório</a>';
         const generationButton = editable ? '' :
             '<button class="btn btn-primary" type="button" data-action="generate-grade"><i class="bi bi-magic me-1"></i>Gerar grade</button>' +
             '<button class="btn btn-outline-primary" type="button" data-action="open-sort-dialog"' +
             (hasAvailableSort || appliedSorts ? '' : ' disabled') + '><i class="bi bi-shuffle me-1"></i>Aplicar sort</button>';
+        const laboratorySession = editable ? loadLaboratory(semester) : null;
+        const semesterControls = editable
+            ? '<div class="small text-muted">Rascunho isolado do semestre <strong>' + h(semester) + '</strong></div>'
+            : semesterForm;
         const primaryGradeActions = '<div class="grade-primary-actions">' + generationButton + navigation +
-            (editable ? '<button class="btn btn-outline-primary" type="button" data-action="export-grade">Exportar JSON</button>' : '') +
-            (editable ? '<button class="btn btn-danger" type="button" data-action="print"><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' : '') +
-            '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button></div>';
+            (editable
+                ? '<button class="btn btn-danger" type="button" data-action="cancel-laboratory"><i class="bi bi-x-circle me-1"></i>Cancelar e descartar</button>' +
+                '<button class="btn btn-success" type="button" data-action="apply-laboratory"><i class="bi bi-check2-circle me-1"></i>Aplicar à Grade oficial</button>'
+                : '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button>') + '</div>';
         return pageHeader(title, 'bi-calendar3', description) +
             '<div class="card mb-3 grade-controls"><div class="card-body grade-controls-body">' +
             primaryGradeActions +
             '<div class="grade-secondary-controls d-flex flex-wrap justify-content-between align-items-end gap-3">' +
-            semesterForm + pdfExportControls + '</div></div></div>' +
+            semesterControls + pdfExportControls + '</div></div></div>' +
             '<div class="card mb-3"><div class="card-body d-flex align-items-end justify-content-between flex-wrap gap-3">' + turmaFilter + disciplineFilter + teacherFilter + completionFilter + legend + '</div></div>' +
             scheduleView + (!editable ? renderSlotProtectionDialog() + renderSortApplyDialog(sortDefinitions, semester, assignments.length > 0) +
                 renderSemesterCopyDialog() : '') +
+            (editable ? renderLaboratoryPendingPanel(laboratorySession) : '') +
             declarationControls + substitutionPanel + workload + manual +
             '<p class="small text-muted mt-3"><i class="bi bi-info-circle me-1"></i>' + (editable
-                ? 'As alterações manuais são gravadas neste navegador. Confira as orientações de demanda e disponibilidade no formulário de cada aula.'
-                : 'Use os ajustes manuais em uma tela separada para corrigir ou complementar a grade automática.') + '</p>';
+                ? 'As mudanças ficam apenas neste rascunho local. A Grade oficial e os relatórios só mudam ao aplicar; cancelar descarta o teste.'
+                : 'Use o Laboratório para testar mudanças antes de aplicá-las à Grade oficial.') + '</p>';
     }
 
     function renderDeclarationControls(semester, assignments) {
@@ -4597,7 +4609,7 @@
         const professorId = professorField ? professorField.value : '';
         const day = form.elements.namedItem('dia_semana').value;
         const slotId = form.elements.namedItem('horario_id').value;
-        const state = readSimulation(getSemester());
+        const state = readEditableSimulation(getSemester());
         const assignments = state.assignments.filter(function (item) { return String(item.id) !== String(form.dataset.assignmentId || ''); });
         const demands = getDemandsForClass(classId);
         const demandRows = demands.map(function (demand) {
@@ -4724,6 +4736,698 @@
         return window.OwltimeGradeLocal.loadState(semester);
     }
 
+    function laboratoryKey(semester) {
+        return 'owltime_laboratorio_' + (semester || 'default');
+    }
+
+    function cloneGradeState(state) {
+        return JSON.parse(JSON.stringify(state));
+    }
+
+    function isLaboratoryRoute() {
+        return window.location.hash.replace(/^#\/?/, '').split('/')[0] === 'laboratorio';
+    }
+
+    function loadLaboratory(semester) {
+        const key = laboratoryKey(semester);
+        const raw = localStorage.getItem(key);
+        if (raw) {
+            let parsed;
+            try {
+                parsed = JSON.parse(raw);
+            } catch (error) {
+                throw new Error('O rascunho do Laboratório deste semestre não contém JSON válido.');
+            }
+            if (!parsed || typeof parsed !== 'object' || !parsed.originalState ||
+                !parsed.state || !Array.isArray(parsed.originalState.assignments) ||
+                !Array.isArray(parsed.state.assignments) || typeof parsed.officialSignature !== 'string') {
+                throw new Error('O rascunho do Laboratório não tem o formato esperado. Cancele-o para iniciar outro.');
+            }
+            return parsed;
+        }
+        const officialState = readSimulation(semester);
+        const laboratory = {
+            version: 1,
+            createdAt: new Date().toISOString(),
+            officialSignature: JSON.stringify(officialState),
+            originalState: cloneGradeState(officialState),
+            state: cloneGradeState(officialState)
+        };
+        localStorage.setItem(key, JSON.stringify(laboratory));
+        return laboratory;
+    }
+
+    function readEditableSimulation(semester) {
+        return isLaboratoryRoute() ? loadLaboratory(semester).state : readSimulation(semester);
+    }
+
+    function saveEditableSimulation(semester, state) {
+        if (!isLaboratoryRoute()) {
+            saveSimulation(semester, state);
+            return;
+        }
+        const laboratory = loadLaboratory(semester);
+        laboratory.state = state;
+        localStorage.setItem(laboratoryKey(semester), JSON.stringify(laboratory));
+    }
+
+    function assignmentFingerprint(assignment) {
+        return [assignment.turma_id, assignment.disciplina_id, assignment.professor_id].map(String).join('|');
+    }
+
+    function getLaboratoryPending(laboratory) {
+        const currentAssignments = laboratory.state.assignments || [];
+        const originalAssignments = laboratory.originalState.assignments || [];
+        const exactCounts = new Map();
+        const fingerprintCounts = new Map();
+        currentAssignments.forEach(function (assignment) {
+            const fingerprint = assignmentFingerprint(assignment);
+            const exactKey = String(assignment.id) + '|' + fingerprint;
+            exactCounts.set(exactKey, (exactCounts.get(exactKey) || 0) + 1);
+            fingerprintCounts.set(fingerprint, (fingerprintCounts.get(fingerprint) || 0) + 1);
+        });
+        const exactMatches = new Set();
+        originalAssignments.forEach(function (original, index) {
+            const fingerprint = assignmentFingerprint(original);
+            const exactKey = String(original.id) + '|' + fingerprint;
+            const exactCount = exactCounts.get(exactKey) || 0;
+            if (!exactCount) return;
+            exactMatches.add(index);
+            exactCounts.set(exactKey, exactCount - 1);
+            fingerprintCounts.set(fingerprint, (fingerprintCounts.get(fingerprint) || 0) - 1);
+        });
+        const pending = [];
+        originalAssignments.forEach(function (original, index) {
+            if (exactMatches.has(index)) return;
+            const fingerprint = assignmentFingerprint(original);
+            const count = fingerprintCounts.get(fingerprint) || 0;
+            if (count) fingerprintCounts.set(fingerprint, count - 1);
+            else pending.push(original);
+        });
+        return pending;
+    }
+
+    function laboratoryClassDisciplineKey(classId, disciplineId) {
+        return String(classId) + '|' + String(disciplineId);
+    }
+
+    function getLaboratoryReplacementCandidates(laboratory, original, assignmentsByClassDiscipline) {
+        const classDisciplineKey = laboratoryClassDisciplineKey(original.turma_id, original.disciplina_id);
+        const candidates = assignmentsByClassDiscipline
+            ? assignmentsByClassDiscipline.get(classDisciplineKey) || []
+            : laboratory.state.assignments || [];
+        const matchingAssignments = candidates.filter(function (assignment) {
+            return String(assignment.turma_id) === String(original.turma_id) &&
+                String(assignment.disciplina_id) === String(original.disciplina_id) &&
+                String(assignment.professor_id) !== String(original.professor_id);
+        });
+        const sameId = matchingAssignments.find(function (assignment) {
+            return String(assignment.id) === String(original.id);
+        });
+        if (sameId) return [sameId];
+        const sameSlot = matchingAssignments.filter(function (assignment) {
+            return String(assignment.dia_semana) === String(original.dia_semana) &&
+                String(assignment.horario_id) === String(original.horario_id);
+        });
+        return sameSlot.length ? sameSlot : matchingAssignments;
+    }
+
+    function buildLaboratoryAnalysis(laboratory, semester) {
+        const originalAssignments = laboratory.originalState.assignments || [];
+        const currentAssignments = laboratory.state.assignments || [];
+        const allClasses = readRecords(KEYS.turmas);
+        const activeClasses = allClasses.filter(function (turma) {
+            return !turma.status || ['ativa', 'ativo'].includes(String(turma.status).toLowerCase());
+        });
+        const classById = new Map(allClasses.map(function (turma) { return [String(turma.id), turma]; }));
+        const disciplineById = new Map(readRecords(KEYS.disciplinas).map(function (discipline) {
+            return [String(discipline.id), discipline];
+        }));
+        const teacherById = new Map(readRecords(KEYS.professores).map(function (teacher) {
+            return [String(teacher.id), teacher];
+        }));
+        const slotById = new Map(readRecords(KEYS.horarios).map(function (slot) {
+            return [String(slot.id), slot];
+        }));
+        const classIds = new Set(activeClasses.map(function (turma) { return String(turma.id); }));
+        originalAssignments.concat(currentAssignments).forEach(function (assignment) {
+            classIds.add(String(assignment.turma_id));
+        });
+        const demandsByClass = new Map();
+        readRecords(KEYS.demandas).forEach(function (demand) {
+            if (!semesterMatches(demand, semester)) return;
+            const classId = String(demand.turma_id);
+            if (!demandsByClass.has(classId)) demandsByClass.set(classId, []);
+            demandsByClass.get(classId).push(demand);
+        });
+        const demandsByClassDiscipline = new Map();
+        const classPlannedCounts = new Map();
+        classIds.forEach(function (classId) {
+            const turma = classById.get(classId);
+            const relations = demandsByClass.get(classId) || [];
+            const demands = relations.length
+                ? relations.map(function (demand) {
+                    const disciplineId = Number(demand.disciplina_id);
+                    const discipline = disciplineById.get(String(demand.disciplina_id));
+                    return {
+                        disciplina_id: disciplineId,
+                        disciplina_nome: discipline ? discipline.nome : demand.disciplina_nome || '—',
+                        aulas_semanais: Number(demand.aulas_semanais || demand.aulas_previstas || 0)
+                    };
+                }).filter(function (demand) { return demand.disciplina_id && demand.aulas_semanais > 0; })
+                : (turma && Array.isArray(turma.matriz) ? turma.matriz : []).map(function (demand) {
+                    const disciplineId = Number(demand.disciplina_id);
+                    const discipline = disciplineById.get(String(demand.disciplina_id));
+                    return {
+                        disciplina_id: disciplineId,
+                        disciplina_nome: discipline ? discipline.nome : demand.disciplina_nome || '—',
+                        aulas_semanais: Number(demand.aulas_semanais || demand.aulas_previstas || 0)
+                    };
+                }).filter(function (demand) { return demand.disciplina_id && demand.aulas_semanais > 0; });
+            classPlannedCounts.set(classId, demands.reduce(function (total, demand) {
+                return total + demand.aulas_semanais;
+            }, 0));
+            demands.forEach(function (demand) {
+                const key = laboratoryClassDisciplineKey(classId, demand.disciplina_id);
+                if (!demandsByClassDiscipline.has(key)) demandsByClassDiscipline.set(key, demand);
+            });
+        });
+
+        const initialByClass = new Map();
+        const currentByClass = new Map();
+        const initialByDiscipline = new Map();
+        const currentByDiscipline = new Map();
+        const currentByTeacher = new Map();
+        const currentByClassDiscipline = new Map();
+        const assignmentsByClassDiscipline = new Map();
+        function incrementCount(counts, key) {
+            const normalizedKey = String(key);
+            counts.set(normalizedKey, (counts.get(normalizedKey) || 0) + 1);
+        }
+        function indexAssignments(assignments, isCurrent) {
+            assignments.forEach(function (assignment) {
+                incrementCount(isCurrent ? currentByClass : initialByClass, assignment.turma_id);
+                incrementCount(isCurrent ? currentByDiscipline : initialByDiscipline, assignment.disciplina_id);
+                if (!isCurrent) return;
+                incrementCount(currentByTeacher, assignment.professor_id);
+                const key = laboratoryClassDisciplineKey(assignment.turma_id, assignment.disciplina_id);
+                incrementCount(currentByClassDiscipline, key);
+                if (!assignmentsByClassDiscipline.has(key)) assignmentsByClassDiscipline.set(key, []);
+                assignmentsByClassDiscipline.get(key).push(assignment);
+            });
+        }
+        indexAssignments(originalAssignments, false);
+        indexAssignments(currentAssignments, true);
+
+        const classRows = Array.from(classIds).map(function (classId) {
+            const initial = initialByClass.get(classId) || 0;
+            const allocated = currentByClass.get(classId) || 0;
+            const planned = classPlannedCounts.get(classId) || 0;
+            const turma = classById.get(classId);
+            return {
+                id: classId,
+                name: turma ? turma.nome : 'Turma',
+                initial: initial,
+                allocated: allocated,
+                planned: planned,
+                pending: Math.max(0, planned - allocated),
+                excess: Math.max(0, allocated - planned)
+            };
+        }).filter(function (row) { return row.initial || row.allocated || row.planned; })
+            .sort(function (a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
+
+        const disciplineIds = new Set(Array.from(disciplineById.keys()));
+        originalAssignments.concat(currentAssignments).forEach(function (assignment) {
+            disciplineIds.add(String(assignment.disciplina_id));
+        });
+        const disciplineRows = Array.from(disciplineIds).map(function (disciplineId) {
+            let planned = 0;
+            const byClass = [];
+            activeClasses.forEach(function (turma) {
+                const demand = demandsByClassDiscipline.get(
+                    laboratoryClassDisciplineKey(turma.id, disciplineId)
+                );
+                if (!demand) return;
+                planned += demand.aulas_semanais;
+                const allocated = currentByClassDiscipline.get(
+                    laboratoryClassDisciplineKey(turma.id, disciplineId)
+                ) || 0;
+                if (allocated !== demand.aulas_semanais) {
+                    byClass.push({
+                        turma: turma.nome,
+                        allocated: allocated,
+                        planned: demand.aulas_semanais
+                    });
+                }
+            });
+            const initial = initialByDiscipline.get(disciplineId) || 0;
+            const allocated = currentByDiscipline.get(disciplineId) || 0;
+            const discipline = disciplineById.get(disciplineId);
+            return {
+                id: disciplineId,
+                name: discipline ? discipline.nome : 'Disciplina',
+                initial: initial,
+                allocated: allocated,
+                planned: planned,
+                pending: Math.max(0, planned - allocated),
+                excess: Math.max(0, allocated - planned),
+                byClass: byClass
+            };
+        }).filter(function (row) { return row.initial || row.allocated || row.planned; })
+            .sort(function (a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
+        return {
+            classes: classRows,
+            disciplines: disciplineRows,
+            classById: classById,
+            disciplineById: disciplineById,
+            teacherById: teacherById,
+            slotById: slotById,
+            demandsByClassDiscipline: demandsByClassDiscipline,
+            currentByTeacher: currentByTeacher,
+            currentByClassDiscipline: currentByClassDiscipline,
+            assignmentsByClassDiscipline: assignmentsByClassDiscipline
+        };
+    }
+
+    function renderLaboratoryTeacherTab(laboratory, pending, analysis) {
+        if (!pending.length) return '<div class="laboratory-tab-empty">Todos os professores mantêm as aulas da grade inicial neste rascunho.</div>';
+        const pendingByTeacher = new Map();
+        pending.forEach(function (assignment) {
+            const teacherId = String(assignment.professor_id);
+            pendingByTeacher.set(teacherId, (pendingByTeacher.get(teacherId) || 0) + 1);
+        });
+        const rows = pending.map(function (assignment) {
+            const slot = analysis.slotById.get(String(assignment.horario_id)) || {};
+            const teacher = analysis.teacherById.get(String(assignment.professor_id));
+            const teacherAssignments = Number(analysis.currentByTeacher.get(String(assignment.professor_id)) || 0);
+            const teacherPending = pendingByTeacher.get(String(assignment.professor_id)) || 0;
+            const weeklyLimit = Number(teacher && teacher.carga_horaria_semanal != null
+                ? teacher.carga_horaria_semanal
+                : 40);
+            const classDisciplineKey = laboratoryClassDisciplineKey(assignment.turma_id, assignment.disciplina_id);
+            const demand = analysis.demandsByClassDiscipline.get(classDisciplineKey);
+            const allocatedForDemand = analysis.currentByClassDiscipline.get(classDisciplineKey) || 0;
+            const time = slot.hora_inicio && slot.hora_fim
+                ? assignment.dia_semana + ' · ' + slot.hora_inicio + '–' + slot.hora_fim
+                : assignment.dia_semana || 'Horário não informado';
+            const replacements = getLaboratoryReplacementCandidates(
+                laboratory,
+                assignment,
+                analysis.assignmentsByClassDiscipline
+            );
+            const replacement = replacements.length === 1 ? replacements[0] : null;
+            const replacementSlot = replacement && analysis.slotById.get(String(replacement.horario_id));
+            const restoreButton = replacements.length > 1
+                ? '<button class="btn btn-sm btn-outline-secondary" type="button" disabled>Mais de uma cobertura possível</button>' +
+                '<small class="text-warning-emphasis">Remova a cobertura excedente manualmente para identificar qual aula devolver.</small>'
+                : '<button class="btn btn-sm btn-primary" type="button" data-action="restore-laboratory-assignment" data-assignment-id="' +
+                h(assignment.id) + '"><i class="bi bi-arrow-return-left" aria-hidden="true"></i><span>Devolver aula</span></button>';
+            const replacementInfo = replacement
+                ? '<span class="laboratory-replacement-info">Cobertura atual: ' +
+                h(replacement.professor_nome || (analysis.teacherById.get(String(replacement.professor_id)) || {}).nome || 'Professor') +
+                ' · ' + h(replacement.dia_semana || '') +
+                (replacementSlot && replacementSlot.hora_inicio
+                    ? ' ' + h(replacementSlot.hora_inicio + '–' + replacementSlot.hora_fim)
+                    : '') + '. Ao devolver, essa cobertura será removida e a aula original voltará ao horário inicial.</span>'
+                : '';
+            return '<li class="laboratory-pending-item"><strong>' +
+                h(assignment.disciplina_nome || (analysis.disciplineById.get(String(assignment.disciplina_id)) || {}).nome || 'Disciplina') +
+                '</strong><span>Professor sem a aula original: ' +
+                h(assignment.professor_nome || (analysis.teacherById.get(String(assignment.professor_id)) || {}).nome || 'Professor') +
+                '</span><span>Turma e horário original: ' +
+                h((analysis.classById.get(String(assignment.turma_id)) || {}).nome || 'Turma') +
+                ' · ' + h(time) + '</span>' +
+                '<span>Aulas do professor no rascunho: <strong>' + teacherAssignments + ' / ' + weeklyLimit +
+                ' semanais</strong> · ' + teacherPending + ' pendência(s) deste professor</span>' +
+                '<span>Aulas da disciplina nesta turma: <strong>' + allocatedForDemand +
+                (demand ? ' / ' + demand.aulas_semanais + ' previstas' : ' alocada(s) · sem demanda cadastrada') +
+                '</strong></span>' + replacementInfo +
+                '<div class="laboratory-pending-actions">' + restoreButton +
+                '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="laboratory-filter-class" data-class-id="' +
+                h(assignment.turma_id) + '"><i class="bi bi-funnel" aria-hidden="true"></i><span>Filtrar turma</span></button></div></li>';
+        }).join('');
+        return '<ul class="laboratory-pending-list">' + rows + '</ul>';
+    }
+
+    function renderLaboratoryCoverageTab(rows, dimension) {
+        if (!rows.length) return '<div class="laboratory-tab-empty">Não há turmas ou disciplinas com dados para comparar neste semestre.</div>';
+        return '<ul class="laboratory-pending-list">' + rows.map(function (row) {
+            const deficit = row.pending;
+            const excess = row.excess;
+            const badge = deficit
+                ? '<span class="badge text-bg-warning">' + deficit + ' pendente(s)</span>'
+                : excess
+                    ? '<span class="badge text-bg-info">' + excess + ' excedente(s)</span>'
+                    : '<span class="badge text-bg-success">Cobertura completa</span>';
+            const classDetails = dimension === 'disciplinas' && row.byClass.length
+                ? '<div class="laboratory-coverage-breakdown"><strong>Por turma:</strong>' +
+                row.byClass.map(function (item) {
+                    const classPending = Math.max(0, item.planned - item.allocated);
+                    return '<span>' + h(item.turma) + ': ' + item.allocated + ' / ' + item.planned +
+                        (classPending ? ' · faltam ' + classPending : item.allocated > item.planned ? ' · excedente ' + (item.allocated - item.planned) : '') +
+                        '</span>';
+                }).join('') + '</div>'
+                : '';
+            return '<li class="laboratory-coverage-item"><div class="laboratory-coverage-heading"><strong>' +
+                h(row.name) + '</strong>' + badge + '</div>' +
+                '<span>No início: ' + row.initial + ' · no rascunho: ' + row.allocated +
+                (dimension === 'turmas' ? ' · demanda total: ' + row.planned : ' · demanda da disciplina: ' + row.planned) +
+                '</span>' + classDetails + '</li>';
+        }).join('') + '</ul>';
+    }
+
+    function renderLaboratoryPendingPanel(laboratory) {
+        if (laboratoryPendingCollapsed) {
+            const pendingCount = getLaboratoryPending(laboratory).length;
+            return '<button class="laboratory-panel-launcher" type="button" data-action="toggle-laboratory-pending-panel" ' +
+                'aria-controls="laboratory-pending-panel" aria-expanded="false" aria-label="Expandir painel do Laboratório; ' +
+                pendingCount + ' aula(s) pendente(s)" title="Expandir painel do Laboratório">' +
+                '<img src="assets/img/logo.png" alt=""></button>';
+        }
+        const semester = getSemester();
+        const pending = getLaboratoryPending(laboratory);
+        const analysis = buildLaboratoryAnalysis(laboratory, semester);
+        const classIssues = analysis.classes.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        const disciplineIssues = analysis.disciplines.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        if (!['professores', 'turmas', 'disciplinas'].includes(laboratoryPendingTab)) laboratoryPendingTab = 'professores';
+        const teacherOptions = new Map();
+        pending.forEach(function (assignment) {
+            const teacherId = String(assignment.professor_id);
+            if (teacherOptions.has(teacherId)) return;
+            const teacher = analysis.teacherById.get(teacherId);
+            teacherOptions.set(teacherId, assignment.professor_nome || (teacher && teacher.nome) || 'Professor');
+        });
+        const filterDefinitions = {
+            professores: {
+                label: 'Professor',
+                allLabel: 'Todos os professores',
+                options: Array.from(teacherOptions, function (entry) {
+                    return { id: entry[0], name: entry[1] };
+                }).sort(function (a, b) { return a.name.localeCompare(b.name, 'pt-BR'); })
+            },
+            turmas: {
+                label: 'Turma',
+                allLabel: 'Todas as turmas',
+                options: analysis.classes.map(function (row) { return { id: row.id, name: row.name }; })
+            },
+            disciplinas: {
+                label: 'Disciplina',
+                allLabel: 'Todas as disciplinas',
+                options: analysis.disciplines.map(function (row) { return { id: row.id, name: row.name }; })
+            }
+        };
+        const filterDefinition = filterDefinitions[laboratoryPendingTab];
+        let selectedFilter = laboratoryPendingFilters[laboratoryPendingTab];
+        if (selectedFilter && !filterDefinition.options.some(function (option) {
+            return String(option.id) === String(selectedFilter);
+        })) {
+            selectedFilter = '';
+            laboratoryPendingFilters[laboratoryPendingTab] = '';
+        }
+        const tabs = [
+            { id: 'professores', label: 'Professores', count: pending.length },
+            { id: 'turmas', label: 'Turmas', count: classIssues },
+            { id: 'disciplinas', label: 'Disciplinas', count: disciplineIssues }
+        ].map(function (tab) {
+            const active = laboratoryPendingTab === tab.id;
+            return '<button class="laboratory-pending-tab' + (active ? ' is-active' : '') +
+                '" type="button" role="tab" id="laboratory-tab-' + tab.id +
+                '" aria-selected="' + String(active) + '" aria-controls="laboratory-tab-content" data-action="select-laboratory-pending-tab" data-tab="' +
+                tab.id + '">' + tab.label + '<span class="badge text-bg-' + (tab.count ? 'warning' : 'success') +
+                '">' + tab.count + '</span></button>';
+        }).join('');
+        const classFilter = gradeTurmaFilter
+            ? '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="laboratory-clear-class-filter">' +
+            '<i class="bi bi-x-circle me-1" aria-hidden="true"></i>Remover filtro de turma: ' +
+            h((analysis.classById.get(String(gradeTurmaFilter)) || {}).nome || 'Turma selecionada') + '</button>'
+            : '';
+        const filterIcons = { professores: 'bi-person', turmas: 'bi-people', disciplinas: 'bi-book' };
+        const clearFilterButton = selectedFilter
+            ? '<button class="laboratory-filter-clear" type="button" data-action="clear-laboratory-pending-filter" data-tab="' +
+            laboratoryPendingTab + '" aria-label="Limpar filtro de ' + h(filterDefinition.label.toLowerCase()) +
+            '" title="Limpar filtro"><i class="bi bi-x-lg" aria-hidden="true"></i></button>'
+            : '';
+        const filterControl = '<div class="laboratory-pending-filter"><label for="laboratory-pending-filter"><i class="bi ' +
+            filterIcons[laboratoryPendingTab] + '" aria-hidden="true"></i> Filtrar por ' +
+            h(filterDefinition.label.toLowerCase()) + '</label><div class="laboratory-pending-filter-controls">' +
+            '<select class="form-select form-select-sm" id="laboratory-pending-filter" data-tab="' +
+            laboratoryPendingTab + '"><option value="">' + h(filterDefinition.allLabel) + '</option>' +
+            filterDefinition.options.map(function (option) {
+                return '<option value="' + h(option.id) + '"' +
+                    (String(option.id) === String(selectedFilter) ? ' selected' : '') + '>' + h(option.name) + '</option>';
+            }).join('') + '</select>' + clearFilterButton + '</div></div>';
+        const filteredPending = laboratoryPendingTab === 'professores' && selectedFilter
+            ? pending.filter(function (assignment) { return String(assignment.professor_id) === String(selectedFilter); })
+            : pending;
+        const filteredClasses = laboratoryPendingTab === 'turmas' && selectedFilter
+            ? analysis.classes.filter(function (row) { return String(row.id) === String(selectedFilter); })
+            : analysis.classes;
+        const filteredDisciplines = laboratoryPendingTab === 'disciplinas' && selectedFilter
+            ? analysis.disciplines.filter(function (row) { return String(row.id) === String(selectedFilter); })
+            : analysis.disciplines;
+        const content = laboratoryPendingTab === 'professores'
+            ? renderLaboratoryTeacherTab(laboratory, filteredPending, analysis)
+            : laboratoryPendingTab === 'turmas'
+                ? renderLaboratoryCoverageTab(filteredClasses, 'turmas')
+                : renderLaboratoryCoverageTab(filteredDisciplines, 'disciplinas');
+        const filteredClassIssues = filteredClasses.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        const filteredDisciplineIssues = filteredDisciplines.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        const selectedCount = laboratoryPendingTab === 'professores'
+            ? filteredPending.length
+            : laboratoryPendingTab === 'turmas' ? filteredClassIssues : filteredDisciplineIssues;
+        return '<aside id="laboratory-pending-panel" class="laboratory-pending-panel" aria-live="polite" aria-label="Situação de professores, turmas e disciplinas">' +
+            '<div class="laboratory-pending-heading"><strong><i class="bi bi-sticky me-1" aria-hidden="true"></i>Situação da grade</strong>' +
+            '<button class="laboratory-panel-collapse" type="button" data-action="toggle-laboratory-pending-panel" aria-controls="laboratory-pending-panel" aria-expanded="true" aria-label="Ocultar painel de pendências" title="Ocultar painel">' +
+            '<i class="bi bi-chevron-up" aria-hidden="true"></i><span>Ocultar</span></button>' +
+            '<span class="badge text-bg-' + (selectedCount ? 'warning' : 'success') + '">' + selectedCount + '</span></div>' +
+            '<p class="small text-muted mb-2">' + (laboratory.state.assignments || []).length +
+            ' aula(s) no rascunho · confira as diferenças por professor, turma ou disciplina.</p>' +
+            (classFilter ? '<div class="mb-2">' + classFilter + '</div>' : '') +
+            '<div class="laboratory-pending-tabs" role="tablist" aria-label="Dimensão da situação da grade">' + tabs + '</div>' +
+            filterControl +
+            '<div id="laboratory-tab-content" class="laboratory-pending-content" role="tabpanel" aria-labelledby="laboratory-tab-' +
+            laboratoryPendingTab + '">' + content + '</div></aside>';
+    }
+
+    function summarizeLaboratoryChanges(laboratory) {
+        const before = laboratory.originalState.assignments || [];
+        const after = laboratory.state.assignments || [];
+        const afterById = new Map(after.map(function (assignment) { return [String(assignment.id), assignment]; }));
+        const beforeById = new Map(before.map(function (assignment) { return [String(assignment.id), assignment]; }));
+        const summary = { adicionadas: 0, removidas: 0, movidas: 0, alteradas: 0 };
+        after.forEach(function (assignment) {
+            const original = beforeById.get(String(assignment.id));
+            if (!original) summary.adicionadas += 1;
+            else if (assignmentFingerprint(original) !== assignmentFingerprint(assignment)) summary.alteradas += 1;
+            else if (String(original.horario_id) !== String(assignment.horario_id) ||
+                String(original.dia_semana) !== String(assignment.dia_semana)) summary.movidas += 1;
+        });
+        before.forEach(function (assignment) {
+            if (!afterById.has(String(assignment.id))) summary.removidas += 1;
+        });
+        return summary;
+    }
+
+    function updateGenerationReportAfterLaboratory(state, semester) {
+        if (!state.lastGenerationReport) return;
+        let totalPrevistas = 0;
+        let totalAtendidas = 0;
+        const failures = [];
+        const classReports = [];
+        const previousFailures = Array.isArray(state.lastGenerationReport.falhas)
+            ? state.lastGenerationReport.falhas
+            : [];
+        activeRecords(KEYS.turmas, ['ativa', 'ativo']).forEach(function (turma) {
+            const classDemands = getDemandsForClass(turma.id, semester);
+            let classPlanned = 0;
+            let classAttended = 0;
+            const disciplineReports = classDemands.map(function (demand) {
+                classPlanned += demand.aulas_semanais;
+                totalPrevistas += demand.aulas_semanais;
+                const allocated = state.assignments.filter(function (assignment) {
+                    return String(assignment.turma_id) === String(turma.id) &&
+                        String(assignment.disciplina_id) === String(demand.disciplina_id);
+                }).length;
+                const attended = Math.min(demand.aulas_semanais, allocated);
+                const pending = Math.max(0, demand.aulas_semanais - attended);
+                totalAtendidas += attended;
+                classAttended += attended;
+                if (!pending) return {
+                    disciplina_id: demand.disciplina_id,
+                    disciplina_nome: demand.disciplina_nome,
+                    previstas: demand.aulas_semanais,
+                    atendidas: attended,
+                    pendentes: 0
+                };
+                const previousFailure = previousFailures.find(function (failure) {
+                    return String(failure.turma_id) === String(turma.id) &&
+                        String(failure.disciplina_id) === String(demand.disciplina_id);
+                });
+                failures.push({
+                    turma_id: turma.id,
+                    turma_nome: turma.nome,
+                    disciplina_id: demand.disciplina_id,
+                    disciplina_nome: demand.disciplina_nome,
+                    previstas: demand.aulas_semanais,
+                    atendidas: attended,
+                    pendentes: pending,
+                    motivo: 'Pendência após a aplicação do Laboratório.',
+                    professores: previousFailure && Array.isArray(previousFailure.professores)
+                        ? previousFailure.professores
+                        : []
+                });
+                return {
+                    disciplina_id: demand.disciplina_id,
+                    disciplina_nome: demand.disciplina_nome,
+                    previstas: demand.aulas_semanais,
+                    atendidas: attended,
+                    pendentes: pending
+                };
+            });
+            classReports.push({
+                turma_id: turma.id,
+                turma_nome: turma.nome,
+                totalPrevistas: classPlanned,
+                atendidas: classAttended,
+                pendentes: classPlanned - classAttended,
+                disciplinas: disciplineReports,
+                completa: classPlanned === classAttended
+            });
+        });
+        const totalPendentes = Math.max(0, totalPrevistas - totalAtendidas);
+        state.lastGenerationReport = Object.assign({}, state.lastGenerationReport, {
+            totalPrevistas: totalPrevistas,
+            totalAtendidas: totalAtendidas,
+            totalPendentes: totalPendentes,
+            percentual: totalPrevistas ? Number((totalAtendidas / totalPrevistas * 100).toFixed(2)) : 0,
+            completo: totalPendentes === 0,
+            falhas: failures,
+            turmas: classReports
+        });
+    }
+
+    function applyLaboratory() {
+        const semester = getSemester();
+        const key = laboratoryKey(semester);
+        const laboratory = loadLaboratory(semester);
+        const officialState = readSimulation(semester);
+        if (JSON.stringify(officialState) !== laboratory.officialSignature) {
+            throw new Error('A Grade oficial mudou depois que o Laboratório foi iniciado. Cancele este rascunho e abra o Laboratório novamente para evitar substituir alterações recentes.');
+        }
+        const changed = JSON.stringify(laboratory.originalState.assignments) !==
+            JSON.stringify(laboratory.state.assignments);
+        const updatedState = changed ? cloneGradeState(laboratory.state) : officialState;
+        if (changed) {
+            const entry = Object.assign({
+                aplicadoEm: new Date().toISOString(),
+                aulasAntes: laboratory.originalState.assignments.length,
+                aulasDepois: updatedState.assignments.length,
+                pendencias: getLaboratoryPending(laboratory).length
+            }, summarizeLaboratoryChanges(laboratory));
+            updatedState.laboratoryAdjustments = (updatedState.laboratoryAdjustments || []).concat(entry);
+            updateGenerationReportAfterLaboratory(updatedState, semester);
+        }
+        saveSimulation(semester, updatedState);
+        localStorage.removeItem(key);
+        window.location.hash = '#/grade';
+        render();
+        window.setTimeout(function () {
+            notify(changed
+                ? 'Alterações do Laboratório aplicadas à Grade oficial e aos relatórios.'
+                : 'Laboratório aplicado sem alterações; a Grade oficial foi mantida.',
+                'success');
+        }, 50);
+    }
+
+    function cancelLaboratory() {
+        const semester = getSemester();
+        const laboratory = loadLaboratory(semester);
+        const changed = JSON.stringify(laboratory.originalState.assignments) !==
+            JSON.stringify(laboratory.state.assignments);
+        if (changed && !window.confirm('Descartar todas as alterações deste Laboratório? A Grade oficial não será modificada.')) return;
+        localStorage.removeItem(laboratoryKey(semester));
+        window.location.hash = '#/grade';
+        render();
+        window.setTimeout(function () {
+            notify('Rascunho do Laboratório descartado. A Grade oficial foi mantida.', 'success');
+        }, 50);
+    }
+
+    function restoreLaboratoryAssignment(assignmentId) {
+        const semester = getSemester();
+        const laboratory = loadLaboratory(semester);
+        const original = laboratory.originalState.assignments.find(function (assignment) {
+            return String(assignment.id) === String(assignmentId);
+        });
+        if (!original || !getLaboratoryPending(laboratory).some(function (assignment) {
+            return String(assignment.id) === String(assignmentId);
+        })) throw new Error('Esta aula não está mais pendente para o professor original.');
+        const replacements = getLaboratoryReplacementCandidates(laboratory, original);
+        if (replacements.length > 1) {
+            throw new Error('Há mais de uma cobertura possível para esta aula. Remova a cobertura excedente manualmente antes de devolvê-la.');
+        }
+        const replacement = replacements[0] || null;
+        const slot = findById(KEYS.horarios, original.horario_id);
+        if (!slot || slot.dia_semana !== original.dia_semana ||
+            String(slot.tipo || 'Aula').toLowerCase() !== 'aula') {
+            throw new Error('O horário original desta aula não está mais disponível. Revise os horários antes de devolvê-la.');
+        }
+        if (getGradeProtections(semester).some(function (protection) {
+            return String(protection.turma_id) === String(original.turma_id) &&
+                String(protection.dia_semana) === String(original.dia_semana) &&
+                String(protection.horario_id) === String(original.horario_id);
+        })) throw new Error('O horário original está protegido e não pode receber a aula devolvida.');
+        const assignments = laboratory.state.assignments || [];
+        const remaining = assignments.filter(function (assignment) {
+            return !replacement || String(assignment.id) !== String(replacement.id);
+        });
+        if (remaining.some(function (assignment) {
+            return String(assignment.turma_id) === String(original.turma_id) &&
+                String(assignment.dia_semana) === String(original.dia_semana) &&
+                String(assignment.horario_id) === String(original.horario_id);
+        })) throw new Error('O horário original da turma já está ocupado por outra aula. Libere-o antes de devolver esta aula.');
+        if (remaining.some(function (assignment) {
+            return String(assignment.professor_id) === String(original.professor_id) &&
+                String(assignment.dia_semana) === String(original.dia_semana) &&
+                String(assignment.horario_id) === String(original.horario_id);
+        })) throw new Error('O professor original já tem outra aula neste horário. Libere o período antes de devolver esta aula.');
+        const availability = getTeacherAvailability(original.professor_id, original.dia_semana, original.horario_id);
+        if (availability.isPrd) throw new Error('O professor original está em PRD neste dia e não pode receber a aula devolvida.');
+        if (availability.available === false && !window.confirm(
+            'O professor original está marcado como indisponível neste horário. Deseja devolver a aula mesmo assim?'
+        )) return;
+        const restoredId = remaining.some(function (assignment) {
+            return String(assignment.id) === String(original.id);
+        }) ? nextId(remaining) : original.id;
+        const restored = Object.assign({}, original, { id: restoredId });
+        laboratory.state.assignments = remaining.concat(restored);
+        laboratory.state.activeTurmaId = Number(original.turma_id);
+        localStorage.setItem(laboratoryKey(semester), JSON.stringify(laboratory));
+        render();
+        const replacementSlot = replacement && findById(KEYS.horarios, replacement.horario_id);
+        const replacementDescription = replacement
+            ? ' A aula de ' + (replacement.professor_nome || nameById(KEYS.professores, replacement.professor_id, 'Professor')) +
+            ' foi removida de ' + (replacement.dia_semana || 'seu dia') +
+            (replacementSlot && replacementSlot.hora_inicio
+                ? ' ' + replacementSlot.hora_inicio + '–' + replacementSlot.hora_fim
+                : '') + '.'
+            : '';
+        notify(
+            'Aula devolvida a ' + (original.professor_nome || nameById(KEYS.professores, original.professor_id, 'Professor')) +
+            ' · ' + nameById(KEYS.turmas, original.turma_id, 'Turma') + ' · ' +
+            original.dia_semana + ' ' + slot.hora_inicio + '–' + slot.hora_fim + '.' + replacementDescription,
+            'success'
+        );
+    }
+
     function simulationKey(semester) {
         return 'owltime_simulacao_painel_' + (semester || 'default');
     }
@@ -4747,7 +5451,7 @@
         const teacher = findById(KEYS.professores, teacherId);
         if (!turmaId || !slot || !subject || !teacher || slot.dia_semana !== day) throw new Error('Revise a turma, o dia, o horário, a disciplina e o professor selecionados.');
         const semester = getSemester();
-        const state = readSimulation(semester);
+        const state = readEditableSimulation(semester);
         const oldAssignment = assignmentId ? state.assignments.find(function (item) { return String(item.id) === assignmentId; }) : null;
         if (assignmentId && !oldAssignment) throw new Error('A aula que você tentou editar não foi encontrada.');
         if (getGradeProtections(semester).some(function (protection) {
@@ -4794,7 +5498,7 @@
             ? state.assignments.map(function (item) { return String(item.id) === assignmentId ? updatedAssignment : item; })
             : state.assignments.concat(updatedAssignment);
         state.activeTurmaId = Number(turmaId);
-        saveSimulation(semester, state);
+        saveEditableSimulation(semester, state);
         gradeEditingId = null;
         gradeFocusDay = '';
         gradeFocusSlotId = '';
@@ -4804,7 +5508,7 @@
 
     function moveAssignment(assignmentId, classId, day, slotId) {
         const semester = getSemester();
-        const state = readSimulation(semester);
+        const state = readEditableSimulation(semester);
         const assignment = state.assignments.find(function (item) { return String(item.id) === String(assignmentId); });
         const slot = findById(KEYS.horarios, slotId);
         if (!assignment || String(assignment.turma_id) !== String(classId)) throw new Error('A aula ou a turma de destino não foi encontrada.');
@@ -4837,16 +5541,16 @@
         assignment.hora_fim = slot.hora_fim;
         assignment.origem = 'manual';
         state.activeTurmaId = Number(classId);
-        saveSimulation(semester, state);
+        saveEditableSimulation(semester, state);
         render();
         notify('Aula movida para ' + day + ', ' + slot.hora_inicio + '–' + slot.hora_fim + '.', 'success');
     }
 
     function removeAssignment(id) {
         const semester = getSemester();
-        const state = readSimulation(semester);
+        const state = readEditableSimulation(semester);
         state.assignments = state.assignments.filter(function (item) { return String(item.id) !== String(id); });
-        saveSimulation(semester, state);
+        saveEditableSimulation(semester, state);
         gradeEditingId = null;
         gradeFocusDay = '';
         gradeFocusSlotId = '';
@@ -4956,9 +5660,11 @@
             [KEYS.substituicoes, 'SubstituicoesDocentes']
         ];
         const simulationKey = 'owltime_simulacao_painel_' + selectedSemester;
+        const laboratoryStorageKey = laboratoryKey(selectedSemester);
         const previousValues = {};
         scopedModules.forEach(function (item) { previousValues[item[0]] = localStorage.getItem(item[0]); });
         previousValues[simulationKey] = localStorage.getItem(simulationKey);
+        previousValues[laboratoryStorageKey] = localStorage.getItem(laboratoryStorageKey);
         try {
             scopedModules.forEach(function (item) {
                 const remaining = readRecords(item[0]).filter(function (record) {
@@ -4967,6 +5673,7 @@
                 saveRecords(item[0], remaining, item[1]);
             });
             localStorage.removeItem(simulationKey);
+            localStorage.removeItem(laboratoryStorageKey);
         } catch (error) {
             Object.keys(previousValues).forEach(function (key) {
                 try {
@@ -4997,7 +5704,7 @@
         const simulationPrefix = 'owltime_simulacao_painel_';
         for (let index = 0; index < localStorage.length; index += 1) {
             const key = localStorage.key(index) || '';
-            const match = new RegExp('^' + simulationPrefix + '(\\d{4}/[12])$').exec(key);
+            const match = new RegExp('^(?:' + simulationPrefix + '|owltime_laboratorio_)(\\d{4}/[12])$').exec(key);
             if (match) semesters.add(match[1]);
         }
         const cards = Array.from(semesters).sort(function (a, b) { return b.localeCompare(a); }).map(function (semester) {
@@ -5013,6 +5720,8 @@
                 return total + (records.length ? new Blob([JSON.stringify(records)]).size : 0);
             }, 0) + (localStorage.getItem(simulationKey(semester))
                 ? new Blob([localStorage.getItem(simulationKey(semester))]).size
+                : 0) + (localStorage.getItem(laboratoryKey(semester))
+                ? new Blob([localStorage.getItem(laboratoryKey(semester))]).size
                 : 0);
             const lessons = readSimulation(semester).assignments || [];
             const active = semester === getSemester();
@@ -5061,6 +5770,7 @@
                     moduleName = 'JSON inválido';
                 }
             }
+            if (key.startsWith('owltime_laboratorio_')) moduleName = 'Laboratório · rascunho isolado';
             items.push({ key: key, moduleName: moduleName, bytes: new Blob([raw]).size });
         }
         items.sort(function (a, b) { return a.key.localeCompare(b.key); });
@@ -5371,6 +6081,19 @@
             h(lastReport.totalPrevistas || 0) + '</strong></span><span>Preenchidas <strong>' + h(lastReport.totalAtendidas || 0) +
             '</strong></span><span>Pendentes na geração <strong>' + h(lastReport.totalPendentes || 0) + '</strong></span></div></div>'
             : '';
+        const laboratoryAdjustments = Array.isArray(state.laboratoryAdjustments) ? state.laboratoryAdjustments : [];
+        const laboratoryAdjustmentRows = laboratoryAdjustments.slice().reverse().map(function (adjustment) {
+            return '<li><strong>' + h(formatDate(adjustment.aplicadoEm)) + '</strong> · ' +
+                h(adjustment.adicionadas || 0) + ' adicionada(s), ' +
+                h(adjustment.removidas || 0) + ' removida(s), ' +
+                h(adjustment.movidas || 0) + ' movida(s), ' +
+                h(adjustment.alteradas || 0) + ' alterada(s); ' +
+                h(adjustment.pendencias || 0) + ' aula(s) inicial(is) ainda sem reaplicação.</li>';
+        }).join('');
+        const laboratoryAdjustmentSection = laboratoryAdjustments.length
+            ? '<section class="card mb-3"><div class="card-header"><strong>Histórico de ajustes aplicados no Laboratório</strong></div>' +
+            '<div class="card-body"><ul class="mb-0">' + laboratoryAdjustmentRows + '</ul></div></section>'
+            : '';
         const recordedGenerationFailures = lastReport && Array.isArray(lastReport.falhas) ? lastReport.falhas : [];
         const visibleGenerationFailures = recordedGenerationFailures.filter(function (failure) {
             if (reportCourseFilter && !courseClassIds.has(String(failure.turma_id))) return false;
@@ -5467,7 +6190,7 @@
             }).length + ' com aulas no recorte</small></div></div>' +
             '<div class="col-6 col-xl-3"><div class="card report-kpi"><span>Turmas com aula</span><strong>' + classRanking.length + '</strong><small>de ' + reportClasses.length + ' no recorte</small></div></div>' +
             '<div class="col-6 col-xl-3"><div class="card report-kpi"><span>Atendimento das demandas</span><strong>' + completion + '%</strong><small>' + totalPending + ' aula(s) pendente(s) · ' + totalDemand + ' previstas</small></div></div></div>' +
-            generationCard +
+            generationCard + laboratoryAdjustmentSection +
             '<div class="row g-3 mb-3"><div class="col-xl-6">' + teacherRankingSection + '</div>' +
             '<div class="col-xl-6">' + pieChart('Distribuição de aulas por disciplina', disciplineRanking, function (item) { return subjectColor(item.id); }) + '</div></div></div>' +
             generationPendingSection +
@@ -5573,7 +6296,7 @@
                 items: [
                     'A geração distribui as aulas conforme as demandas, horários, vínculos e disponibilidades.',
                     'Confira aulas preenchidas e pendências para identificar o que ainda precisa de atenção.',
-                    'Em Ajustes manuais, inclua, edite, mova ou remova aulas quando necessário.'
+                    'No Laboratório, teste mudanças em uma cópia isolada da grade e aplique-as ou descarte-as quando decidir.'
                 ]
             },
             {
@@ -5637,12 +6360,16 @@
 
     function render() {
         const route = (window.location.hash.replace(/^#\/?/, '').split('/')[0] || 'dashboard');
+        if (route === 'ajustes') {
+            window.location.hash = '#/laboratorio';
+            return;
+        }
         if (route === 'ajuda') {
             window.location.hash = '#/sobre';
             return;
         }
         if (spreadsheetImport && spreadsheetImport.route !== route) spreadsheetImport = null;
-        if (route !== 'grade' && route !== 'ajustes') {
+        if (route !== 'grade' && route !== 'laboratorio') {
             gradeEditingId = null;
             gradeFocusDay = '';
             gradeFocusSlotId = '';
@@ -5661,7 +6388,7 @@
             else if (specs[route]) view.innerHTML = renderCrud(route);
             else if (route === 'dashboard') view.innerHTML = renderDashboard();
             else if (route === 'grade') view.innerHTML = renderGrade();
-            else if (route === 'ajustes') view.innerHTML = renderGrade(true);
+            else if (route === 'laboratorio') view.innerHTML = renderGrade(true);
             else if (route === 'relatorios') view.innerHTML = renderReports();
             else if (route === 'armazenamento') view.innerHTML = renderStorage();
             else if (route === 'sobre') view.innerHTML = renderAbout();
@@ -5669,7 +6396,7 @@
             sortSelectOptions(view);
             ensureInputPlaceholders();
             if (route === 'disponibilidade') syncAvailabilityForm(document.getElementById('record-form'));
-            if (route === 'ajustes') {
+            if (route === 'laboratorio') {
                 const assignmentForm = document.getElementById('manual-assignment-form');
                 const assignmentDialog = document.getElementById('manual-assignment-dialog');
                 if (assignmentForm) renderAssignmentGuidance(assignmentForm);
@@ -5943,9 +6670,9 @@
 
     function updateSimulation(transform) {
         const semester = getSemester();
-        const state = readSimulation(semester);
+        const state = readEditableSimulation(semester);
         transform(state);
-        saveSimulation(semester, state);
+        saveEditableSimulation(semester, state);
         render();
     }
 
@@ -6900,7 +7627,7 @@
                 workloadPanelCollapsed = !workloadPanelCollapsed;
                 render();
             } else if (action === 'toggle-grade-legend') {
-                if (window.location.hash === '#/ajustes') manualLegendCollapsed = !manualLegendCollapsed;
+                if (isLaboratoryRoute()) manualLegendCollapsed = !manualLegendCollapsed;
                 else gradeLegendCollapsed = !gradeLegendCollapsed;
                 render();
             } else if (action === 'toggle-report-teacher-ranking') {
@@ -7031,6 +7758,40 @@
                 editing = null;
                 render();
             } else if (action === 'generate-grade') generateGrade();
+            else if (action === 'apply-laboratory') applyLaboratory();
+            else if (action === 'cancel-laboratory') cancelLaboratory();
+            else if (action === 'laboratory-filter-class') {
+                gradeTurmaFilter = button.dataset.classId || '';
+                gradeDisciplineFilter = '';
+                gradeTeacherFilter = '';
+                render();
+            }
+            else if (action === 'laboratory-clear-class-filter') {
+                gradeTurmaFilter = '';
+                render();
+            }
+            else if (action === 'toggle-laboratory-pending-panel') {
+                laboratoryPendingCollapsed = !laboratoryPendingCollapsed;
+                render();
+            }
+            else if (action === 'clear-laboratory-pending-filter') {
+                const tab = button.dataset.tab;
+                if (!Object.prototype.hasOwnProperty.call(laboratoryPendingFilters, tab)) {
+                    throw new Error('Não foi possível identificar o filtro do Laboratório.');
+                }
+                laboratoryPendingFilters[tab] = '';
+                render();
+            }
+            else if (action === 'select-laboratory-pending-tab') {
+                if (!['professores', 'turmas', 'disciplinas'].includes(button.dataset.tab)) {
+                    throw new Error('Selecione uma aba válida para consultar a situação da grade.');
+                }
+                laboratoryPendingTab = button.dataset.tab;
+                render();
+            }
+            else if (action === 'restore-laboratory-assignment') {
+                restoreLaboratoryAssignment(button.dataset.assignmentId);
+            }
             else if (action === 'select-slot') {
                 gradeEditingId = null;
                 gradeFocusDay = button.dataset.day;
@@ -7038,7 +7799,7 @@
                 updateSimulation(function (state) { state.activeTurmaId = Number(button.dataset.classId || 0); });
                 openAssignmentDialog();
             } else if (action === 'edit-assignment') {
-                const assignment = readSimulation(getSemester()).assignments.find(function (item) { return String(item.id) === String(button.dataset.id); });
+                const assignment = readEditableSimulation(getSemester()).assignments.find(function (item) { return String(item.id) === String(button.dataset.id); });
                 if (!assignment) throw new Error('A aula não foi encontrada.');
                 gradeEditingId = assignment.id;
                 gradeFocusDay = '';
@@ -7239,6 +8000,14 @@
     function handleChange(event) {
         if (event.target.classList.contains('record-filter-control')) {
             applyRecordFilters();
+        } else if (event.target.id === 'laboratory-pending-filter') {
+            const tab = event.target.dataset.tab;
+            if (!Object.prototype.hasOwnProperty.call(laboratoryPendingFilters, tab)) {
+                console.error('Aba inválida para o filtro do Laboratório:', tab);
+                return;
+            }
+            laboratoryPendingFilters[tab] = event.target.value;
+            render();
         } else if (event.target.form && event.target.form.id === 'teacher-substitution-form' &&
             ['substitution-class', 'substitution-discipline', 'substitution-start'].includes(event.target.id)) {
             if (event.target.id === 'substitution-class') {
@@ -7453,7 +8222,7 @@
 
     function handleDragStart(event) {
         const assignment = event.target.closest('[data-drag-assignment-id]');
-        if (!assignment || window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'ajustes') return;
+        if (!assignment || window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
         event.dataTransfer.setData('text/plain', assignment.dataset.dragAssignmentId);
         event.dataTransfer.effectAllowed = 'move';
         assignment.classList.add('is-dragging');
@@ -7466,7 +8235,7 @@
     }
 
     function handleDragOver(event) {
-        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'ajustes') return;
+        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
         const target = event.target.closest('td[data-drop-class-id]');
         if (!target || !Array.from(event.dataTransfer.types).includes('text/plain')) return;
         event.preventDefault();
@@ -7480,7 +8249,7 @@
     }
 
     function handleDrop(event) {
-        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'ajustes') return;
+        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
         const target = event.target.closest('td[data-drop-class-id]');
         if (!target) return;
         event.preventDefault();
