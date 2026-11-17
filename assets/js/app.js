@@ -4224,6 +4224,17 @@
         const description = editable
             ? 'Ambiente de teste isolado da Grade oficial. Experimente mover, editar, adicionar ou remover aulas; nada é aplicado antes da confirmação.'
             : 'Gere a grade automaticamente pelo QDP e acompanhe todas as turmas, demandas e cargas docentes.';
+        const laboratoryGuide = editable
+            ? '<section class="laboratory-guide card mb-3" aria-labelledby="laboratory-guide-title"><div class="card-body">' +
+                '<h2 id="laboratory-guide-title" class="h6 mb-2"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Como usar o Laboratório</h2>' +
+                '<ul class="mb-0">' +
+                '<li><strong>Aulas:</strong> clique em uma aula para editar disciplina, professor, dia ou horário; use os controles da grade para adicionar ou remover aulas.</li>' +
+                '<li><strong>Disciplinas e demandas:</strong> ajuste o catálogo em <a href="#/disciplinas">Disciplinas</a>, as aulas semanais em <a href="#/demandas">Demandas das turmas</a> e os professores habilitados em <a href="#/vinculos">Vínculos</a>. Essas informações orientam a geração; alterações na demanda não mudam automaticamente as aulas já existentes.</li>' +
+                '<li><strong>Eventos e peculiaridades:</strong> cadastre as definições em <a href="#/eventos">Eventos</a> ou <a href="#/peculiaridades">Peculiaridades</a>. Na Grade oficial, dê duplo clique no período para marcar: o evento reserva o horário para as turmas do mesmo turno; a peculiaridade protege somente a turma escolhida. Faça essas marcações antes de gerar a grade.</li>' +
+                '<li><strong>Sort:</strong> configure turmas, quantidade e consecutividade em <a href="#/sorts">Sort</a>; na Grade oficial, use <strong>Aplicar sort</strong> para sortear e reservar horários antes da geração. Para aplicar um sort, a grade oficial precisa estar sem aulas.</li>' +
+                '</ul><p class="small text-muted mt-2 mb-0">Este Laboratório altera apenas uma cópia local da grade. Use <strong>Aplicar à Grade oficial</strong> para confirmar ou <strong>Cancelar e descartar</strong> para abandonar o rascunho.</p>' +
+                '</div></section>'
+            : '';
         const navigation = editable
             ? ''
             : '<a class="btn btn-outline-primary" href="#/laboratorio"><i class="bi bi-sliders me-1"></i>Abrir Laboratório</a>';
@@ -4240,7 +4251,7 @@
                 ? '<button class="btn btn-danger" type="button" data-action="cancel-laboratory"><i class="bi bi-x-circle me-1"></i>Cancelar e descartar</button>' +
                 '<button class="btn btn-success" type="button" data-action="apply-laboratory"><i class="bi bi-check2-circle me-1"></i>Aplicar à Grade oficial</button>'
                 : '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button>') + '</div>';
-        return pageHeader(title, 'bi-calendar3', description) +
+        return pageHeader(title, 'bi-calendar3', description) + laboratoryGuide +
             '<div class="card mb-3 grade-controls"><div class="card-body grade-controls-body">' +
             primaryGradeActions +
             '<div class="grade-secondary-controls d-flex flex-wrap justify-content-between align-items-end gap-3">' +
@@ -4604,7 +4615,6 @@
 
     function renderAssignmentGuidance(form) {
         const classId = form.dataset.classId;
-        const subjectId = form.elements.namedItem('disciplina_id').value;
         const professorField = form.elements.namedItem('professor_id');
         const professorId = professorField ? professorField.value : '';
         const day = form.elements.namedItem('dia_semana').value;
@@ -4617,8 +4627,7 @@
                 return String(item.turma_id) === String(classId) && String(item.disciplina_id) === String(demand.disciplina_id);
             }).length;
             const remaining = Math.max(0, demand.aulas_semanais - allocated);
-            const selected = String(demand.disciplina_id) === String(subjectId);
-            return '<div class="assignment-demand-row' + (selected ? ' is-selected' : '') + '"><span>' + h(demand.disciplina_nome) + '</span><strong>' +
+            return '<div class="assignment-demand-row"><span>' + h(demand.disciplina_nome) + '</span><strong>' +
                 allocated + ' / ' + demand.aulas_semanais + '</strong><span class="' + (remaining ? 'text-primary' : 'text-success') + '">' +
                 (remaining ? remaining + ' restante(s)' : 'completa') + '</span></div>';
         }).join('');
@@ -4700,10 +4709,14 @@
             return '<option value="' + h(slot.id) + '" data-day="' + h(slot.dia_semana) + '"' + (selectedSlot ? ' selected' : '') + '>' +
                 h(slot.dia_semana + ' · ' + slot.hora_inicio + '–' + slot.hora_fim) + '</option>';
         }).join('');
-        const dialog = '<dialog class="assignment-dialog" id="manual-assignment-dialog" aria-labelledby="manual-assignment-title">' +
+        const dialog = '<dialog class="assignment-dialog assignment-editor-dialog" id="manual-assignment-dialog" aria-labelledby="manual-assignment-title">' +
             '<div class="assignment-dialog-header"><div><h2 id="manual-assignment-title">' + (assignment ? 'Editar aula' : 'Adicionar aula à turma ' + h(turma.nome)) + '</h2>' +
             '<p class="mb-0 text-muted">' + (assignment ? 'Revise os dados da aula e as orientações antes de salvar.' : 'Escolha a disciplina. O professor será preenchido automaticamente quando houver apenas um vínculo.') + '</p></div>' +
             '<button type="button" class="btn-close" data-action="cancel-assignment-edit" aria-label="Fechar"></button></div>' +
+            '<details class="assignment-demand-reference"><summary class="assignment-demand-reference-toggle">' +
+            '<strong>Demandas da turma</strong><span>Informativo · abrir/recolher</span></summary>' +
+            '<div class="assignment-demand-reference-content"><p>Somente consulta. Para alterar a aula, use o formulário abaixo; para mudar as demandas, acesse <a href="#/demandas">Demandas das turmas</a>.</p>' +
+            '<div id="assignment-demand-guidance"></div></div></details>' +
             '<form id="manual-assignment-form" data-class-id="' + h(turma.id) + '"' +
             (assignment ? ' data-assignment-id="' + h(assignment.id) + '" data-original-discipline-id="' + h(assignment.disciplina_id) + '" data-original-professor-id="' + h(assignment.professor_id) + '"' : '') + '>' +
             '<div class="row g-3 mb-3"><div class="col-md-3"><label class="form-label" for="manual-day">Dia</label><select class="form-select" name="dia_semana" id="manual-day" required>' +
@@ -4714,7 +4727,6 @@
                 '<option value="" selected disabled>Cadastre uma disciplina</option>') + '</select></div>' +
             '<div class="col-md-3" id="manual-teacher-field"><label class="form-label">Professor</label>' +
             renderManualTeacherField(selectedDisciplineId, selectedTeacherId, assignment && assignment.professor_id) + '</div></div>' +
-            '<section class="assignment-guidance-section"><h3>Demandas da turma</h3><div id="assignment-demand-guidance"></div></section>' +
             '<section class="assignment-guidance-section"><h3>Disponibilidade e carga do professor</h3><div id="assignment-teacher-guidance"></div></section>' +
             '<div class="d-flex flex-wrap gap-2 mt-4"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (assignment ? 'Salvar alteração' : 'Adicionar aula') + '</button>' +
             (assignment ? '<button class="btn btn-outline-danger ms-auto" type="button" data-action="delete-assignment" data-id="' + h(assignment.id) + '">Excluir aula</button>' : '') +
