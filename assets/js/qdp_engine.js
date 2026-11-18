@@ -233,6 +233,19 @@ class QDPEngine {
   _obterProfessorPrimario(turmaId, disciplinaId) {
     const chave = `${turmaId}|${disciplinaId}`;
     const primarioId = this.professorPrimarioMap[chave];
+    const professoresElegiveis = this._professoresElegiveisParaTurma(
+      this.vinculos[String(disciplinaId)] || [],
+      turmaId,
+    );
+    const professoresPrioritarios = professoresElegiveis.filter((professor) =>
+      this._prioridadeAtiva(professor.prioridade),
+    );
+    if (professoresPrioritarios.length) {
+      return (
+        professoresPrioritarios.find((professor) => Number(professor.id) === Number(primarioId)) ||
+        professoresPrioritarios[0]
+      );
+    }
     if (primarioId) {
       return (
         this.professores.find((p) => Number(p.id) === Number(primarioId)) ||
@@ -240,6 +253,16 @@ class QDPEngine {
       );
     }
     return null;
+  }
+
+  _prioridadeAtiva(valor) {
+    return valor === true || Number(valor) === 1 ||
+      ["sim", "true", "yes"].includes(String(valor || "").trim().toLowerCase());
+  }
+
+  _demandaPrioritaria(turmaId, disciplinaId) {
+    const primario = this._obterProfessorPrimario(turmaId, disciplinaId);
+    return Boolean(primario && this._prioridadeAtiva(primario.prioridade));
   }
 
   // ==========================================
@@ -518,6 +541,10 @@ class QDPEngine {
             a.id !== ignoreId,
     ).length;
 
+    if (this._demandaPrioritaria(turmaId, disciplinaId) && aulasDisciplinaDia >= 2) {
+        return false;
+    }
+
     let maxPermitido = 2;
     if (relaxarLimiteDia) {
         maxPermitido = 3;
@@ -576,10 +603,12 @@ class QDPEngine {
     this._log(`📊 Carga máxima por professor: ${this.maxCargaProfessor}`);
 
     // FASE 1: Alocação inicial - permite 4 aulas da mesma disciplina por dia
+    this._log("📋 PRIORIDADE: alocando primeiro as aulas prioritárias");
+    let assignments = this._alocarPrioritarias(demandas);
     this._log(
       "📋 FASE 1: Alocação com APENAS professores primários (4 aulas/dia)",
     );
-    let assignments = this._alocarApenasPrimarios(demandas);
+    assignments = this._alocarApenasPrimarios(demandas, assignments);
     this._log(`   FASE 1: ${assignments.length} aulas alocadas`);
 
     // FASE 2: Fallback
@@ -630,6 +659,11 @@ class QDPEngine {
     assignments = this._aplicarValidacaoFinalEstrita(assignments);
     assignments = this._reagruparAulasDaMesmaDisciplina(assignments);
     const relatorio = this._gerarRelatorio(assignments, demandas);
+    assignments = assignments.map((assignment) => {
+      const resultado = { ...assignment };
+      delete resultado._prioridade;
+      return resultado;
+    });
 
     const tempo = ((performance.now() - inicio) / 1000).toFixed(2);
 
@@ -692,6 +726,7 @@ class QDPEngine {
           disciplinaId: discId,
           disciplinaNome: discNome,
           qtd: qtd,
+          prioridade: this._demandaPrioritaria(turma.id, discId),
           professores: profsDisponiveis,
           professoresVinculados: profs,
           professoresElegiveis: elegiveis,
@@ -708,9 +743,119 @@ class QDPEngine {
   // FASE 1: ALOCAR APENAS COM PROFESSORES PRIMÁRIOS
   // ==========================================
 
-  _alocarApenasPrimarios(demandas) {
+  _alocarPrioritarias(demandas) {
     const assignments = [];
+    const demandasPrioritarias = demandas
+      .filter((demanda) => demanda.prioridade)
+      .sort((a, b) => a.qtd - b.qtd || a.turmaNome.localeCompare(b.turmaNome));
+    const horariosOrdenados = this._ordenarHorarios();
+
+    for (const demanda of demandasPrioritarias) {
+      const professor = this._obterProfessorPrimario(
+        demanda.turmaId,
+        demanda.disciplinaId,
+      );
+      if (!professor) {
+        demanda.prioridadePendente = true;
+        this._log(`   ⚠️ Prioridade sem professor elegível: ${demanda.disciplinaNome} na ${demanda.turmaNome}`);
+        continue;
+      }
+
+      const quantidadePrioritaria = Math.min(demanda.qtd, 2);
+      let slotsEscolhidos = null;
+      let melhorPontuacao = Infinity;
+
+      this.dias.forEach((dia) => {
+        const horariosDoDia = horariosOrdenados.filter(
+          (horario) => horario.dia_semana === dia,
+        );
+        const janelas = quantidadePrioritaria === 1
+          ? horariosDoDia.map((horario) => [horario])
+          : horariosDoDia.slice(0, -1).map((horario, index) => [
+              horario,
+              horariosDoDia[index + 1],
+            ]).filter((janela) =>
+              this._horariosNoMesmoTurno(janela[0], janela[1]),
+            );
+
+        janelas.forEach((janela) => {
+          const tentativa = assignments.slice();
+          const valid = janela.every((horario) => {
+            if (
+              !this._podeAlocarComProfessor(
+                tentativa,
+                demanda.turmaId,
+                demanda.disciplinaId,
+                professor.id,
+                dia,
+                horario.id,
+              )
+            ) {
+              return false;
+            }
+            tentativa.push({
+              turma_id: Number(demanda.turmaId),
+              dia_semana: dia,
+              horario_id: Number(horario.id),
+              disciplina_id: Number(demanda.disciplinaId),
+              professor_id: Number(professor.id),
+            });
+            return true;
+          });
+          if (!valid) return;
+
+          const aulasTurmaDia = assignments.filter(
+            (assignment) =>
+              Number(assignment.turma_id) === Number(demanda.turmaId) &&
+              assignment.dia_semana === dia,
+          ).length;
+          const aulasProfessorDia = assignments.filter(
+            (assignment) =>
+              Number(assignment.professor_id) === Number(professor.id) &&
+              assignment.dia_semana === dia,
+          ).length;
+          const pontuacao = aulasTurmaDia * 10 + aulasProfessorDia;
+          if (pontuacao < melhorPontuacao) {
+            melhorPontuacao = pontuacao;
+            slotsEscolhidos = janela;
+          }
+        });
+      });
+
+      if (!slotsEscolhidos) {
+        demanda.prioridadePendente = true;
+        this._log(`   ⚠️ Não foi possível reservar a prioridade de ${demanda.disciplinaNome} na ${demanda.turmaNome}; a demanda ficará pendente.`);
+        continue;
+      }
+
+      slotsEscolhidos.forEach((horario) => {
+        assignments.push({
+          id: "qdp_prioridade_" + demanda.turmaId + "_" + demanda.disciplinaId + "_" + horario.id,
+          turma_id: Number(demanda.turmaId),
+          turma_nome: demanda.turmaNome,
+          horario_id: Number(horario.id),
+          dia_semana: horario.dia_semana,
+          disciplina_id: Number(demanda.disciplinaId),
+          disciplina_nome: demanda.disciplinaNome,
+          professor_id: Number(professor.id),
+          professor_nome: this._getProfessorNome(professor.id),
+          _prioridade: true,
+        });
+      });
+    }
+
+    if (assignments.length) {
+      this._log(`   PRIORIDADE: ${assignments.length} aula(s) reservada(s) antes das demais`);
+    }
+    return assignments;
+  }
+
+  _alocarApenasPrimarios(demandas, assignments) {
+    assignments = assignments || [];
     const slotsOcupados = new Set();
+    assignments.forEach((assignment) => {
+      slotsOcupados.add(`${assignment.turma_id}|${assignment.dia_semana}|${assignment.horario_id}`);
+    });
     const profTotalContagem = {};
 
     this.professores.forEach((p) => {
@@ -760,10 +905,17 @@ class QDPEngine {
         const demandasOrdenadas = [...grupo.demandas].sort((a, b) => b.qtd - a.qtd);
 
         for (const demanda of demandasOrdenadas) {
+            if (demanda.prioridadePendente) continue;
             const cargaAtualProf = assignments.filter(
                 (a) => Number(a.professor_id) === Number(primario.id),
             ).length;
-            const cargaNecessaria = demanda.qtd;
+            const alocadasAntes = assignments.filter(
+                (assignment) =>
+                    Number(assignment.turma_id) === Number(demanda.turmaId) &&
+                    Number(assignment.disciplina_id) === Number(demanda.disciplinaId),
+            ).length;
+            const cargaNecessaria = demanda.qtd - alocadasAntes;
+            if (cargaNecessaria <= 0) continue;
             const cargaDisponivel = this.maxCargaProfessor - cargaAtualProf;
 
             if (cargaDisponivel < cargaNecessaria) {
@@ -775,7 +927,7 @@ class QDPEngine {
 
             let alocadas = 0;
 
-            for (let aula = 0; aula < demanda.qtd; aula++) {
+            for (let aula = 0; aula < cargaNecessaria; aula++) {
                 let melhorSlot = null;
                 let melhorScore = -Infinity;
 
@@ -995,6 +1147,7 @@ class QDPEngine {
     let fallbackAlocadas = 0;
 
     for (const demanda of demandas) {
+        if (demanda.prioridadePendente) continue;
         const alocadasAtuais = assignments.filter(
             (a) =>
                 Number(a.turma_id) === Number(demanda.turmaId) &&
@@ -1204,6 +1357,7 @@ class QDPEngine {
 
       const pendencias = [];
       for (const demanda of demandas) {
+        if (demanda.prioridadePendente) continue;
         const alocadas = assignments.filter(
           (a) =>
             Number(a.turma_id) === Number(demanda.turmaId) &&
@@ -1289,6 +1443,7 @@ class QDPEngine {
 
           let movido = false;
           for (const aulaExistente of aulasTurma) {
+            if (aulaExistente._prioridade) continue;
             const slotsAlternativos = horariosOrdenados.filter(
               (h) =>
                 h.dia_semana !== aulaExistente.dia_semana ||
@@ -1361,6 +1516,7 @@ class QDPEngine {
           if (movido) continue;
 
           for (const aulaExistente of aulasTurma) {
+            if (aulaExistente._prioridade) continue;
             const demandaExistente = demandas.find(
               (d) =>
                 Number(d.turmaId) === Number(aulaExistente.turma_id) &&
@@ -1425,6 +1581,7 @@ class QDPEngine {
           );
 
           for (const aulaExistente of aulasTurma) {
+            if (aulaExistente._prioridade) continue;
             if (
               Number(aulaExistente.disciplina_id) ===
               Number(demanda.disciplinaId)
@@ -1537,6 +1694,7 @@ class QDPEngine {
         );
 
         for (const aula of aulasParaTransferir) {
+          if (aula._prioridade) continue;
           if (
             this._getCargaProfessor(assignments, profIdSobrecarga) <=
             this.maxCargaProfessor
@@ -1614,6 +1772,7 @@ class QDPEngine {
 
       const pendencias = demandas.filter(
         (d) =>
+          !d.prioridadePendente &&
           d.turmaId === turma.id &&
           assignments.filter(
             (a) =>
@@ -1652,6 +1811,7 @@ class QDPEngine {
           let reposicionado = false;
 
           for (const aulaExistente of aulasTurma) {
+            if (aulaExistente._prioridade) continue;
             if (aulaExistente.disciplina_id === pendencia.disciplinaId)
               continue;
 
@@ -1741,6 +1901,7 @@ class QDPEngine {
 
           if (!reposicionado) {
             for (const aulaExistente of aulasTurma) {
+              if (aulaExistente._prioridade) continue;
               if (aulaExistente.disciplina_id === pendencia.disciplinaId)
                 continue;
 
@@ -1806,6 +1967,7 @@ class QDPEngine {
 
     const pendencias = [];
     for (const demanda of demandas) {
+      if (demanda.prioridadePendente) continue;
       const alocadasAtuais = assignments.filter(
         (a) =>
           Number(a.turma_id) === Number(demanda.turmaId) &&
@@ -1934,6 +2096,7 @@ class QDPEngine {
 
     const pendencias = [];
     for (const demanda of demandas) {
+      if (demanda.prioridadePendente) continue;
       const alocadasAtuais = assignments.filter(
         (a) =>
           Number(a.turma_id) === Number(demanda.turmaId) &&
@@ -2024,6 +2187,7 @@ class QDPEngine {
                 break;
               }
             } else {
+              if (aulaExistente._prioridade) continue;
               const slotsAlternativos = horariosOrdenados.filter(
                 (h) =>
                   h.dia_semana !== dia || Number(h.id) !== Number(horario.id),
@@ -2098,6 +2262,7 @@ class QDPEngine {
 
         if (!encontrado) {
           for (const aulaExistente of aulasTurma) {
+            if (aulaExistente._prioridade) continue;
             if (
               Number(aulaExistente.disciplina_id) ===
               Number(demanda.disciplinaId)
@@ -2164,7 +2329,7 @@ class QDPEngine {
         (a) => Number(a.professor_id) === Number(primario.id),
       );
       const semPrimario = aulas.filter(
-        (a) => Number(a.professor_id) !== Number(primario.id),
+        (a) => Number(a.professor_id) !== Number(primario.id) && !a._prioridade,
       );
 
       if (comPrimario.length < aulas.length * 0.8 && semPrimario.length > 0) {
@@ -2297,6 +2462,7 @@ class QDPEngine {
     let trocas = 0;
     grupos.forEach((indices) => {
       if (indices.length < 3) return;
+      if (indices.some((index) => working[index]._prioridade)) return;
       const dia = working[indices[0]].dia_semana;
       const horariosDoDia = this._ordenarHorarios().filter(
         (horario) => horario.dia_semana === dia,
@@ -2379,6 +2545,9 @@ class QDPEngine {
   }
 
   _motivoPendencia(demanda, assignments) {
+    if (demanda.prioridadePendente) {
+      return "Não foi possível alocar a dupla consecutiva obrigatória da prioridade; revise horários, disponibilidade e restrições.";
+    }
     const vinculados = demanda.professoresVinculados || this.vinculos[String(demanda.disciplinaId)] || [];
     if (!vinculados.length) return "Não há professor vinculado a esta disciplina neste semestre.";
 

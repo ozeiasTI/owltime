@@ -781,7 +781,8 @@
                 { name: 'professor_id', label: 'Professor', type: 'select', optionsFrom: 'professores', includeIngress: true, required: true },
                 { name: 'disciplina_id', label: 'Disciplina', type: 'select', optionsFrom: 'disciplinas', required: true },
                 { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' },
-                { name: 'grupo_ids', label: 'Grupos de turmas (opcional)', type: 'multi-check', optionsFrom: 'grupos', help: 'Se marcar grupos, este professor será considerado apenas nas turmas deles. Sem grupo, o vínculo continua geral.' }
+                { name: 'grupo_ids', label: 'Grupos de turmas (opcional)', type: 'multi-check', optionsFrom: 'grupos', help: 'Se marcar grupos, este professor será considerado apenas nas turmas deles. Sem grupo, o vínculo continua geral.' },
+                { name: 'prioridade', label: 'Prioridade na grade', type: 'select', defaultValue: 'Não', options: [['Sim', 'Sim'], ['Não', 'Não']], help: 'Prioriza uma dupla consecutiva; no máximo duas aulas, nunca três no mesmo dia.' }
             ],
             columns: [
                 ['professor_id', 'Professor', function (id) {
@@ -797,7 +798,8 @@
                         return nameById(KEYS.grupos, id, '');
                     }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
                     return h(names.length ? names.join(', ') : 'Todos os grupos');
-                }]
+                }],
+                ['prioridade', 'Prioridade', function (value) { return h(value || 'Não'); }]
             ]
         },
         disponibilidade: {
@@ -1650,6 +1652,7 @@
         const value = record[field.name];
         if (field.type === 'sort-groups') return JSON.stringify(getSortSubgroups(record));
         if (field.type === 'multi-check') return (Array.isArray(value) ? value : []).join(', ');
+        if (field.name === 'prioridade') return value || 'Não';
         if (field.type === 'select' && field.optionsFrom && value != null && value !== '') {
             const option = fieldOptions(field).find(function (item) { return String(item[0]) === String(value); });
             return option ? option[1] : '';
@@ -1737,9 +1740,17 @@
                 const disciplineInput = values[fieldPositions[1]] || '';
                 const semester = values[fieldPositions[2]] || getSemester();
                 const groupInput = fieldPositions[3] == null ? '' : values[fieldPositions[3]] || '';
+                const priorityInput = fieldPositions[4] == null ? '' : values[fieldPositions[4]] || '';
+                const defaultPriority = fieldPositions[4] == null && oldRecord
+                    ? oldRecord.prioridade || 'Não'
+                    : 'Não';
                 if (!professorInput) throw new Error('"Professor" é obrigatório.');
                 if (!disciplineInput) throw new Error('"Disciplina" é obrigatório.');
                 if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+                const priorityOption = priorityInput
+                    ? currentSpreadsheetOption(specs.vinculos.fields[4], priorityInput)
+                    : [defaultPriority, defaultPriority];
+                if (!priorityOption) throw new Error('"Prioridade na grade" deve ser Sim ou Não.');
                 const availableGroupIds = new Set(readRecords(KEYS.grupos).filter(function (group) {
                     return semesterMatches(group, semester);
                 }).map(function (group) { return String(group.id); }));
@@ -1801,7 +1812,8 @@
                             professor_id: Number(professor.id),
                             disciplina_id: Number(discipline.id),
                             semestre_letivo: semester,
-                            grupo_ids: groupIds.map(Number)
+                            grupo_ids: groupIds.map(Number),
+                            prioridade: priorityOption[0]
                         },
                         update: Boolean(matchedLink),
                         newDiscipline: newDiscipline,
@@ -1915,6 +1927,7 @@
                 return positions.get('turmas');
             }
             if (position === undefined && route === 'vinculos' && field.type === 'multi-check') return null;
+            if (position === undefined && route === 'vinculos' && field.name === 'prioridade') return null;
             if (position === undefined && route === 'grupos' && field.name === 'semestre_letivo') return null;
             if (position === undefined) throw new Error('A planilha está sem a coluna "' + field.label + '". Baixe uma nova cópia preenchida pelo sistema.');
             return position;
@@ -3907,7 +3920,8 @@
                 id: professor.id, nome: professor.nome,
                 carga_horaria_semanal: professor.carga_horaria_semanal,
                 limite_aulas_dia: professor.limite_aulas_dia,
-                grupo_ids: Array.isArray(row.grupo_ids) ? row.grupo_ids.map(Number) : []
+                grupo_ids: Array.isArray(row.grupo_ids) ? row.grupo_ids.map(Number) : [],
+                prioridade: row.prioridade || 'Não'
             });
         });
         const demandaPorTurma = {};
