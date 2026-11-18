@@ -846,11 +846,18 @@
             title: 'Eventos', icon: 'bi-calendar-event', key: KEYS.eventos, module: 'Eventos',
             fields: [
                 { name: 'nome', label: 'Nome do evento', required: true, placeholder: 'Ex.: Momento cívico' },
-                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva este evento recorrente da escola' }
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva este evento recorrente da escola' },
+                { name: 'curso_ids', label: 'Cursos onde o evento pode ser aplicado (opcional)', type: 'multi-check', optionsFrom: 'cursos', help: 'Sem curso marcado, o evento poderá ser aplicado em todos os cursos compatíveis com o turno.' }
             ],
             columns: [
                 ['nome', 'Evento'],
-                ['descricao', 'Descrição', function (value) { return h(value || '—'); }]
+                ['descricao', 'Descrição', function (value) { return h(value || '—'); }],
+                ['curso_ids', 'Cursos', function (ids) {
+                    const names = (Array.isArray(ids) ? ids : []).map(function (id) {
+                        return nameById(KEYS.cursos, id, '');
+                    }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                    return h(names.length ? names.join(', ') : 'Todos os cursos');
+                }]
             ]
         },
         sorts: {
@@ -2986,7 +2993,7 @@
             disponibilidade: 'Planeje os dias de PRD e registre indisponibilidades por horário ou dia completo.',
             demandas: 'Defina quantas aulas semanais de cada disciplina cada turma precisa.',
             peculiaridades: 'Cadastre tipos de proteção e marque os períodos reservados de cada turma antes de gerar a grade.',
-            eventos: 'Cadastre eventos recorrentes que, ao serem marcados na Grade oficial, bloqueiam o mesmo horário nas turmas do turno compatível.',
+            eventos: 'Cadastre eventos recorrentes e, opcionalmente, selecione os cursos onde podem ser aplicados. Ao marcar na Grade oficial, o evento bloqueia o horário nas turmas compatíveis do turno e dos cursos escolhidos.',
             sorts: 'Crie subgrupos de turmas e reserve horários aleatórios distintos dentro de cada subgrupo antes de gerar a grade.',
             notas: 'Observações, pendências e decisões salvas apenas neste navegador.'
         };
@@ -3017,9 +3024,24 @@
         return true;
     }
 
-    function getEventTargetClasses(slot) {
+    function eventAppliesToClass(event, turma) {
+        const courseIds = Array.isArray(event && event.curso_ids) ? event.curso_ids.map(String) : [];
+        if (!courseIds.length) return true;
+        if (turma && turma.curso_id != null && courseIds.includes(String(turma.curso_id))) return true;
+        if (turma && turma.curso_nome) {
+            const course = readRecords(KEYS.cursos).find(function (item) {
+                return String(item.nome || '').toLocaleLowerCase('pt-BR') ===
+                    String(turma.curso_nome || '').toLocaleLowerCase('pt-BR');
+            });
+            if (course && courseIds.includes(String(course.id))) return true;
+        }
+        return false;
+    }
+
+    function getEventTargetClasses(slot, event) {
         return activeRecords(KEYS.turmas, ['ativa', 'ativo']).filter(function (turma) {
-            return slotMatchesClassPeriod(turma, slot);
+            return slotMatchesClassPeriod(turma, slot) &&
+                (!event || eventAppliesToClass(event, turma));
         });
     }
 
@@ -3150,6 +3172,11 @@
         });
         const events = readRecords(KEYS.eventosGrade).filter(function (event) {
             return String(event.semestre_letivo || '') === selectedSemester;
+        }).filter(function (event) {
+            const definition = eventDefinitions.get(String(event.evento_id));
+            if (!definition) return true;
+            const turma = findById(KEYS.turmas, event.turma_id);
+            return !turma || eventAppliesToClass(definition, turma);
         }).map(function (event) {
             const definition = eventDefinitions.get(String(event.evento_id));
             return Object.assign({}, event, {
@@ -3438,7 +3465,7 @@
             (peculiarities.length ? '<optgroup label="Peculiaridades · somente esta turma">' + peculiarities.map(function (item) {
                 return '<option value="peculiaridade:' + h(item.id) + '">' + h(item.nome || 'Proteção') + ' - Peculiaridade</option>';
             }).join('') + '</optgroup>' : '') +
-            (events.length ? '<optgroup label="Eventos · todas as turmas do mesmo turno">' + events.map(function (item) {
+            (events.length ? '<optgroup label="Eventos · turmas compatíveis do mesmo turno">' + events.map(function (item) {
                 return '<option value="evento:' + h(item.id) + '">' + h(item.nome || 'Evento') + ' - Evento</option>';
             }).join('') + '</optgroup>' : '');
         return '<dialog class="assignment-dialog" id="slot-protection-dialog" aria-labelledby="slot-protection-title">' +
@@ -3449,7 +3476,7 @@
             '<form id="slot-protection-form"><input type="hidden" name="turma_id"><input type="hidden" name="dia_semana"><input type="hidden" name="horario_id">' +
             '<div class="mb-3"><label class="form-label" for="slot-protection-type">Marcação</label><select class="form-select" id="slot-protection-type" name="marcacao"' +
             (peculiarities.length || events.length ? '' : ' disabled') + '>' + options + '</select>' +
-            '<div class="form-text">Peculiaridades protegem somente esta turma. Eventos são aplicados em todas as turmas compatíveis com o mesmo dia, horário e turno.</div></div>' +
+            '<div class="form-text">Peculiaridades protegem somente esta turma. Eventos são aplicados nas turmas compatíveis com o mesmo dia, horário, turno e cursos selecionados no cadastro.</div></div>' +
             '<div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit"' + (peculiarities.length || events.length ? '' : ' disabled') +
             '>Salvar marcação</button><button class="btn btn-outline-secondary" type="button" data-action="close-slot-protection">Cancelar</button></div></form></dialog>';
     }
@@ -3490,6 +3517,14 @@
                 ? 'evento:' + String(alreadyProtected.evento_id)
                 : 'peculiaridade:' + String(alreadyProtected.peculiaridade_id))
             : '';
+        const marcacaoSelect = form.elements.namedItem('marcacao');
+        Array.from(marcacaoSelect.options).forEach(function (option) {
+            const match = /^evento:(.+)$/.exec(option.value);
+            if (!match) return;
+            const event = findById(KEYS.eventos, match[1]);
+            option.hidden = !event || !eventAppliesToClass(event, turma);
+            option.disabled = option.hidden;
+        });
         document.getElementById('slot-protection-context').textContent =
             turma.nome + ' · ' + day + ' · ' + slot.hora_inicio + '–' + slot.hora_fim;
         if (!dialog.open) dialog.showModal();
@@ -3583,7 +3618,7 @@
 
         const eventDefinition = findById(KEYS.eventos, selectionId);
         if (!eventDefinition) throw new Error('O evento selecionado não foi encontrado. Atualize a página e tente novamente.');
-        const targetClasses = getEventTargetClasses(slot);
+        const targetClasses = getEventTargetClasses(slot, eventDefinition);
         if (!targetClasses.some(function (item) { return String(item.id) === turmaId; })) {
             throw new Error('A turma selecionada não está entre as turmas compatíveis com este horário.');
         }
@@ -6680,6 +6715,12 @@
                 });
                 saveRecords(key, rows, key);
             });
+            saveRecords(KEYS.eventos, readRecords(KEYS.eventos).map(function (event) {
+                const courseIds = Array.isArray(event.curso_ids)
+                    ? event.curso_ids.filter(function (courseId) { return String(courseId) !== String(id); })
+                    : [];
+                return Object.assign({}, event, { curso_ids: courseIds });
+            }), 'Eventos');
         }
         if (route === 'professores') {
             [KEYS.vinculos, KEYS.disponibilidade].forEach(function (key) {
