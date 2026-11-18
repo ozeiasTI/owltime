@@ -628,6 +628,7 @@ class QDPEngine {
     this._log(`   FASE 8: ${assignments.length} aulas no total`);
 
     assignments = this._aplicarValidacaoFinalEstrita(assignments);
+    assignments = this._reagruparAulasDaMesmaDisciplina(assignments);
     const relatorio = this._gerarRelatorio(assignments, demandas);
 
     const tempo = ((performance.now() - inicio) / 1000).toFixed(2);
@@ -2255,6 +2256,126 @@ class QDPEngine {
     }
 
     return resultado;
+  }
+
+  _pontuarProximidadeDisciplinas(indices, assignments, posicoes) {
+    const porDisciplina = new Map();
+    indices.forEach((index) => {
+      const assignment = assignments[index];
+      const position = posicoes.get(Number(assignment.horario_id));
+      if (position === undefined) return;
+      const key = String(assignment.disciplina_id);
+      if (!porDisciplina.has(key)) porDisciplina.set(key, []);
+      porDisciplina.get(key).push(position);
+    });
+
+    let adjacencias = 0;
+    let distanciaTotal = 0;
+    porDisciplina.forEach((positions) => {
+      for (let first = 0; first < positions.length; first += 1) {
+        for (let second = first + 1; second < positions.length; second += 1) {
+          const distance = Math.abs(positions[first] - positions[second]);
+          if (distance === 1) adjacencias += 1;
+          distanciaTotal += distance;
+        }
+      }
+    });
+    return { adjacencias, distanciaTotal };
+  }
+
+  _reagruparAulasDaMesmaDisciplina(assignments) {
+    const working = assignments.map((assignment, index) =>
+      Object.assign({}, assignment, { id: "qdp-reagrupamento-" + index }),
+    );
+    const grupos = new Map();
+    working.forEach((assignment, index) => {
+      const key = String(assignment.turma_id) + "|" + String(assignment.dia_semana);
+      if (!grupos.has(key)) grupos.set(key, []);
+      grupos.get(key).push(index);
+    });
+
+    let trocas = 0;
+    grupos.forEach((indices) => {
+      if (indices.length < 3) return;
+      const dia = working[indices[0]].dia_semana;
+      const horariosDoDia = this._ordenarHorarios().filter(
+        (horario) => horario.dia_semana === dia,
+      );
+      const posicoes = new Map(horariosDoDia.map((horario, index) => [
+        Number(horario.id),
+        index,
+      ]));
+      let pontuacao = this._pontuarProximidadeDisciplinas(indices, working, posicoes);
+      let melhorou = true;
+
+      while (melhorou) {
+        melhorou = false;
+        for (let first = 0; first < indices.length && !melhorou; first += 1) {
+          for (let second = first + 1; second < indices.length; second += 1) {
+            const firstAssignment = working[indices[first]];
+            const secondAssignment = working[indices[second]];
+            if (Number(firstAssignment.disciplina_id) === Number(secondAssignment.disciplina_id)) continue;
+
+            const firstSlot = firstAssignment.horario_id;
+            const secondSlot = secondAssignment.horario_id;
+            firstAssignment.horario_id = secondAssignment.horario_id;
+            secondAssignment.horario_id = firstSlot;
+
+            const valid =
+              this._podeAlocarComProfessor(
+                working,
+                firstAssignment.turma_id,
+                firstAssignment.disciplina_id,
+                firstAssignment.professor_id,
+                firstAssignment.dia_semana,
+                firstAssignment.horario_id,
+                firstAssignment.id,
+              ) &&
+              this._podeAlocarComProfessor(
+                working,
+                secondAssignment.turma_id,
+                secondAssignment.disciplina_id,
+                secondAssignment.professor_id,
+                secondAssignment.dia_semana,
+                secondAssignment.horario_id,
+                secondAssignment.id,
+              );
+
+            const candidata = valid
+              ? this._pontuarProximidadeDisciplinas(indices, working, posicoes)
+              : null;
+            const melhor =
+              candidata &&
+              (candidata.adjacencias > pontuacao.adjacencias ||
+                (candidata.adjacencias === pontuacao.adjacencias &&
+                  candidata.distanciaTotal < pontuacao.distanciaTotal));
+
+            if (melhor) {
+              pontuacao = candidata;
+              trocas += 1;
+              melhorou = true;
+              break;
+            }
+
+            firstAssignment.horario_id = firstSlot;
+            secondAssignment.horario_id = secondSlot;
+          }
+        }
+      }
+    });
+
+    if (trocas) {
+      this._log(
+        `📋 PÓS-PROCESSAMENTO: ${trocas} troca(s) para aproximar aulas da mesma disciplina`,
+      );
+    }
+
+    return assignments.map((assignment, index) =>
+      Object.assign({}, assignment, {
+        dia_semana: working[index].dia_semana,
+        horario_id: working[index].horario_id,
+      }),
+    );
   }
 
   _motivoPendencia(demanda, assignments) {
