@@ -300,6 +300,11 @@ class QDPEngine {
     return "noite";
   }
 
+  _horariosNoMesmoTurno(horarioA, horarioB) {
+    return this._turnoByHora(horarioA.hora_inicio) ===
+      this._turnoByHora(horarioB.hora_inicio);
+  }
+
   _normalizarPeriodo(periodo) {
     return String(periodo || "")
       .trim()
@@ -406,6 +411,12 @@ class QDPEngine {
         (horario) => Number(horario.id) === Number(aula.horario_id),
       );
       if (ordemExistente < 0) continue;
+      if (
+        !this._horariosNoMesmoTurno(
+          horariosDoDia[ordemExistente],
+          horariosDoDia[ordemAtual],
+        )
+      ) continue;
       const distancia = Math.abs(ordemExistente - ordemAtual);
       if (distancia === 1) score += 14000;
       else if (distancia === 2) score -= 1500;
@@ -421,7 +432,14 @@ class QDPEngine {
       const ordemExistente = horariosDoDia.findIndex(
         (horario) => Number(horario.id) === Number(aula.horario_id),
       );
-      if (ordemExistente >= 0 && Math.abs(ordemExistente - ordemAtual) === 1) {
+      if (
+        ordemExistente >= 0 &&
+        this._horariosNoMesmoTurno(
+          horariosDoDia[ordemExistente],
+          horariosDoDia[ordemAtual],
+        ) &&
+        Math.abs(ordemExistente - ordemAtual) === 1
+      ) {
         score += 3500;
       }
     }

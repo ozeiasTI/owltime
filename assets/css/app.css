@@ -648,7 +648,14 @@ body {
 .grade-discipline-legend { display: flex; flex-wrap: wrap; gap: .4rem .8rem; }
 .grade-discipline-chip { display: inline-flex; align-items: center; gap: .35rem; color: #42526b; font-size: .78rem; }
 .grade-discipline-chip i { width: .8rem; height: .8rem; border: 1px solid #23364d20; border-radius: .2rem; background: var(--grade-subject-color); }
-.grade-filter { min-width: 320px; }
+.grade-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    align-items: end;
+    gap: 1rem;
+}
+.grade-filter { min-width: 0; }
+.grade-filter-grid .grade-legend-panel { grid-column: 1 / -1; }
 .generation-summary { position: fixed; z-index: 1100; top: 1rem; right: 1rem; width: min(440px, calc(100vw - 2rem)); padding: 1rem 1.1rem; border: 1px solid #f1d59b; border-radius: .85rem; color: #5c4715; background: #fffaf0; box-shadow: 0 12px 36px #172b4d2b; opacity: 1; transform: translateY(0); transition: opacity .3s ease, transform .3s ease; }
 .generation-summary.is-complete { border-color: #b7dfc2; color: #245c39; background: #f3fbf5; }
 .generation-summary.is-leaving { opacity: 0; transform: translateY(-8px); }

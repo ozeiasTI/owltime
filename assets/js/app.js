@@ -33,8 +33,10 @@
     let gradeFocusDay = '';
     let gradeFocusSlotId = '';
     let gradeDisciplineFilter = '';
+    let gradeCourseFilter = '';
     let gradeTurmaFilter = '';
     let gradeTeacherFilter = '';
+    let gradeProtectionFilter = '';
     let gradeCompletionFilter = '';
     let gradeScheduleCollapsed = false;
     let workloadPanelCollapsed = false;
@@ -2534,7 +2536,9 @@
             throw new Error('Não há aulas atribuídas a este registro na grade do semestre atual.');
         }
         gradeTurmaFilter = isProfessor ? '' : String(entityId);
+        gradeCourseFilter = '';
         gradeTeacherFilter = isProfessor ? String(entityId) : '';
+        gradeProtectionFilter = '';
         gradeDisciplineFilter = '';
         gradeCompletionFilter = '';
         gradeScheduleCollapsed = false;
@@ -2996,13 +3000,20 @@
         return SUBJECT_COLORS[hash % SUBJECT_COLORS.length];
     }
 
+    function getScheduleTurn(slot) {
+        const hour = Number(String(slot.hora_inicio || '00:00').split(':')[0] || 0);
+        if (hour < 12) return 'manha';
+        if (hour < 18) return 'tarde';
+        return 'noite';
+    }
+
     function slotMatchesClassPeriod(turma, slot) {
         const period = normalizeCatalogValue(turma && turma.periodo);
-        const hour = Number(String(slot.hora_inicio || '00:00').split(':')[0] || 0);
-        if (period === 'matutino' || period === 'manha') return hour < 12;
-        if (period === 'vespertino' || period === 'tarde') return hour >= 12 && hour < 18;
-        if (period === 'noturno' || period === 'noite') return hour >= 18;
-        if (period === 'integral') return hour < 18;
+        const turn = getScheduleTurn(slot);
+        if (period === 'matutino' || period === 'manha') return turn === 'manha';
+        if (period === 'vespertino' || period === 'tarde') return turn === 'tarde';
+        if (period === 'noturno' || period === 'noite') return turn === 'noite';
+        if (period === 'integral') return turn === 'manha' || turn === 'tarde';
         return true;
     }
 
@@ -3149,10 +3160,15 @@
         return protections.concat(events);
     }
 
+    function gradeProtectionType(protection) {
+        if (protection.tipo_marcacao === 'evento') return 'evento';
+        if (protection.tipo_marcacao === 'sort') return 'sort';
+        return 'peculiaridade';
+    }
+
     function gradeProtectionTypeLabel(protection) {
-        if (protection.tipo_marcacao === 'evento') return 'Evento';
-        if (protection.tipo_marcacao === 'sort') return 'Sort';
-        return 'Peculiaridade';
+        const labels = { evento: 'Evento', sort: 'Sort', peculiaridade: 'Peculiaridade' };
+        return labels[gradeProtectionType(protection)];
     }
 
     function renderSortApplyDialog(sortDefinitions, semester, hasAssignments) {
@@ -3244,7 +3260,11 @@
             slotsByDay.forEach(function (daySlots, day) {
                 for (let index = 0; index <= daySlots.length - occurrences; index += 1) {
                     const window = daySlots.slice(index, index + occurrences);
-                    if (window.every(function (slot) { return isAvailable(day, slot); })) windows.push(window);
+                    const staysInTurn = window.every(function (slot, slotIndex) {
+                        return slotIndex === 0 ||
+                            getScheduleTurn(slot) === getScheduleTurn(window[slotIndex - 1]);
+                    });
+                    if (staysInTurn && window.every(function (slot) { return isAvailable(day, slot); })) windows.push(window);
                 }
             });
             return windows;
@@ -3618,7 +3638,7 @@
             (targetClasses.length === 1 ? ' turma.' : ' turmas.') + '.', 'success');
     }
 
-    function renderDisciplineTeacherSchedules(slots, assignments, disciplineId, turmaId, teachers, editable) {
+    function renderDisciplineTeacherSchedules(slots, assignments, disciplineId, turmaId, teachers, editable, protections) {
         const filtered = assignments.filter(function (item) {
             return String(item.disciplina_id) === String(disciplineId) &&
                 (!turmaId || String(item.turma_id) === String(turmaId));
@@ -3630,7 +3650,7 @@
             const teacherAssignments = filtered.filter(function (item) { return String(item.professor_id || '') === teacherId; });
             const name = teacher ? teacher.nome : (teacherAssignments[0].professor_nome || 'Sem professor');
             return '<section class="card grade-teacher-card"><div class="card-header d-flex justify-content-between align-items-center gap-2"><strong>' + h(name) + '</strong><span class="badge text-bg-primary">' + teacherAssignments.length + ' aula(s)</span></div>' +
-                '<div class="card-body">' + renderWeeklyGrid(slots, teacherAssignments, turmaId || null, editable) + '</div></section>';
+                '<div class="card-body">' + renderWeeklyGrid(slots, teacherAssignments, turmaId || null, editable, protections) + '</div></section>';
         }).join('');
         return '<div class="grade-teacher-schedules">' + cards + '</div>';
     }
@@ -4077,15 +4097,29 @@
         const slots = readRecords(KEYS.horarios).filter(function (slot) { return String(slot.tipo || 'Aula').toLowerCase() === 'aula'; });
         const assignments = state.assignments || [];
         const protections = getGradeProtections(semester);
+        const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
         const disciplines = readRecords(KEYS.disciplinas);
         const teachers = activeRecords(KEYS.professores, ['ativo']);
         if (!['', 'complete', 'pending'].includes(gradeCompletionFilter)) gradeCompletionFilter = '';
         const effectiveCompletionFilter = gradeCompletionFilter;
-        if (gradeTurmaFilter && !turmas.some(function (turma) { return String(turma.id) === String(gradeTurmaFilter); })) gradeTurmaFilter = '';
+        if (gradeCourseFilter && !courses.some(function (course) { return String(course.id) === String(gradeCourseFilter); })) gradeCourseFilter = '';
+        if (!['', 'evento', 'sort', 'peculiaridade'].includes(gradeProtectionFilter)) gradeProtectionFilter = '';
+        const matchingProtections = gradeProtectionFilter
+            ? protections.filter(function (protection) { return gradeProtectionType(protection) === gradeProtectionFilter; })
+            : protections;
+        const protectionClassIds = new Set(matchingProtections.map(function (protection) { return String(protection.turma_id); }));
+        const selectedCourse = courses.find(function (course) { return String(course.id) === String(gradeCourseFilter); });
+        const courseTurmas = gradeCourseFilter
+            ? turmas.filter(function (turma) {
+                return String(turma.curso_id || '') === gradeCourseFilter ||
+                    (!turma.curso_id && normalizeCatalogValue(turma.curso_nome) === normalizeCatalogValue(selectedCourse && selectedCourse.nome));
+            })
+            : turmas;
+        if (gradeTurmaFilter && !courseTurmas.some(function (turma) { return String(turma.id) === String(gradeTurmaFilter); })) gradeTurmaFilter = '';
         if (gradeDisciplineFilter && !disciplines.some(function (discipline) { return String(discipline.id) === String(gradeDisciplineFilter); })) gradeDisciplineFilter = '';
         if (gradeTeacherFilter && !teachers.some(function (teacher) { return String(teacher.id) === String(gradeTeacherFilter); })) gradeTeacherFilter = '';
-        const selectedTurma = turmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); }) ||
-            turmas.find(function (turma) { return String(turma.id) === String(state.activeTurmaId); }) || turmas[0];
+        const selectedTurma = courseTurmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); }) ||
+            courseTurmas.find(function (turma) { return String(turma.id) === String(state.activeTurmaId); }) || courseTurmas[0];
         const semesterForm = '<div class="d-flex flex-wrap align-items-end gap-2"><form id="semester-form" class="d-flex align-items-end gap-2"><div><label class="form-label mb-1" for="semester-input">Semestre</label>' +
             '<input id="semester-input" class="form-control form-control-sm" value="' + h(semester) + '" pattern="\\d{4}/[12]" placeholder="AAAA/1" required></div>' +
             '<button class="btn btn-sm btn-outline-primary" type="submit">Aplicar</button></form>' +
@@ -4118,9 +4152,14 @@
             (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-share me-1"></i>Compartilhar resumo</button></div>' +
             '<p class="form-text no-print mb-0">PDFs individuais ou a grade de todas as turmas podem ser enviados como arquivo pelo menu de compartilhamento do dispositivo. O Owltime mantém os dados localmente; publicação por link requer um serviço externo.</p>'
             : '';
+        const courseFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-course-filter">Filtrar curso</label><select class="form-select" id="grade-course-filter">' +
+            '<option value="">Todos os cursos</option>' +
+            courses.map(function (course) {
+                return '<option value="' + h(course.id) + '"' + (String(gradeCourseFilter) === String(course.id) ? ' selected' : '') + '>' + h(course.nome) + '</option>';
+            }).join('') + '</select></div>';
         const turmaFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-turma-filter">Filtrar turma</label><select class="form-select" id="grade-turma-filter">' +
             '<option value="">Todas as turmas</option>' +
-            turmas.map(function (turma) {
+            courseTurmas.map(function (turma) {
                 return '<option value="' + h(turma.id) + '"' + (String(gradeTurmaFilter) === String(turma.id) ? ' selected' : '') + '>' + h(turma.nome) + '</option>';
             }).join('') + '</select></div>';
         const disciplineFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-discipline-filter">Filtrar disciplina</label><select class="form-select" id="grade-discipline-filter">' +
@@ -4133,6 +4172,12 @@
             teachers.map(function (teacher) {
                 return '<option value="' + h(teacher.id) + '"' + (String(gradeTeacherFilter) === String(teacher.id) ? ' selected' : '') + '>' + h(teacher.nome) + '</option>';
             }).join('') + '</select></div>';
+        const protectionFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-protection-filter">Filtrar marcação</label><select class="form-select" id="grade-protection-filter">' +
+            '<option value=""' + (!gradeProtectionFilter ? ' selected' : '') + '>Todas as marcações</option>' +
+            '<option value="evento"' + (gradeProtectionFilter === 'evento' ? ' selected' : '') + '>Eventos — aplicados às turmas do turno</option>' +
+            '<option value="sort"' + (gradeProtectionFilter === 'sort' ? ' selected' : '') + '>Sorts — horários sorteados e reservados</option>' +
+            '<option value="peculiaridade"' + (gradeProtectionFilter === 'peculiaridade' ? ' selected' : '') + '>Peculiaridades — horários protegidos por turma</option>' +
+            '</select></div>';
         const completionFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-completion-filter">Situação da grade</label><select class="form-select" id="grade-completion-filter">' +
             '<option value=""' + (!effectiveCompletionFilter ? ' selected' : '') + '>Todas as grades</option>' +
             '<option value="complete"' + (effectiveCompletionFilter === 'complete' ? ' selected' : '') + '>Grades completas</option>' +
@@ -4147,7 +4192,7 @@
             ' me-1" aria-hidden="true"></i>' + (legendCollapsed ? 'Mostrar disciplinas e cores' : 'Recolher disciplinas e cores') +
             '</button><div id="grade-discipline-legend-content" class="mt-2"' + (legendCollapsed ? ' hidden' : '') + '>' +
             legendContent + '</div></div>';
-        const selectedFilterTurma = turmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); });
+        const selectedFilterTurma = courseTurmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); });
         const completionClassIds = new Set(turmas.filter(function (turma) {
             const demandedLessons = getDemandsForClass(turma.id, semester).reduce(function (total, demand) {
                 return total + demand.aulas_semanais;
@@ -4159,14 +4204,19 @@
                 ? allocatedLessons >= demandedLessons
                 : allocatedLessons < demandedLessons);
         }).map(function (turma) { return String(turma.id); }));
+        const courseClassIds = new Set(courseTurmas.map(function (turma) { return String(turma.id); }));
         const filteredAssignments = assignments.filter(function (assignment) {
-            return (!gradeTurmaFilter || String(assignment.turma_id) === String(gradeTurmaFilter)) &&
+            return (!gradeCourseFilter || courseClassIds.has(String(assignment.turma_id))) &&
+                (!gradeProtectionFilter || protectionClassIds.has(String(assignment.turma_id))) &&
+                (!gradeTurmaFilter || String(assignment.turma_id) === String(gradeTurmaFilter)) &&
                 (!effectiveCompletionFilter || completionClassIds.has(String(assignment.turma_id))) &&
                 (!gradeDisciplineFilter || String(assignment.disciplina_id) === String(gradeDisciplineFilter)) &&
                 (!gradeTeacherFilter || String(assignment.professor_id) === String(gradeTeacherFilter));
         });
         const visibleTurmas = turmas.filter(function (turma) {
-            return (!gradeTurmaFilter || String(turma.id) === String(gradeTurmaFilter)) &&
+            return (!gradeCourseFilter || courseClassIds.has(String(turma.id))) &&
+                (!gradeProtectionFilter || protectionClassIds.has(String(turma.id))) &&
+                (!gradeTurmaFilter || String(turma.id) === String(gradeTurmaFilter)) &&
                 (!effectiveCompletionFilter || completionClassIds.has(String(turma.id))) &&
                 (!gradeTeacherFilter || filteredAssignments.some(function (assignment) {
                     return String(assignment.turma_id) === String(turma.id);
@@ -4187,20 +4237,21 @@
         const scheduleView = gradeDisciplineFilter
             ? collapsibleSchedule('Disciplina por professor',
                 h(nameById(KEYS.disciplinas, gradeDisciplineFilter, 'Disciplina')) +
+                (selectedCourse ? ' · ' + h(selectedCourse.nome) : '') +
                 (selectedFilterTurma ? ' · ' + h(selectedFilterTurma.nome) : ' · todas as turmas') +
                 (gradeTeacherFilter ? ' · ' + h(nameById(KEYS.professores, gradeTeacherFilter, 'Professor')) : '') +
                 (editable ? ' · clique em uma aula para editar' : ''),
-                renderDisciplineTeacherSchedules(slots, filteredAssignments, gradeDisciplineFilter, gradeTurmaFilter, teachers, editable))
+                renderDisciplineTeacherSchedules(slots, filteredAssignments, gradeDisciplineFilter, gradeTurmaFilter, teachers, editable, matchingProtections))
             : !selectedFilterTurma
-                ? collapsibleSchedule('Grade de todas as turmas', scheduleDescription,
-                    (gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
+                ? collapsibleSchedule(selectedCourse ? 'Grade do curso ' + (selectedCourse.nome || '') : 'Grade de todas as turmas', scheduleDescription,
+                    (gradeCourseFilter || gradeProtectionFilter || gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
                         ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
-                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable))
+                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, matchingProtections, !editable))
                 : collapsibleSchedule('Grade da turma ' + (selectedFilterTurma.nome || ''),
                     scheduleDescription,
-                    (gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
+                    (gradeCourseFilter || gradeProtectionFilter || gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
                         ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
-                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, protections, !editable));
+                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, matchingProtections, !editable));
         const gradeEditing = state.assignments.find(function (item) { return String(item.id) === String(gradeEditingId); }) || null;
         const manual = editable ? renderManualAssignment(selectedTurma, slots, gradeEditing, gradeFocusDay, gradeFocusSlotId) : '';
         const workload = editable ? '' : renderTeacherWorkload(readRecords(KEYS.professores), assignments);
@@ -4256,7 +4307,7 @@
             primaryGradeActions +
             '<div class="grade-secondary-controls d-flex flex-wrap justify-content-between align-items-end gap-3">' +
             semesterControls + pdfExportControls + '</div></div></div>' +
-            '<div class="card mb-3"><div class="card-body d-flex align-items-end justify-content-between flex-wrap gap-3">' + turmaFilter + disciplineFilter + teacherFilter + completionFilter + legend + '</div></div>' +
+            '<div class="card mb-3"><div class="card-body grade-filter-grid">' + courseFilter + turmaFilter + disciplineFilter + teacherFilter + protectionFilter + completionFilter + legend + '</div></div>' +
             scheduleView + (!editable ? renderSlotProtectionDialog() + renderSortApplyDialog(sortDefinitions, semester, assignments.length > 0) +
                 renderSemesterCopyDialog() : '') +
             (editable ? renderLaboratoryPendingPanel(laboratorySession) : '') +
@@ -7774,8 +7825,10 @@
             else if (action === 'cancel-laboratory') cancelLaboratory();
             else if (action === 'laboratory-filter-class') {
                 gradeTurmaFilter = button.dataset.classId || '';
+                gradeCourseFilter = '';
                 gradeDisciplineFilter = '';
                 gradeTeacherFilter = '';
+                gradeProtectionFilter = '';
                 render();
             }
             else if (action === 'laboratory-clear-class-filter') {
@@ -8110,6 +8163,10 @@
         } else if (event.target.id === 'pdf-export-entity') {
             pdfExportId = event.target.value;
             render();
+        } else if (event.target.id === 'grade-course-filter') {
+            gradeCourseFilter = event.target.value;
+            gradeTurmaFilter = '';
+            render();
         } else if (event.target.id === 'grade-turma-filter') {
             gradeTurmaFilter = event.target.value;
             render();
@@ -8118,6 +8175,9 @@
             render();
         } else if (event.target.id === 'grade-teacher-filter') {
             gradeTeacherFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'grade-protection-filter') {
+            gradeProtectionFilter = event.target.value;
             render();
         } else if (event.target.id === 'grade-completion-filter') {
             gradeCompletionFilter = event.target.value;
