@@ -381,6 +381,49 @@ body {
 .side-link.active i { color: var(--owltime-blue); }
 
 .main-content { width: calc(100% - var(--owltime-sidebar)); min-width: 0; padding: 1.5rem clamp(1rem, 3vw, 2.4rem) 1rem; }
+#app-alert.app-notification {
+    position: fixed;
+    z-index: 2000;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    width: min(600px, calc(100vw - 2rem));
+    min-height: 5rem;
+    max-height: calc(100vh - 2rem);
+    align-items: center;
+    overflow-y: auto;
+    margin: 0;
+    padding: 1.25rem 3.75rem 1.25rem 1.4rem;
+    transform: translate(-50%, -50%);
+    border: 2px solid #90a9c2;
+    border-left-width: .5rem;
+    border-radius: 1rem;
+    color: #17365b;
+    background: #fff;
+    box-shadow: 0 1.25rem 3.5rem #10274640;
+    font-size: 1.05rem;
+    font-weight: 650;
+    line-height: 1.5;
+}
+#app-alert.app-notification-success { border-color: #3b8f5a; color: #1d5e36; background: #f2fbf5; }
+#app-alert.app-notification-warning { border-color: #c18b19; color: #684b0b; background: #fff9e9; }
+#app-alert.app-notification-danger { border-color: #bf424c; color: #79242d; background: #fff4f4; }
+#app-alert.app-notification-info { border-color: #3974ac; color: #183f68; background: #f3f8ff; }
+#app-alert-message { flex: 1; overflow-wrap: anywhere; }
+.app-notification-dismiss {
+    position: absolute;
+    top: .7rem;
+    right: .7rem;
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 0;
+    border-radius: .5rem;
+    color: inherit;
+    background: transparent;
+}
+.app-notification-dismiss:hover { background: #17365b12; }
 .page-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
 .page-heading h1 { margin: 0; color: var(--owltime-ink); font-size: clamp(1.45rem, 3vw, 1.85rem); font-weight: 760; }
 .page-heading p { max-width: 760px; margin: .35rem 0 0; color: var(--owltime-muted); }
@@ -629,8 +672,11 @@ body {
 .grade-entry { display: block; width: 100%; min-height: 42px; padding: .35rem; border: 0; border-radius: .45rem; color: #20436b; background: var(--grade-subject-color, #eaf3fc); font-size: .76rem; line-height: 1.3; }
 .grade-empty { display: block; width: 100%; min-height: 42px; border: 1px dashed #d9e1eb; border-radius: .45rem; color: #9aa6b5; background: #fafbfd; }
 .grade-entry:hover, .grade-empty:hover { outline: 2px solid #91b6e0; }
-.grade-table td[data-protection-class-id] { cursor: pointer; }
-.grade-table td[data-protection-class-id]:hover { background: #fff1f1; }
+.grade-table td[data-protection-class-id] { cursor: context-menu; }
+.grade-table td[data-injection-class-id] { cursor: pointer; }
+.grade-table td[data-injection-class-id]:hover { background: #f3f8fe; }
+.grade-table td[data-protection-class-id]:not([data-injection-class-id]):hover { background: #fff1f1; }
+.grade-injection-hint { display: block; padding: .35rem; color: #245b8f; font-size: .7rem; font-weight: 650; }
 .grade-protection-entry { display: grid; min-height: 42px; align-content: center; gap: .15rem; padding: .35rem; border: 1px solid #e6a3a8; border-left: 4px solid #c74750; border-radius: .45rem; color: #8f2933; background: #fdeced; font-size: .76rem; line-height: 1.25; }
 .grade-protection-entry small { color: #a34a52; font-size: .65rem; }
 .grade-protection-hint { display: inline-block; padding: .35rem; color: #8a9b9c; font-size: .65rem; }
@@ -753,6 +799,7 @@ body {
 }
 
 @media (max-width: 700px) {
+    #app-alert.app-notification { width: calc(100vw - 1.25rem); padding: 1.1rem 3.25rem 1.1rem 1rem; font-size: .95rem; }
     .topbar { min-height: 60px; padding: .55rem .8rem; }
     .back-to-top { right: .9rem; bottom: .9rem; }
     .active-semester-display { padding: .35rem .5rem; font-size: .72rem; }

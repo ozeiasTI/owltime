@@ -72,7 +72,11 @@
         </aside>
 
         <main class="main-content">
-            <div id="app-alert" class="alert d-none" role="status" aria-live="polite"></div>
+            <div id="app-alert" class="app-notification d-none" role="alert" aria-live="assertive" aria-atomic="true">
+                <span id="app-alert-message"></span>
+                <button class="app-notification-dismiss" type="button" data-action="dismiss-notification"
+                    aria-label="Fechar notificação"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            </div>
             <div id="view" aria-live="polite"></div>
             <footer class="app-footer">Owltime Local <span>·</span> executado no seu navegador</footer>
         </main>
