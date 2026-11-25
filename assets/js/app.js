@@ -26,6 +26,156 @@
     const PRE_GENERATION_INJECTION_ORIGIN = 'pre-geracao-manual';
     const SUBJECT_COLORS = ['#dceeff', '#fce4ec', '#e4f4e8', '#fff0d6', '#ece5ff', '#dff5f3', '#f7e8d8', '#e7eafc', '#f3e5f5', '#e8f0df', '#ffe8dc', '#dcecf2'];
     const DECLARATION_INSTITUTION_KEY = 'owltime_declaracao_instituicao_v1';
+    const APP_VERSION = '1.5';
+    const THEME_PREFERENCE_KEY = 'owltime_cor_sistema_v1';
+    const MENU_PREFERENCE_KEY = 'owltime_menu_modo_v1';
+    const DENSITY_PREFERENCE_KEY = 'owltime_densidade_interface_v1';
+    const DEFAULT_THEME_COLOR = '#7E5EF2';
+    const THEME_COLORS = [
+        { value: '#F24B6A', label: 'Rosa intenso' },
+        { value: '#000000', label: 'Preto' },
+        { value: '#F2778D', label: 'Rosa claro' },
+        { value: '#7E5EF2', label: 'Roxo' },
+        { value: '#4ED998', label: 'Verde' },
+        { value: '#F2B84B', label: 'Dourado' },
+        { value: '#1D4E89', label: 'Azul' },
+        { value: '#0F766E', label: 'Verde-azulado' }
+    ];
+    const TEAM_MEMBERS = [
+        {
+            name: 'Ozeias Meira Santos de Souza',
+            department: 'Gabinete',
+            photo: 'assets/img/fotos/ozeias.png',
+            phone: '+55 69 9272-6386',
+            phoneLink: '+556992726386',
+            email: 'ozeeiiaass@gmail.com',
+            role: 'Desenvolvedor FullStack',
+            description: 'Responsável pela construção e evolução do software.',
+            color: 'about-person-developer'
+        },
+        {
+            name: 'Wellington Dias Lima',
+            department: 'Gabinete',
+            photo: 'assets/img/fotos/well.jpg',
+            phone: '+55 69 9307-9832',
+            phoneLink: '+556993079832',
+            email: 'wellington.lima@ifro.edu.br',
+            role: 'Analista de performance',
+            description: 'Avalia a eficiência, a usabilidade e o desempenho da ferramenta.',
+            color: 'about-person-performance'
+        },
+        {
+            name: 'Bianca Luzia Carvalho de Marco',
+            department: 'SUPAE',
+            photo: 'assets/img/fotos/bianca.png',
+            phone: '+55 69 8442-5575',
+            phoneLink: '+556984425575',
+            email: 'biancademarco_smg@hotmail.com',
+            role: 'QA (Quality Assurance)',
+            description: 'Contribui com sua experiência na geração de horários e na carga horária docente, trazendo a realidade do dia a dia escolar para o projeto.',
+            color: 'about-person-practice'
+        }
+    ];
+    const MODULE_HELP = {
+        'Ninho': [
+            'Encontre e baixe a logo oficial do Owltime e a imagem da Owlly em PNG.',
+            'A galeria reúne os papéis de parede PNG favoritos da Owlly, organizados para desktop e celular. O guia rápido interativo mostra como ampliar e baixar as imagens.',
+            'O card Como a Owlly planeja seus horários resume as etapas da montagem da grade e a importância do planejamento.',
+            'Use o botão Baixar PNG no item desejado para salvar uma cópia no seu dispositivo. Clique em uma miniatura para abrir a imagem em tamanho maior.'
+        ],
+        'Configurações': [
+            'Escolha uma cor pronta ou use o seletor para definir uma cor personalizada. A preferência fica salva neste navegador.',
+            'O menu por mouse fica compacto na lateral e expande ao passar o ponteiro ou navegar por teclado. No modo tradicional, use o botão de menu.',
+            'No Repositório, baixe as planilhas preenchidas em XLSX ou PDF. Os cadastros principais também oferecem modelos XLSX/CSV para importação.',
+            'A densidade compacta reduz espaços entre os elementos; restaure os padrões quando quiser voltar ao roxo e ao menu por mouse.'
+        ],
+        'Bloco de notas': [
+            'Crie notas para registrar tarefas, decisões e lembretes do planejamento.',
+            'Organize cada nota por etapa, prioridade e prazo; arraste os cartões entre as colunas para atualizar o andamento.',
+            'As anotações ficam apenas no armazenamento local deste navegador e entram no backup do sistema.'
+        ],
+        'Cursos': [
+            'Cadastre os cursos oferecidos pela escola. Eles ajudam a organizar disciplinas, turmas e filtros do planejamento.',
+            'Use status ativo/inativo para preservar registros antigos sem disponibilizá-los em novos cadastros.',
+            'Importe um modelo CSV ou XLSX pelo cadastro, ou baixe a planilha preenchida no Repositório.'
+        ],
+        'Professores': [
+            'Cadastre cada docente e informe sua carga semanal, limite diário e área de ingresso quando aplicável.',
+            'Depois, relacione o professor às disciplinas que pode ministrar em Vínculos e registre PRDs ou indisponibilidades.',
+            'Os limites informados ajudam a avaliar a distribuição de aulas; revise os dados antes de gerar a grade.'
+        ],
+        'Disciplinas': [
+            'Mantenha o catálogo de disciplinas e associe cada uma ao curso correspondente.',
+            'Use Demandas para informar quantas aulas semanais cada turma precisa e Vínculos para indicar docentes aptos.',
+            'As cores automáticas ajudam a distinguir disciplinas na grade e nos relatórios.'
+        ],
+        'Turmas': [
+            'Cadastre as turmas com curso, ano letivo, turno e semestre.',
+            'Associe disciplinas e quantidades de aulas em Demandas; use Grupos para reunir turmas quando necessário.',
+            'O semestre da turma identifica a qual período letivo ela pertence; confira-o antes de importar uma planilha.'
+        ],
+        'Grupos de turmas': [
+            'Crie grupos de turmas para organizar classes relacionadas, como turmas do mesmo ano.',
+            'Ao marcar um grupo em um vínculo professor-disciplina, o docente será considerado apenas para as turmas daquele grupo.',
+            'Grupos e vínculos são separados por semestre. Remova associações de vínculos antes de excluir um grupo.'
+        ],
+        'Horários da escola': [
+            'Defina os períodos de aula e intervalos por dia da semana. Os horários de aula alimentam a geração da grade.',
+            'Evite períodos sobrepostos no mesmo dia. Sábado e domingo são opcionais e só entram no planejamento quando configurados.',
+            'Use a duplicação de horários para copiar períodos e intervalos entre dias.'
+        ],
+        'Vínculos professor × disciplina': [
+            'Associe professores às disciplinas que podem lecionar no semestre selecionado.',
+            'Vínculos sem grupo são gerais. Selecione um ou mais grupos para restringir o docente às turmas correspondentes.',
+            'Use o painel de cobertura para localizar disciplinas demandadas sem professor vinculado.'
+        ],
+        'PRD e disponibilidade dos professores': [
+            'Registre PRDs, que bloqueiam o dia inteiro, e indisponibilidades de um dia ou período específico.',
+            'Esses registros são considerados na geração da grade e devem corresponder ao semestre selecionado.',
+            'Confira conflitos com aulas existentes antes de salvar alterações.'
+        ],
+        'Peculiaridades': [
+            'Cadastre tipos de proteção usados pela escola, como DEPAE ou PPS.',
+            'Na Grade oficial, aplique a proteção a um horário específico da turma para impedir alocações incompatíveis.',
+            'As proteções são consideradas na geração e aparecem nas visualizações e exportações da grade.'
+        ],
+        'Eventos': [
+            'Cadastre eventos recorrentes e indique, se necessário, os cursos compatíveis.',
+            'Aplique eventos pela Grade oficial. Eles marcam o mesmo dia e horário nas turmas que atendem aos critérios.',
+            'A aplicação é recusada quando encontra aulas ou proteções conflitantes, evitando bloqueios parciais.'
+        ],
+        'Sort': [
+            'Crie subgrupos de turmas e escolha quantos horários cada uma deve reservar.',
+            'Dentro de cada subgrupo, as turmas recebem horários diferentes; subgrupos distintos podem coincidir.',
+            'Aplique o sort na Grade oficial antes de gerar a grade. As reservas serão respeitadas pelo gerador.'
+        ],
+        'Demandas das turmas': [
+            'Registre a quantidade semanal de aulas de cada disciplina para cada turma.',
+            'As demandas são a referência do gerador e dos relatórios para medir aulas previstas, preenchidas e pendentes.',
+            'Você pode cadastrar uma turma por vez ou aplicar a mesma demanda a várias turmas.'
+        ],
+        'Grade oficial': [
+            'Selecione o semestre, confira horários, demandas, vínculos e disponibilidades antes de gerar a grade.',
+            'A geração do QDP distribui as aulas respeitando regras da escola; acompanhe o resumo para revisar pendências.',
+            'Injete aulas manualmente ou aplique eventos, proteções e sorts quando necessário. As exportações e o Laboratório ficam nesta tela.',
+            'Em Vigências e substituições, registre mudanças por turma ou a saída do campus. Aulas compatíveis são transferidas, impactos ficam listados e a declaração inclui o histórico.'
+        ],
+        'Laboratório': [
+            'O Laboratório cria uma cópia local isolada da grade oficial para testar mudanças sem afetar os dados publicados.',
+            'Edite, mova ou adicione aulas e confira as pendências. Aplique o rascunho somente quando estiver satisfeito.',
+            'Cancelar e descartar elimina o rascunho. Se a grade oficial mudar durante o teste, a aplicação é bloqueada para evitar sobrescrita.'
+        ],
+        'Relatórios': [
+            'Acompanhe aulas previstas e preenchidas, distribuição por disciplina, carga docente e pendências da geração.',
+            'Use filtros por semestre, curso, turma, disciplina e professor para analisar recortes específicos.',
+            'Exporte os resultados para PDF ou CSV pelos controles da tela.'
+        ],
+        'Armazenamento e backup': [
+            'Os dados são salvos no navegador atual e não são sincronizados entre dispositivos.',
+            'Exporte backups regularmente e guarde-os em local seguro. Importe uma cópia para restaurar os registros.',
+            'A limpeza de dados é permanente; confira o resumo e mantenha um backup antes de excluir informações.'
+        ]
+    };
     const PLAIN_TEXT_PREFERENCE_KEYS = ['owltime_fixture_profile_id', KEYS.semestre, DECLARATION_INSTITUTION_KEY];
     const view = document.getElementById('view');
     const alertBox = document.getElementById('app-alert');
@@ -57,6 +207,7 @@
     let coverageCourseId = '';
     let availabilityCourseId = '';
     let reportSearchQuery = '';
+    let globalSearchTarget = null;
     let reportCourseFilter = '';
     let reportTeacherFilter = '';
     let reportTurmaFilter = '';
@@ -117,6 +268,16 @@
             .replace(/'/g, '&#39;');
     }
 
+    function whatsappNumber(value) {
+        const raw = String(value || '').trim();
+        let digits = raw.replace(/\D/g, '');
+        if (digits.startsWith('00')) digits = digits.slice(2);
+        if (raw.startsWith('+')) return digits.length >= 10 && digits.length <= 15 ? digits : '';
+        if (digits.length === 10 || digits.length === 11) return '55' + digits;
+        if ((digits.length === 12 || digits.length === 13) && digits.startsWith('55')) return digits;
+        return '';
+    }
+
     function notify(message, type) {
         const notificationType = ['success', 'warning', 'danger', 'info'].includes(type) ? type : 'info';
         alertBox.className = 'app-notification app-notification-' + notificationType;
@@ -170,6 +331,68 @@
         if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
         localStorage.setItem(KEYS.semestre, semester);
         return semester;
+    }
+
+    function getThemeColor() {
+        const stored = localStorage.getItem(THEME_PREFERENCE_KEY) || DEFAULT_THEME_COLOR;
+        return /^#[0-9A-F]{6}$/i.test(stored) ? stored.toUpperCase() : DEFAULT_THEME_COLOR;
+    }
+
+    function getMenuMode() {
+        return localStorage.getItem(MENU_PREFERENCE_KEY) === 'click' ? 'click' : 'hover';
+    }
+
+    function getDensityMode() {
+        return localStorage.getItem(DENSITY_PREFERENCE_KEY) === 'compact' ? 'compact' : 'comfortable';
+    }
+
+    function applyUserPreferences() {
+        const color = getThemeColor();
+        const channels = [1, 3, 5].map(function (offset) {
+            const value = parseInt(color.slice(offset, offset + 2), 16) / 255;
+            return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+        });
+        const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+        const accentText = luminance > 0.23 ? '#172B4D' : '#FFFFFF';
+        document.documentElement.style.setProperty('--owltime-blue', color);
+        document.documentElement.style.setProperty('--owltime-blue-dark', color);
+        document.documentElement.style.setProperty('--owltime-scroll-thumb', color);
+        document.documentElement.style.setProperty('--owltime-on-accent', accentText);
+        document.documentElement.style.setProperty('--bs-primary', color);
+        document.documentElement.style.setProperty('--bs-primary-rgb',
+            [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16)].join(', '));
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.content = color;
+        const layout = document.querySelector('.app-layout');
+        const sidebar = document.getElementById('main-sidebar');
+        const toggle = document.getElementById('sidebar-toggle');
+        const hoverMenu = getMenuMode() === 'hover';
+        const density = getDensityMode();
+        document.body.classList.toggle('app-density-compact', density === 'compact');
+        document.body.classList.toggle('app-density-comfortable', density !== 'compact');
+        const wasHoverMenu = layout && layout.classList.contains('sidebar-hover-mode');
+        if (layout && sidebar) {
+            layout.classList.toggle('sidebar-hover-mode', hoverMenu);
+            if (hoverMenu) {
+                sidebar.hidden = false;
+                layout.classList.add('sidebar-collapsed');
+            } else if (wasHoverMenu) {
+                sidebar.hidden = true;
+                layout.classList.add('sidebar-collapsed');
+            }
+        }
+        if (toggle) toggle.hidden = hoverMenu;
+        if (toggle && hoverMenu) {
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'O menu abre ao passar o mouse');
+            toggle.title = 'O menu abre ao passar o mouse';
+            toggle.innerHTML = '<i class="bi bi-list" aria-hidden="true"></i>';
+        } else if (toggle) {
+            toggle.removeAttribute('title');
+            toggle.setAttribute('aria-expanded', String(Boolean(sidebar && !sidebar.hidden)));
+            toggle.setAttribute('aria-label', sidebar && !sidebar.hidden ? 'Fechar menu' : 'Abrir menu');
+            toggle.innerHTML = '<i class="bi ' + (sidebar && !sidebar.hidden ? 'bi-x-lg' : 'bi-list') + '" aria-hidden="true"></i>';
+        }
     }
 
     function previousSemester(value) {
@@ -706,7 +929,18 @@
                         '</strong>' + renderScheduleShortcut('professor', record, assignments) + '</span>' +
                         (discipline ? '<div class="small text-muted">Ingresso: ' + h(discipline) + '</div>' : '');
                 }],
-                ['matricula', 'Matrícula'], ['telefone', 'Telefone'],
+                ['matricula', 'Matrícula'],
+                ['telefone', 'Telefone', function (value, record) {
+                    const phone = String(value || '').trim();
+                    if (!phone) return '—';
+                    const destination = whatsappNumber(phone);
+                    return '<span class="teacher-phone-cell"><span>' + h(phone) + '</span>' +
+                        (destination
+                            ? '<a class="btn btn-sm btn-outline-success teacher-whatsapp-link" href="https://wa.me/' + h(destination) +
+                                '" target="_blank" rel="noopener noreferrer" aria-label="Iniciar conversa no WhatsApp com ' + h(record.nome) +
+                                '" title="Conversar pelo WhatsApp"><i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></a>'
+                            : '') + '</span>';
+                }],
                 ['carga_horaria_semanal', 'Carga/semana'], ['status', 'Status', statusBadge]
             ]
         },
@@ -938,13 +1172,27 @@
             '<button class="btn btn-sm btn-danger no-print" type="button" data-action="print-module-pdf" data-print-scope="' +
             h(printScope || 'page') + '" data-print-title="' + h(title) +
             '" title="Na janela de impressão, escolha Salvar como PDF."><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Gerar PDF</button>';
-        const pageActions = actions || printAction
-            ? '<div class="page-heading-actions">' + (actions || '') + printAction + '</div>'
+        const helpContent = MODULE_HELP[title];
+        const helpAction = helpContent
+            ? '<button class="btn btn-sm btn-outline-primary" type="button" data-action="open-module-help"><i class="bi bi-question-circle me-1" aria-hidden="true"></i>Saiba mais</button>'
+            : '';
+        const actionContent = (actions || printAction) + helpAction;
+        const pageActions = actionContent
+            ? '<div class="page-heading-actions">' + actionContent + '</div>'
             : '';
         return '<div class="page-heading"><div><h1><i class="bi ' + h(icon) + ' page-icon"></i>' + h(title) + '</h1>' +
             (description ? '<p>' + h(description) + '</p>' : '') +
             '<p class="module-print-meta print-only">Documento gerado pelo Owltime em ' + h(new Date().toLocaleDateString('pt-BR')) + '.</p>' +
-            '</div>' + pageActions + '</div>';
+            '</div>' + pageActions + '</div>' + (helpContent ? renderModuleHelpDialog(title, helpContent) : '');
+    }
+
+    function renderModuleHelpDialog(title, paragraphs) {
+        return '<dialog class="module-help-dialog" id="module-help-dialog" aria-labelledby="module-help-title">' +
+            '<div class="module-help-dialog-header"><span class="settings-section-icon"><i class="bi bi-lightbulb" aria-hidden="true"></i></span>' +
+            '<button class="btn-close" type="button" data-action="close-module-help" aria-label="Fechar"></button></div>' +
+            '<h2 id="module-help-title">Como funciona: ' + h(title) + '</h2>' +
+            '<ul>' + paragraphs.map(function (paragraph) { return '<li>' + h(paragraph) + '</li>'; }).join('') + '</ul>' +
+            '<div class="d-flex justify-content-end"><button class="btn btn-primary" type="button" data-action="close-module-help">Entendi</button></div></dialog>';
     }
 
     function printModulePdf(scope, title) {
@@ -983,79 +1231,59 @@
             (collapsed ? ' hidden' : '') + '>' + content + '</div>';
     }
 
-    function renderAvailabilityDashboardCard() {
-        const records = readRecords(KEYS.disponibilidade).filter(semesterMatches);
-        const days = new Map();
-        records.forEach(function (record) {
-            const isPrd = String(record.tipo || '').toLowerCase() === 'prd';
-            const isAvailable = !isPrd && (record.disponivel === true || Number(record.disponivel) === 1 ||
-                String(record.disponivel).toLowerCase() === 'sim');
-            if (isAvailable || !DAYS.includes(record.dia_semana)) return;
-            const teacherId = String(record.professor_id || '');
-            const teacher = findById(KEYS.professores, teacherId);
-            const dayRecords = days.get(record.dia_semana) || new Map();
-            const summary = dayRecords.get(teacherId) || {
-                nome: teacher ? teacher.nome : 'Professor removido',
-                prd: false,
-                wholeDay: false,
-                periods: new Set()
-            };
-            if (isPrd) {
-                summary.prd = true;
-                summary.wholeDay = true;
-                summary.periods.clear();
-            } else if (!summary.prd) {
-                const slot = record.horario_id ? findById(KEYS.horarios, record.horario_id) : null;
-                if (!slot) summary.wholeDay = true;
-                else summary.periods.add(slot.hora_inicio + '–' + slot.hora_fim);
-            }
-            dayRecords.set(teacherId, summary);
-            days.set(record.dia_semana, dayRecords);
-        });
-        const dayRows = DAYS.filter(function (day) { return days.has(day); }).map(function (day) {
-            const entries = Array.from(days.get(day).values()).sort(function (a, b) {
-                return a.nome.localeCompare(b.nome, 'pt-BR');
-            }).map(function (summary) {
-                const label = summary.prd
-                    ? '<span class="availability-kind availability-kind-prd">PRD · dia todo</span>'
-                    : summary.wholeDay
-                        ? '<span class="availability-kind">Dia todo</span>'
-                        : '<span class="availability-times">' + h(Array.from(summary.periods).join(', ')) + '</span>';
-                return '<div class="dashboard-availability-person"><strong>' + h(summary.nome) + '</strong>' + label + '</div>';
-            }).join('');
-            return '<section class="dashboard-availability-day"><h3>' + h(day) + '</h3>' + entries + '</section>';
-        }).join('');
-        return '<div class="card h-100 dashboard-availability-card"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
-            '<strong>Indisponibilidades e PRDs</strong><div class="d-flex gap-2">' +
-            renderDataSectionToggle('dashboard-availability', 'Mostrar dados', 'Recolher dados') +
-            '<a class="btn btn-sm btn-outline-primary" href="#/disponibilidade">Gerenciar</a></div></div>' +
-            renderDataSectionContent('dashboard-availability', '<div class="card-body">' + (dayRows
-                ? '<div class="dashboard-availability-days">' + dayRows + '</div>'
-                : '<div class="empty-state py-3"><i class="bi bi-calendar2-check"></i>Nenhuma indisponibilidade ou PRD cadastrado para ' + h(getSemester()) + '.</div>') +
-                '</div>') + '</div>';
-    }
-
     function renderDashboard() {
         const gradeState = readSimulation(getSemester());
         const lastGeneration = gradeState.lastGenerationReport;
+        const semester = getSemester();
+        const today = declarationDateValue(new Date());
+        const activeSubstitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || semester) === semester &&
+                String(record.data_inicio || '') <= today &&
+                (!record.data_fim || String(record.data_fim) >= today);
+        }).length;
         const counts = [
-            ['Cursos', KEYS.cursos, 'bi-mortarboard', 'cursos'],
-            ['Professores', KEYS.professores, 'bi-person-workspace', 'professores'],
-            ['Disciplinas', KEYS.disciplinas, 'bi-book', 'disciplinas'],
-            ['Turmas', KEYS.turmas, 'bi-people', 'turmas']
+            ['Cursos', KEYS.cursos, 'bi-mortarboard', 'cursos', 'var(--owltime-blue)'],
+            ['Professores', KEYS.professores, 'bi-person-workspace', 'professores', '#4ED998'],
+            ['Disciplinas', KEYS.disciplinas, 'bi-book', 'disciplinas', '#F2778D'],
+            ['Turmas', KEYS.turmas, 'bi-people', 'turmas', '#F2B84B']
         ];
-        const stats = counts.map(function (item) {
-            return '<div class="col-6 col-xl-3"><div class="card stat-card"><div class="stat-icon"><i class="bi ' + item[2] + '"></i></div>' +
-                '<div class="stat-number">' + readRecords(item[1]).length + '</div><div class="stat-label">' + item[0] + '</div></div></div>';
+        const indicators = counts.map(function (item) {
+            return { label: item[0], total: readRecords(item[1]).length, icon: item[2], color: item[4] };
+        });
+        const totalRecords = indicators.reduce(function (sum, item) { return sum + item.total; }, 0);
+        const maximumCount = Math.max.apply(null, indicators.map(function (item) { return item.total; }).concat([1]));
+        const stats = indicators.map(function (item) {
+            return '<div class="col-6 col-xl-3"><div class="card stat-card"><div class="stat-icon"><i class="bi ' + item.icon + '"></i></div>' +
+                '<div class="stat-number">' + item.total + '</div><div class="stat-label">' + h(item.label) + '</div></div></div>';
         }).join('');
-        const links = [
-            ['Grade oficial', 'bi-calendar3', 'grade'],
-            ['Cadastrar professor', 'bi-person-plus', 'professores'],
-            ['Configurar demandas', 'bi-journal-plus', 'demandas'],
-            ['Backup e armazenamento', 'bi-hdd-stack', 'armazenamento']
-        ].map(function (item) {
-            return '<div class="col-sm-6 col-xl-3"><a class="quick-link" href="#/' + item[2] + '"><i class="bi ' + item[1] + '"></i><strong>' + item[0] + '</strong></a></div>';
+        let chartPercent = 0;
+        const chartStops = indicators.filter(function (item) { return item.total > 0; }).map(function (item) {
+            const start = chartPercent;
+            chartPercent += item.total / totalRecords * 100;
+            return item.color + ' ' + start.toFixed(2) + '% ' + chartPercent.toFixed(2) + '%';
+        });
+        const donutBackground = chartStops.length
+            ? 'conic-gradient(' + chartStops.join(', ') + ')'
+            : 'conic-gradient(var(--owltime-border) 0 100%)';
+        const chartLegend = indicators.map(function (item) {
+            const share = totalRecords ? Math.round(item.total / totalRecords * 100) : 0;
+            return '<li><i style="--dashboard-chart-color:' + item.color + '"></i><span>' + h(item.label) +
+                '</span><strong>' + item.total + ' <small>' + share + '%</small></strong></li>';
         }).join('');
+        const chartBars = indicators.map(function (item) {
+            const width = Math.round(item.total / maximumCount * 100);
+            return '<div class="dashboard-chart-bar-row"><span>' + h(item.label) + '</span><div class="dashboard-chart-bar-track">' +
+                '<i style="width:' + width + '%;--dashboard-chart-color:' + item.color + '"></i></div><strong>' + item.total + '</strong></div>';
+        }).join('');
+        const indicatorCharts = '<div class="row g-3 mb-4 dashboard-indicators-charts">' +
+            '<div class="col-lg-5"><section class="card dashboard-chart-card h-100"><div class="card-header"><i class="bi bi-pie-chart me-2" aria-hidden="true"></i>Distribuição dos cadastros</div>' +
+            '<div class="card-body"><div class="dashboard-donut-layout"><div class="dashboard-donut" role="img" aria-label="' +
+            h('Distribuição de ' + totalRecords + ' registros cadastrados') + '" style="background:' + donutBackground +
+            '"><div><strong>' + totalRecords + '</strong><span>registros</span></div></div><ul class="dashboard-chart-legend">' +
+            chartLegend + '</ul></div></div></section></div>' +
+            '<div class="col-lg-7"><section class="card dashboard-chart-card h-100"><div class="card-header"><i class="bi bi-bar-chart-line me-2" aria-hidden="true"></i>Cadastros por módulo</div>' +
+            '<div class="card-body"><div class="dashboard-chart-bars" role="img" aria-label="Quantidade de cadastros por módulo">' +
+            chartBars + '</div></div></section></div></div>';
         const developmentMilestones = [
             ['Novembro de 2025', 'Idealização do projeto'],
             ['Janeiro de 2026', 'Projeção de Módulos'],
@@ -1064,6 +1292,7 @@
             ['Março a novembro de 2026', 'Construção base do QDP'],
             ['Maio de 2026', 'Construção de Classes de Relatórios'],
             ['Novembro de 2026', 'Repaginação com novos módulos'],
+            ['Novembro de 2026', 'Atualização 1.5 · Recursos Visuais e Aquisição da Owlly'],
             ['Novembro de 2026', 'Estilização final'],
             ['Novembro de 2026', 'Submissão de pedido de certificação INPI']
         ].map(function (milestone) {
@@ -1073,6 +1302,27 @@
         const recentNotes = readRecords(KEYS.notas).slice().sort(function (a, b) {
             return String(b.updated_at || '').localeCompare(String(a.updated_at || ''));
         }).slice(0, 4);
+        const recentNotesCard = '<section class="card dashboard-recent-notes-card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2"><span>Notas recentes</span><div class="d-flex gap-2">' +
+            renderDataSectionToggle('dashboard-recent-notes', 'Mostrar notas', 'Recolher notas') +
+            '<a class="btn btn-sm btn-outline-primary" href="#/notas">Abrir bloco de notas</a></div></div>' +
+            renderDataSectionContent('dashboard-recent-notes', (recentNotes.length ? '<div class="list-group list-group-flush">' + recentNotes.map(function (note) {
+                return '<div class="list-group-item"><div class="d-flex justify-content-between gap-3"><strong>' + h(note.titulo) + '</strong>' + statusBadge(noteStatusLabel(note.status)) + '</div><div class="small text-muted mt-1">' + h(String(note.texto || '').slice(0, 220)) + '</div></div>';
+            }).join('') + '</div>' : '<div class="empty-state"><i class="bi bi-journal"></i>Nenhuma nota registrada ainda.</div>')) + '</section>';
+        const operationalMetrics = [
+            { label: 'Aulas alocadas', value: gradeState.assignments.length, hint: 'Na grade atual deste semestre', icon: 'bi-calendar-check', color: '#7E5EF2' },
+            { label: 'Aulas pendentes', value: lastGeneration ? (lastGeneration.totalPendentes || 0) : '—', hint: lastGeneration ? 'Na última geração do QDP' : 'Disponível após gerar a grade', icon: 'bi-exclamation-diamond', color: '#F2B84B' },
+            { label: 'Substituições vigentes', value: activeSubstitutions, hint: 'Ativas hoje neste semestre', icon: 'bi-arrow-left-right', color: '#F2778D' },
+            { label: 'Professores ativos', value: activeRecords(KEYS.professores, ['ativo']).length, hint: 'Disponíveis nos cadastros', icon: 'bi-person-check', color: '#4ED998' }
+        ];
+        const dashboardOperationalSummary = '<section class="dashboard-operational-card card mb-4" aria-label="Acompanhamento do semestre">' +
+            '<div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap"><strong><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Acompanhamento do semestre</strong>' +
+            '<span class="small text-muted">Indicadores atualizados com os dados locais</span></div><div class="card-body"><div class="dashboard-operational-grid">' +
+            operationalMetrics.map(function (item) {
+                return '<article class="dashboard-operational-metric" style="--dashboard-metric-color:' + item.color + '">' +
+                    '<span class="dashboard-operational-icon"><i class="bi ' + item.icon + '" aria-hidden="true"></i></span>' +
+                    '<div class="dashboard-operational-value">' + h(item.value) + '</div><div class="dashboard-operational-label">' + h(item.label) +
+                    '</div><div class="dashboard-operational-hint">' + h(item.hint) + '</div></article>';
+            }).join('') + '</div></div></section>';
         const lastGenerationCard = lastGeneration
             ? '<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Última grade gerada pelo QDP</strong><a class="btn btn-sm btn-outline-primary" href="#/grade">Abrir grade oficial</a></div>' +
             '<div class="card-body"><div class="row g-3"><div class="col-sm-6 col-lg-3"><span class="text-muted small">Gerada em</span><div class="fw-semibold">' + h(formatDate(lastGeneration.geradoEm)) + '</div></div>' +
@@ -1084,22 +1334,334 @@
                     ? ' Último ajuste no Laboratório: ' + h(formatDate(gradeState.laboratoryAdjustments[gradeState.laboratoryAdjustments.length - 1].aplicadoEm)) + '.'
                     : '') + '</div>' : '') + '</div></div>'
             : '<div class="alert alert-info mb-4">Ainda não há uma grade QDP gerada para este semestre. <a href="#/grade" class="alert-link">Acesse a Grade oficial</a> para gerar.</div>';
-        return pageHeader('Painel', 'bi-grid-1x2', 'Organize dados escolares e monte grades com armazenamento local.', '<span class="badge text-bg-primary align-self-center">Semestre ' + h(getSemester()) + '</span>', '', true) +
+        const dashboardTeamMembers = TEAM_MEMBERS.map(function (person) {
+            return '<div class="dashboard-team-member" tabindex="0" role="group" aria-label="Contato de ' + h(person.name) + '">' +
+                '<img src="' + h(person.photo) + '" alt="Foto de ' + h(person.name) + '" loading="lazy">' +
+                '<div class="dashboard-team-tooltip"><strong>' + h(person.name) + '</strong>' +
+                '<span class="dashboard-team-role">' + h(person.role) + '</span>' +
+                '<span class="dashboard-team-department">Assistente de Administração · ' + h(person.department) + '</span>' +
+                '<p>' + h(person.description) + '</p>' +
+                '<a href="tel:' + h(person.phoneLink) + '"><i class="bi bi-telephone" aria-hidden="true"></i>' + h(person.phone) + '</a>' +
+                '<a href="mailto:' + h(person.email) + '"><i class="bi bi-envelope" aria-hidden="true"></i>' + h(person.email) + '</a></div></div>';
+        }).join('');
+        return '<section class="dashboard-welcome"><div class="dashboard-welcome-brand"><div class="dashboard-welcome-brand-art">' +
+            '<img class="dashboard-welcome-logo" src="assets/img/logo.png" alt="Logo do Owltime">' +
+            '<figure class="dashboard-welcome-mascot"><img src="assets/img/coruja.png" alt="Owlly, mascote coruja do Owltime">' +
+            '<figcaption>Owlly</figcaption></figure>' +
+            '</div>' +
+            '<div class="dashboard-welcome-copy"><span class="dashboard-eyebrow"><i class="bi bi-stars me-1" aria-hidden="true"></i>Gestão escolar em um só lugar</span>' +
+            '<h1>Olá, seja bem-vindo ao Owltime</h1><p>Organize os dados da escola, planeje as aulas e acompanhe a montagem da grade.</p>' +
+            '<div class="dashboard-welcome-meta"><span class="dashboard-semester"><i class="bi bi-calendar2-week me-1" aria-hidden="true"></i>Semestre ativo · ' + h(getSemester()) + '</span>' +
+            '<span class="dashboard-version-pill"><i class="bi bi-stars me-1" aria-hidden="true"></i>Versão ' + h(APP_VERSION) + '</span></div></div>' +
+            '</div><div class="dashboard-welcome-side"><div class="dashboard-team"><span>Conheça nossa equipe · passe o mouse</span><div class="dashboard-team-photos">' +
+            dashboardTeamMembers + '</div></div><div class="dashboard-welcome-actions"><a class="btn btn-light" href="#/grade"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>Abrir grade</a>' +
+            '</div></div></section>' +
             '<div class="alert local-callout"><i class="bi bi-shield-check me-2"></i>Sem conta e sem servidor: seus registros ficam no armazenamento deste navegador. Faça backups periódicos em Armazenamento e backup.</div>' +
-            '<div class="row g-3 mb-4">' + stats + '</div>' +
-            '<div class="row g-3 mb-4"><div class="col-12">' + renderAvailabilityDashboardCard() + '</div></div>' +
+            recentNotesCard +
+            dashboardOperationalSummary +
+            '<section class="dashboard-indicators mb-4" aria-label="Indicadores dos cadastros"><div class="row g-3 mb-3">' + stats + '</div>' +
+            indicatorCharts + '</section>' +
             lastGenerationCard +
-            '<div class="d-flex align-items-center justify-content-between mb-2"><h2 class="h5 mb-0">Acesso rápido</h2><a href="#/sobre" class="small">Como funciona</a></div>' +
-            '<div class="row g-3 mb-4">' + links + '</div>' +
             '<section class="card development-timeline-card mb-4"><div class="card-header d-flex align-items-center gap-2">' +
             '<i class="bi bi-clock-history" aria-hidden="true"></i><strong>Linha do tempo do desenvolvimento</strong></div>' +
-            '<div class="card-body"><ol class="development-timeline">' + developmentMilestones + '</ol></div></section>' +
-            '<div class="card"><div class="card-header d-flex justify-content-between align-items-center gap-2"><span>Notas recentes</span><div class="d-flex gap-2">' +
-            renderDataSectionToggle('dashboard-recent-notes', 'Mostrar notas', 'Recolher notas') +
-            '<a class="btn btn-sm btn-outline-primary" href="#/notas">Abrir bloco de notas</a></div></div>' +
-            renderDataSectionContent('dashboard-recent-notes', (recentNotes.length ? '<div class="list-group list-group-flush">' + recentNotes.map(function (note) {
-                return '<div class="list-group-item"><div class="d-flex justify-content-between gap-3"><strong>' + h(note.titulo) + '</strong>' + statusBadge(noteStatusLabel(note.status)) + '</div><div class="small text-muted mt-1">' + h(String(note.texto || '').slice(0, 220)) + '</div></div>';
-            }).join('') + '</div>' : '<div class="empty-state"><i class="bi bi-journal"></i>Nenhuma nota registrada ainda.</div>')) + '</div>';
+            '<div class="card-body"><ol class="development-timeline">' + developmentMilestones + '</ol></div></section>';
+    }
+
+    function renderRepository() {
+        return Object.keys(specs).map(function (route) {
+            const spec = specs[route];
+            const total = getRepositoryRecords(route).length;
+            const templateActions = catalogImportSchemas[route]
+                ? '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="download-repository-template" data-route="' + h(route) + '" data-format="xlsx"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Modelo XLSX</button>' +
+                '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="download-repository-template" data-route="' + h(route) + '" data-format="csv"><i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Modelo CSV</button>'
+                : '';
+            return '<article class="repository-card"><div class="repository-card-icon"><i class="bi ' + h(spec.icon) + '" aria-hidden="true"></i></div>' +
+                '<div class="repository-card-content"><h3>' + h(spec.title) + '</h3><p>' + total + ' registro(s) · XLSX ou PDF preenchido.</p>' +
+                '<div class="repository-card-actions"><button class="btn btn-sm btn-primary" type="button" data-action="download-repository-data" data-route="' + h(route) + '">' +
+                '<i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>XLSX</button>' +
+                '<button class="btn btn-sm btn-outline-primary" type="button" data-action="download-repository-pdf" data-route="' + h(route) + '">' +
+                '<i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF</button>' + templateActions + '</div></div></article>';
+        }).join('');
+    }
+
+    function renderNinho() {
+        const brandAssets = [
+            {
+                title: 'Logo do Owltime',
+                src: 'assets/img/logo.png',
+                filename: 'owltime-logo.png',
+                description: 'A identidade visual oficial do sistema em PNG.',
+                icon: 'bi-calendar-heart'
+            },
+            {
+                title: 'Owlly',
+                src: 'assets/img/coruja.png',
+                filename: 'owlly.png',
+                description: 'A coruja mascote do Owltime, pronta para salvar e compartilhar.',
+                icon: 'bi-stars'
+            }
+        ];
+        const planningSteps = [
+            { title: 'Mapeia as aulas', description: 'Registra turmas, disciplinas e quantas aulas cada turma precisa por semana.' },
+            { title: 'Conhece os professores', description: 'Confere vínculos, PRDs, disponibilidades e limites de carga horária.' },
+            { title: 'Considera as regras', description: 'Leva em conta grupos, peculiaridades, eventos e horários definidos pela escola.' },
+            { title: 'Monta e revisa a grade', description: 'Gera uma proposta, verifica pendências e ajusta conflitos antes de confirmar.' }
+        ];
+        const planningStepCards = planningSteps.map(function (step, index) {
+            return '<li><span class="ninho-planning-step-number">' + String(index + 1).padStart(2, '0') +
+                '</span><div><h3>' + h(step.title) + '</h3><p>' + h(step.description) + '</p></div></li>';
+        }).join('');
+        const wallpapers = [
+            { file: 'owltime_wallpaper-1.png', title: 'Owlly entre as estrelas', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_weekend.png', title: 'Fim de semana', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_study.png', title: 'Hora de estudar', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_funny.png', title: 'Owlly divertida', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_calendar.png', title: 'Calendário Owltime', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_desktop_night.png', title: 'Noite Owltime', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_funny.png', title: 'Owlly divertida', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_focus.png', title: 'Foco nos estudos', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_calendar.png', title: 'Calendário Owltime', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_reports.png', title: 'Painel de relatórios', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'formado.png', title: 'Owlly formada', device: 'Desktop', size: '2752 × 1536 px', portrait: false },
+            { file: 'owlly_higiene.png', title: 'Hora de cuidar', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_estudar.png', title: 'Hora de aprender', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_cafe.png', title: 'Hora de se alimentar', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_arrumar.png', title: 'Hora de se preparar', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_acordar.png', title: 'Hora de acordar', device: 'Desktop', size: '2816 × 1584 px', portrait: false }
+        ];
+        const brandCards = brandAssets.map(function (asset) {
+            return '<article class="ninho-brand-card"><button class="ninho-brand-preview" type="button" data-action="open-ninho-image" data-image-src="' +
+                h(asset.src) + '" data-image-alt="' + h(asset.title) + '" data-image-caption="' + h(asset.title) +
+                '" aria-label="Abrir imagem ampliada: ' + h(asset.title) + '"><img src="' + h(asset.src) +
+                '" alt="" loading="lazy"><span class="ninho-zoom-hint"><i class="bi bi-zoom-in" aria-hidden="true"></i>Ampliar</span></button>' +
+                '<div class="ninho-brand-copy"><span class="ninho-card-kicker">' +
+                h(asset.title) + '</span><h3>' + h(asset.title) + '</h3><p>' + h(asset.description) +
+                '</p><a class="btn btn-primary" href="' + h(asset.src) + '" download="' + h(asset.filename) +
+                '"><i class="bi bi-download me-1" aria-hidden="true"></i>Baixar PNG</a></div></article>';
+        }).join('');
+        const wallpaperCards = wallpapers.map(function (wallpaper) {
+            const src = 'assets/img/galeria/' + wallpaper.file;
+            const previewClass = wallpaper.portrait ? 'ninho-wallpaper-preview is-portrait' : 'ninho-wallpaper-preview';
+            const imageAlt = wallpaper.title + ' para ' + wallpaper.device.toLowerCase();
+            return '<article class="ninho-wallpaper-card"><button class="' + previewClass + '" type="button" data-action="open-ninho-image" data-image-src="' +
+                h(src) + '" data-image-alt="' + h(imageAlt) + '" data-image-caption="' + h(wallpaper.title) +
+                '" aria-label="Abrir imagem ampliada: ' + h(wallpaper.title) + '"><img src="' + h(src) +
+                '" alt="" loading="lazy"><span class="ninho-wallpaper-device"><i class="bi ' +
+                (wallpaper.portrait ? 'bi-phone' : 'bi-display') + '" aria-hidden="true"></i>' + h(wallpaper.device) +
+                '</span><span class="ninho-zoom-hint"><i class="bi bi-zoom-in" aria-hidden="true"></i>Ampliar</span></button>' +
+                '<div class="ninho-wallpaper-copy"><div><h3>' + h(wallpaper.title) +
+                '</h3><span>' + h(wallpaper.size) + '</span></div><a class="btn btn-sm btn-outline-primary" href="' +
+                h(src) + '" download="' + h(wallpaper.file) + '" aria-label="Baixar ' + h(wallpaper.title) + ' em PNG">' +
+                '<i class="bi bi-download" aria-hidden="true"></i><span>Baixar PNG</span></a></div></article>';
+        }).join('');
+        return pageHeader('Ninho', 'bi-house-heart', 'Um espaço para encontrar e baixar a identidade visual e os papéis de parede do Owltime.', '', 'page', true) +
+            '<section class="ninho-page"><section class="ninho-hero"><div class="ninho-hero-copy">' +
+            '<span class="ninho-eyebrow"><i class="bi bi-stars me-1" aria-hidden="true"></i>O cantinho da Owlly</span>' +
+            '<h2>Bem-vindo ao Ninho</h2><p>Leve um pedacinho do Owltime com você. Baixe a logo, conheça a Owlly e escolha um papel de parede para seu celular ou computador.</p>' +
+            '<div class="ninho-hero-tags"><span><i class="bi bi-image me-1" aria-hidden="true"></i>PNG em alta resolução</span>' +
+            '<span><i class="bi bi-phone me-1" aria-hidden="true"></i>Celular e desktop</span></div>' +
+            '<button type="button" class="btn btn-primary ninho-guide-trigger" data-action="open-ninho-guide">' +
+            '<i class="bi bi-stars me-1" aria-hidden="true"></i>Guia rápido interativo da Owlly</button></div>' +
+            '<div class="ninho-hero-art"><div class="ninho-hero-orbit" aria-hidden="true"></div>' +
+            '<img src="assets/img/coruja.png" alt="Owlly, mascote do Owltime"></div></section>' +
+            '<section class="ninho-planning-card" aria-labelledby="ninho-planning-title"><div class="ninho-planning-header">' +
+            '<div class="ninho-planning-copy"><span class="ninho-planning-icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span>' +
+            '<div><span class="ninho-card-kicker">O método da Owlly</span><h2 id="ninho-planning-title">Como a Owlly planeja seus horários</h2>' +
+            '<p>Um bom horário começa com informações organizadas e regras claras para toda a escola.</p></div></div>' +
+            '<div class="ninho-planning-art"><img src="assets/img/coruja.png" alt="" loading="lazy"></div></div>' +
+            '<ol class="ninho-planning-steps">' + planningStepCards + '</ol>' +
+            '<div class="ninho-planning-importance"><i class="bi bi-lightbulb-fill" aria-hidden="true"></i>' +
+            '<p><strong>Por que planejar?</strong> Ajuda a evitar choques de horários, distribuir melhor a carga docente, reduzir retrabalho e garantir as aulas das turmas.</p></div></section>' +
+            '<section class="ninho-brand-section" aria-labelledby="ninho-brand-title"><div class="ninho-section-heading">' +
+            '<span class="ninho-section-icon"><i class="bi bi-gem" aria-hidden="true"></i></span><div>' +
+            '<h2 id="ninho-brand-title">Logo e mascote</h2><p>Arquivos oficiais do Owltime disponíveis para baixar.</p></div></div>' +
+            '<div class="ninho-brand-grid">' + brandCards + '</div></section>' +
+            '<section class="ninho-wallpapers-section" aria-labelledby="ninho-wallpapers-title"><div class="ninho-section-heading">' +
+            '<span class="ninho-section-icon"><i class="bi bi-images" aria-hidden="true"></i></span><div>' +
+            '<h2 id="ninho-wallpapers-title">Galeria de papéis de parede</h2><p>' + wallpapers.length +
+            ' imagens PNG para personalizar seus dispositivos com as cores do Owltime e da Owlly. Clique em qualquer imagem para ampliar.</p></div></div>' +
+            '<div class="ninho-wallpaper-grid">' + wallpaperCards + '</div></section>' +
+            '<dialog class="ninho-lightbox" id="ninho-lightbox" aria-labelledby="ninho-lightbox-caption">' +
+            '<div class="ninho-lightbox-header"><div><span>Visualização ampliada</span><h2 id="ninho-lightbox-caption"></h2></div>' +
+            '<button type="button" class="btn-close btn-close-white" data-action="close-ninho-lightbox" aria-label="Fechar imagem ampliada"></button></div>' +
+            '<img id="ninho-lightbox-image" src="" alt=""></dialog>' +
+            '<dialog class="ninho-guide-dialog" id="ninho-guide-dialog" aria-labelledby="ninho-guide-title">' +
+            '<div class="ninho-guide-layout"><div class="ninho-guide-owlly"><img src="assets/img/coruja.png" alt="Owlly, sua guia no Ninho"></div>' +
+            '<div class="ninho-guide-content"><div class="ninho-guide-heading"><span>Owlly apresenta</span>' +
+            '<button type="button" class="btn-close" data-action="close-ninho-guide" aria-label="Fechar guia rápido"></button></div>' +
+            '<h2 id="ninho-guide-title">Guia rápido do Ninho</h2>' +
+            '<div class="ninho-guide-progress" role="progressbar" aria-label="Progresso do guia" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1"><span></span></div>' +
+            '<p class="ninho-guide-step" id="ninho-guide-step">Passo 1 de 3</p>' +
+            '<h3 id="ninho-guide-step-title"></h3><p id="ninho-guide-step-description"></p>' +
+            '<div class="ninho-guide-actions"><button type="button" class="btn btn-outline-secondary" data-action="previous-ninho-guide" disabled>Voltar</button>' +
+            '<button type="button" class="btn btn-primary" data-action="next-ninho-guide">Próximo<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></button></div>' +
+            '</div></div></dialog></section>';
+    }
+
+    function updateNinhoGuide(step) {
+        const dialog = document.getElementById('ninho-guide-dialog');
+        const stepLabel = document.getElementById('ninho-guide-step');
+        const stepTitle = document.getElementById('ninho-guide-step-title');
+        const stepDescription = document.getElementById('ninho-guide-step-description');
+        const progress = dialog && dialog.querySelector('.ninho-guide-progress');
+        const progressFill = progress && progress.querySelector('span');
+        const previousButton = dialog && dialog.querySelector('[data-action="previous-ninho-guide"]');
+        const nextButton = dialog && dialog.querySelector('[data-action="next-ninho-guide"], [data-action="finish-ninho-guide"]');
+        const steps = [
+            {
+                title: 'Escolha seu papel de parede',
+                description: 'Explore a coleção de wallpapers favoritos da Owlly e encontre uma opção para celular ou desktop.'
+            },
+            {
+                title: 'Veja a imagem em tamanho maior',
+                description: 'Clique na miniatura ou no botão Ampliar para conferir todos os detalhes antes de baixar.'
+            },
+            {
+                title: 'Baixe seu PNG favorito',
+                description: 'Use Baixar PNG no cartão escolhido para salvar a imagem no seu dispositivo.'
+            }
+        ];
+        if (!dialog || !stepLabel || !stepTitle || !stepDescription || !progress || !progressFill || !previousButton || !nextButton) {
+            throw new Error('O guia rápido da Owlly não está disponível.');
+        }
+        const currentStep = Math.max(0, Math.min(steps.length - 1, Number(step) || 0));
+        const current = steps[currentStep];
+        dialog.dataset.guideStep = String(currentStep);
+        stepLabel.textContent = 'Passo ' + (currentStep + 1) + ' de ' + steps.length;
+        stepTitle.textContent = current.title;
+        stepDescription.textContent = current.description;
+        progress.setAttribute('aria-valuenow', String(currentStep + 1));
+        progressFill.style.width = ((currentStep + 1) / steps.length * 100) + '%';
+        previousButton.disabled = currentStep === 0;
+        if (currentStep === steps.length - 1) {
+            nextButton.dataset.action = 'finish-ninho-guide';
+            nextButton.innerHTML = 'Ver wallpapers<i class="bi bi-images ms-2" aria-hidden="true"></i>';
+        } else {
+            nextButton.dataset.action = 'next-ninho-guide';
+            nextButton.innerHTML = 'Próximo<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>';
+        }
+    }
+
+    function getRepositoryRecords(route) {
+        const spec = specs[route];
+        if (!spec) throw new Error('Não há dados exportáveis para este módulo.');
+        let records = readRecords(spec.key);
+        if (['grupos', 'demandas', 'vinculos'].includes(route)) {
+            records = records.filter(function (record) { return semesterMatches(record, getSemester()); });
+        } else if (route === 'disponibilidade') {
+            records = records.filter(function (record) { return semesterMatches(record, availabilitySemester); });
+        }
+        return records;
+    }
+
+    async function downloadRepositoryPdf(route) {
+        const spec = specs[route];
+        if (!spec) throw new Error('Este módulo não possui dados para exportar.');
+        const records = getRepositoryRecords(route);
+        const headers = ['ID'].concat(spec.fields.map(function (field) { return field.label; }));
+        const body = [headers.map(function (label) { return { text: label, style: 'tableHeader' }; })];
+        records.forEach(function (record) {
+            body.push([record.id].concat(spec.fields.map(function (field) {
+                const value = spreadsheetDisplayValue(field, record);
+                return value == null || value === '' ? '—' : Array.isArray(value) ? value.join(', ') : String(value);
+            })).map(function (value) { return String(value == null ? '' : value); }));
+        });
+        if (!records.length) body.push([{ text: 'Nenhum registro cadastrado.', colSpan: headers.length, alignment: 'center', color: '#64748b', margin: [0, 8, 0, 8] }]
+            .concat(Array(Math.max(0, headers.length - 1)).fill('')));
+        const columnWidths = ['auto'].concat(spec.fields.map(function () { return '*'; }));
+        const documentDefinition = {
+            pageSize: 'A4',
+            pageOrientation: 'landscape',
+            pageMargins: [28, 30, 28, 34],
+            content: [
+                { text: 'OWLTIME · REPOSITÓRIO', style: 'eyebrow' },
+                { text: spec.title, style: 'title' },
+                { text: 'Exportado em ' + new Date().toLocaleString('pt-BR') + ' · ' + records.length + ' registro(s)' +
+                    (['grupos', 'demandas', 'vinculos', 'disponibilidade'].includes(route) ? ' · Semestre ' + getSemester() : ''),
+                style: 'meta', margin: [0, 0, 0, 12] },
+                { table: { headerRows: 1, widths: columnWidths, body: body }, layout: 'lightHorizontalLines', fontSize: 7 }
+            ],
+            defaultStyle: { font: 'Roboto', fontSize: 8, color: '#172b4d' },
+            styles: {
+                eyebrow: { fontSize: 8, bold: true, color: '#7E5EF2', characterSpacing: 1.1, margin: [0, 0, 0, 5] },
+                title: { fontSize: 19, bold: true, color: '#172b4d', margin: [0, 0, 0, 7] },
+                meta: { fontSize: 8, color: '#64748b' },
+                tableHeader: { bold: true, fontSize: 7, color: '#172b4d', fillColor: '#f0ebff' }
+            },
+            footer: function (currentPage, pageCount) {
+                return { text: 'Owltime · ' + currentPage + ' / ' + pageCount, alignment: 'right', margin: [0, 10, 28, 0], fontSize: 7, color: '#64748b' };
+            }
+        };
+        const blob = await createPdfBlob(documentDefinition);
+        downloadCatalogBlob('dados_' + route + '.pdf', blob);
+    }
+
+    function renderGlossary() {
+        const modules = [
+            ['Painel', 'Resumo dos cadastros, PRDs e indisponibilidades, notas recentes e situação da última grade.'],
+            ['Ninho', 'Reúne a logo, a Owlly, seus papéis de parede PNG favoritos, um guia rápido interativo e um resumo visual do planejamento da grade.'],
+            ['Cursos', 'Organiza as etapas ou formações oferecidas pela escola e agrupa disciplinas.'],
+            ['Disciplinas', 'Catálogo das matérias que podem ser demandadas pelas turmas e vinculadas aos professores.'],
+            ['Professores', 'Cadastro dos docentes, incluindo titulação, carga horária semanal e limite diário.'],
+            ['Turmas', 'Grupos de estudantes associados a um curso, ano letivo e período.'],
+            ['Grupos', 'Agrupa turmas relacionadas para restringir, quando necessário, os vínculos de professores.'],
+            ['Horários da escola', 'Define os períodos de aula e intervalos disponíveis em cada dia da semana.'],
+            ['Demandas das turmas', 'Registra quantas aulas semanais de cada disciplina cada turma precisa.'],
+            ['Vincular Professor', 'Relaciona docentes às disciplinas que podem lecionar, opcionalmente por grupo.'],
+            ['PRD e disponibilidade', 'Marca dias de trabalho docente e períodos em que o professor não pode dar aulas.'],
+            ['Peculiaridades', 'Define proteções de horários específicos de turmas, como DEPAE ou PPS.'],
+            ['Eventos', 'Marca eventos recorrentes que podem ser aplicados aos horários de turmas compatíveis.'],
+            ['Sort', 'Reserva horários para subgrupos de turmas, evitando coincidências dentro do mesmo subgrupo.'],
+            ['Grade oficial', 'Gera, consulta e ajusta a grade do semestre com base nas demandas e restrições.'],
+            ['Laboratório', 'Permite testar alterações em uma cópia local da grade antes de aplicá-las à grade oficial.'],
+            ['Relatórios', 'Apresenta indicadores, cobertura das demandas, pendências e distribuição de aulas.'],
+            ['Bloco de notas', 'Organiza tarefas e lembretes por etapa, prioridade e prazo.'],
+            ['Armazenamento e backup', 'Exibe dados locais e permite exportar ou restaurar cópias de segurança.'],
+            ['Configurações', 'Personaliza cor e comportamento do menu, reúne planilhas e explica os módulos.']
+        ];
+        return modules.map(function (module) {
+            return '<article class="glossary-card"><i class="bi bi-bookmark-check" aria-hidden="true"></i><div><h3>' +
+                h(module[0]) + '</h3><p>' + h(module[1]) + '</p></div></article>';
+        }).join('');
+    }
+
+    function renderSettings() {
+        const selectedColor = getThemeColor();
+        const hoverMenu = getMenuMode() === 'hover';
+        const density = getDensityMode();
+        const swatches = THEME_COLORS.map(function (theme) {
+            return '<button class="theme-swatch' + (selectedColor === theme.value ? ' is-selected' : '') +
+                '" type="button" data-action="select-theme" data-color="' + theme.value + '" aria-label="' + h(theme.label) +
+                ', ' + theme.value + '" title="' + h(theme.label) + '" aria-pressed="' + String(selectedColor === theme.value) +
+                '" style="--swatch-color:' + theme.value + '"></button>';
+        }).join('');
+        return pageHeader('Configurações', 'bi-gear', 'Personalize aparência, navegação e densidade da interface.') +
+            '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-palette" aria-hidden="true"></i></span>' +
+            '<div><h2>Aparência e navegação</h2><p>Suas preferências são salvas apenas neste navegador.</p></div></div>' +
+            '<div class="settings-control"><div><h3>Cor do sistema</h3><p>Escolha uma cor para os destaques da interface ou selecione outra cor.</p></div>' +
+            '<div class="theme-options">' + swatches + '<label class="theme-custom-color" title="Escolher outra cor"><i class="bi bi-eyedropper" aria-hidden="true"></i>' +
+            '<input type="color" data-setting="theme" value="' + selectedColor + '" aria-label="Escolher outra cor para o sistema"></label></div></div>' +
+            '<div class="settings-control"><div><h3>Comportamento do menu</h3><p>Escolha como o menu lateral aparece no computador.</p></div>' +
+            '<div class="menu-mode-options"><button class="menu-mode-option' + (!hoverMenu ? ' is-selected' : '') +
+            '" type="button" data-action="select-menu-mode" data-mode="click" aria-pressed="' + String(!hoverMenu) + '">' +
+            '<i class="bi bi-layout-sidebar" aria-hidden="true"></i><span><strong>Abrir e fechar</strong><small>Como está atualmente, pelo botão do menu.</small></span></button>' +
+            '<button class="menu-mode-option' + (hoverMenu ? ' is-selected' : '') +
+            '" type="button" data-action="select-menu-mode" data-mode="hover" aria-pressed="' + String(hoverMenu) + '">' +
+            '<i class="bi bi-cursor" aria-hidden="true"></i><span><strong>Abrir ao passar o mouse</strong><small>Menu compacto que se expande ao passar o mouse ou usar o teclado.</small></span></button></div></div>' +
+            '<div class="settings-control"><div><h3>Densidade da interface</h3><p>Controle o espaçamento entre cartões e controles.</p></div>' +
+            '<div class="density-options"><button class="density-option' + (density === 'comfortable' ? ' is-selected' : '') +
+            '" type="button" data-action="select-density" data-density="comfortable" aria-pressed="' + String(density === 'comfortable') + '"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span><strong>Confortável</strong><small>Mais espaço para leitura.</small></span></button>' +
+            '<button class="density-option' + (density === 'compact' ? ' is-selected' : '') +
+            '" type="button" data-action="select-density" data-density="compact" aria-pressed="' + String(density === 'compact') + '"><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i><span><strong>Compacta</strong><small>Mais conteúdo na tela.</small></span></button></div></div>' +
+            '<div class="settings-defaults"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="restore-default-settings"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restaurar padrões</button>' +
+            '<span>Roxo Owltime · menu por mouse · densidade confortável</span></div></section>' +
+            '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-archive" aria-hidden="true"></i></span>' +
+            '<div><h2>Repositório de planilhas</h2><p>Baixe planilhas preenchidas para consulta/edição ou modelos para importar cadastros.</p></div></div>' +
+            '<div class="repository-grid">' + renderRepository() + '</div>' +
+            '<p class="settings-note"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Modelos CSV e XLSX para importação estão disponíveis em cursos, professores, disciplinas e turmas. PDFs e XLSX preenchidos são exportações para consulta e arquivo.</p></section>' +
+            '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span>' +
+            '<div><h2>Glossário dos módulos</h2><p>Um resumo rápido do que você encontra em cada área.</p></div></div>' +
+            '<div class="glossary-grid">' + renderGlossary() + '</div></section>';
     }
 
     function fieldOptions(field) {
@@ -2510,7 +3072,7 @@
                     : '';
                 const nextStatus = column[0] === 'standby' ? 'andamento' : column[0] === 'andamento' ? 'concluido' : 'standby';
                 const nextLabel = column[0] === 'concluido' ? 'Reabrir' : column[0] === 'andamento' ? 'Concluir' : 'Iniciar';
-                return '<article class="note-card note-color-' + h(color) + '" data-note-search="' +
+                return '<article class="note-card note-color-' + h(color) + '" data-global-record-id="' + h(note.id) + '" tabindex="-1" data-note-search="' +
                     h([note.titulo, note.texto, notePriorityLabel(priority)].join(' ').toLocaleLowerCase('pt-BR')) + '">' +
                     '<div class="note-card-top"><span class="note-priority note-priority-' + h(priority) + '">' +
                     h(notePriorityLabel(priority)) + '</span><div class="note-card-actions">' +
@@ -2623,7 +3185,7 @@
             const demandLessonsAttribute = route === 'demandas'
                 ? ' data-demand-lessons="' + h(Number(record.aulas_semanais || record.aulas_previstas || 0)) + '"'
                 : '';
-            return '<tr' + filterAttributes + demandLessonsAttribute + '>' + cells + '<td><div class="table-actions">' +
+            return '<tr data-global-record-id="' + h(record.id) + '" tabindex="-1"' + filterAttributes + demandLessonsAttribute + '>' + cells + '<td><div class="table-actions">' +
                 '<button type="button" class="btn btn-sm btn-outline-primary" data-action="edit" data-id="' + h(record.id) + '" aria-label="Editar"><i class="bi bi-pencil"></i></button>' +
                 '<button type="button" class="btn btn-sm btn-outline-danger" data-action="delete" data-id="' + h(record.id) + '" aria-label="Excluir"><i class="bi bi-trash"></i></button>' +
                 '</div></td></tr>';
@@ -2651,7 +3213,7 @@
         const coverage = route === 'vinculos' ? renderVinculoCoverage() : '';
         const availabilityPlanning = route === 'disponibilidade' ? renderAvailabilityPlanning() : '';
         const spreadsheetTools = '<div class="card mb-4"><div class="card-header">Editar registros com planilha</div><div class="card-body">' +
-            '<p class="text-muted">Baixe os registros atuais em XLSX, edite as linhas e envie a planilha para revisar as alterações antes de aplicar. Preserve a coluna ID; deixe-a vazia apenas para adicionar novos registros.</p>' +
+            '<p class="text-muted module-guidance">Baixe o XLSX preenchido para editar registros; preserve o ID para atualizá-los ou deixe vazio para criar novos.</p>' +
             '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-current-spreadsheet"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar XLSX preenchido</button>' +
             '<button class="btn btn-outline-secondary" type="button" data-action="pick-current-spreadsheet"><i class="bi bi-upload me-1"></i>Enviar XLSX editado</button>' +
             '<input id="current-spreadsheet-file" class="d-none" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div></div></div>';
@@ -2662,7 +3224,7 @@
             : 'No XLSX, o status também tem lista suspensa.';
         const importTools = catalogImportSchemas[route]
             ? '<div class="card mb-4"><div class="card-header">Importar cadastro por planilha</div><div class="card-body">' +
-            '<p class="text-muted">Baixe um modelo, preencha uma linha por registro e envie o arquivo para revisar antes de importar. Se a planilha tiver a coluna ID, IDs existentes atualizam os registros; deixe o ID vazio para criar novos.</p>' +
+            '<p class="text-muted module-guidance">Use o modelo para preencher os registros e revise a prévia antes de aplicar. IDs existentes atualizam registros; IDs vazios criam novos.</p>' +
             '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-catalog-template" data-format="xlsx"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar modelo XLSX com listas</button>' +
             '<button class="btn btn-outline-secondary" type="button" data-action="download-catalog-template" data-format="csv"><i class="bi bi-download me-1"></i>Baixar modelo CSV</button>' +
             '<button class="btn btn-primary" type="button" data-action="pick-catalog-import"><i class="bi bi-upload me-1"></i>Enviar CSV ou XLSX</button>' +
@@ -3008,8 +3570,8 @@
             disponibilidade: 'Planeje os dias de PRD e registre indisponibilidades por horário ou dia completo.',
             demandas: 'Defina quantas aulas semanais de cada disciplina cada turma precisa.',
             peculiaridades: 'Cadastre tipos de proteção e marque os períodos reservados de cada turma antes de gerar a grade.',
-            eventos: 'Cadastre eventos recorrentes e, opcionalmente, selecione os cursos onde podem ser aplicados. Ao marcar na Grade oficial, o evento bloqueia o horário nas turmas compatíveis do turno e dos cursos escolhidos.',
-            sorts: 'Crie subgrupos de turmas e reserve horários aleatórios distintos dentro de cada subgrupo antes de gerar a grade.',
+            eventos: 'Cadastre eventos recorrentes para aplicar em horários compatíveis da grade.',
+            sorts: 'Reserve horários para subgrupos de turmas antes de gerar a grade.',
             notas: 'Observações, pendências e decisões salvas apenas neste navegador.'
         };
         return descriptions[route] || '';
@@ -4278,7 +4840,8 @@
         const editable = Boolean(manualAdjustments);
         const turmas = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
         const slots = readRecords(KEYS.horarios).filter(function (slot) { return String(slot.tipo || 'Aula').toLowerCase() === 'aula'; });
-        const assignments = state.assignments || [];
+        const baseAssignments = state.assignments || [];
+        const assignments = editable ? baseAssignments : getCurrentGradeAssignments(baseAssignments, semester);
         const protections = getGradeProtections(semester);
         const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
         const disciplines = readRecords(KEYS.disciplinas);
@@ -4443,7 +5006,7 @@
         const manual = editable ? renderManualAssignment(selectedTurma, slots, gradeEditing, gradeFocusDay, gradeFocusSlotId) : '';
         const workload = editable ? '' : renderTeacherWorkload(readRecords(KEYS.professores), assignments);
         const declarationControls = editable ? '' : renderDeclarationControls(semester, assignments);
-        const substitutionPanel = editable ? '' : renderTeacherSubstitutionPanel(semester, assignments, turmas);
+        const substitutionPanel = editable ? '' : renderTeacherSubstitutionPanel(semester, baseAssignments, turmas);
         const sortDefinitions = readRecords(KEYS.sorts);
         const appliedSorts = getGradeProtections(semester).some(function (protection) {
             return protection.tipo_marcacao === 'sort';
@@ -4526,16 +5089,21 @@
         const editingSubstitution = substitutions.find(function (record) {
             return String(record.id) === teacherSubstitutionEditingId;
         }) || null;
-        const selectedClassId = editingSubstitution ? String(editingSubstitution.turma_id) : '';
+        const selectedScope = editingSubstitution && editingSubstitution.abrangencia === 'todas-aulas-professor'
+            ? 'todas-aulas-professor'
+            : 'turmas-selecionadas';
+        const selectedClassIds = editingSubstitution && selectedScope !== 'todas-aulas-professor'
+            ? [String(editingSubstitution.turma_id)]
+            : [];
         const selectedDisciplineId = editingSubstitution ? String(editingSubstitution.disciplina_id) : '';
         const substitutionOptions = getTeacherSubstitutionOptions(
-            selectedClassId, selectedDisciplineId,
+            selectedClassIds, selectedDisciplineId,
             editingSubstitution ? editingSubstitution.data_inicio : declarationDateValue(new Date()),
-            assignments, semester, substitutions, editingSubstitution
+            assignments, semester, substitutions, editingSubstitution, selectedScope
         );
-        const classOptions = '<option value="">Selecione a turma</option>' + turmas.map(function (turma) {
+        const classOptions = turmas.map(function (turma) {
             return '<option value="' + h(turma.id) + '"' +
-                (String(turma.id) === selectedClassId ? ' selected' : '') + '>' + h(turma.nome || 'Turma') + '</option>';
+                (selectedClassIds.includes(String(turma.id)) ? ' selected' : '') + '>' + h(turma.nome || 'Turma') + '</option>';
         }).join('');
         const disciplineOptions = renderSubstitutionSelectOptions(
             substitutionOptions.disciplines, 'Selecione a disciplina', selectedDisciplineId
@@ -4550,35 +5118,61 @@
         );
         const rows = substitutions.map(function (record) {
             const matchingAssignments = getSubstitutionAffectedAssignments(assignments, semester, substitutions, record).length;
-            return '<tr><td>' + h(nameById(KEYS.turmas, record.turma_id, record.turma_nome || 'Turma removida')) + '</td><td>' +
-                h(nameById(KEYS.disciplinas, record.disciplina_id, record.disciplina_nome || 'Disciplina removida')) + '</td><td>' +
+            const blockedAssignments = Array.isArray(record.aulas_bloqueadas) ? record.aulas_bloqueadas : [];
+            const isCampusExit = record.abrangencia === 'todas-aulas-professor';
+            const blockedRows = blockedAssignments.map(function (item) {
+                const slot = findById(KEYS.horarios, item.horario_id);
+                const period = slot ? slot.hora_inicio + '–' + slot.hora_fim : 'horário removido';
+                return '<li><strong>' + h(nameById(KEYS.turmas, item.turma_id, 'Turma')) + '</strong> · ' +
+                    h(nameById(KEYS.disciplinas, item.disciplina_id, 'Disciplina')) + ' · ' +
+                    h(item.dia_semana || 'Dia não informado') + ' · ' + h(period) + ': ' +
+                    h((item.motivos || []).join('; ')) + '</li>';
+            }).join('');
+            const transferStatus = matchingAssignments + ' aula(s) transferida(s)' +
+                (blockedAssignments.length ? ' · ' + blockedAssignments.length + ' bloqueada(s)' : '');
+            return '<tr><td>' + h(isCampusExit ? 'Todas as turmas' : nameById(KEYS.turmas, record.turma_id, record.turma_nome || 'Turma removida')) + '</td><td>' +
+                h(isCampusExit ? 'Todas as disciplinas' : nameById(KEYS.disciplinas, record.disciplina_id, record.disciplina_nome || 'Disciplina removida')) + '</td><td>' +
                 h(nameById(KEYS.professores, record.professor_original_id, record.professor_original_nome || 'Professor removido')) + ' → ' +
-                h(nameById(KEYS.professores, record.professor_substituto_id, record.professor_substituto_nome || 'Professor removido')) + '</td><td>' +
+                h(nameById(KEYS.professores, record.professor_substituto_id, record.professor_substituto_nome || 'Professor removido')) +
+                (record.motivo ? '<div class="small text-muted">' + h(record.motivo) + '</div>' : '') + '</td><td>' +
                 h(formatSubstitutionDate(record.data_inicio)) + ' – ' +
                 h(record.data_fim ? formatSubstitutionDate(record.data_fim) : 'sem data final') + '</td><td>' +
-                (matchingAssignments ? matchingAssignments + ' aula(s)/semana' : '<span class="text-warning">Sem correspondência na grade atual</span>') +
+                (matchingAssignments || blockedAssignments.length
+                    ? '<span class="' + (blockedAssignments.length ? 'text-warning' : 'text-success') + '">' + h(transferStatus) + '</span>'
+                    : '<span class="text-warning">Sem correspondência na grade atual</span>') +
                 '</td><td class="text-end"><div class="table-actions"><button class="btn btn-sm btn-outline-primary" type="button" data-action="edit-teacher-substitution" data-id="' +
                 h(record.id) + '" aria-label="Editar substituição"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" type="button" data-action="delete-teacher-substitution" data-id="' +
-                h(record.id) + '" aria-label="Excluir substituição"><i class="bi bi-trash"></i></button></div></td></tr>';
+                h(record.id) + '" aria-label="Excluir substituição"><i class="bi bi-trash"></i></button></div></td></tr>' +
+                (blockedRows ? '<tr class="substitution-impact-row"><td colspan="6"><div class="alert alert-warning py-2 mb-2"><strong>Impactos bloqueados:</strong><ul class="mb-0 mt-1">' +
+                    blockedRows + '</ul></div></td></tr>' : '');
         }).join('');
-        return '<section class="card mb-3 no-print teacher-substitution-beta"><div class="card-header d-flex align-items-center gap-2"><strong>Vigências e substituições</strong><span class="badge teacher-substitution-beta-badge">Beta · em desenvolvimento</span></div><div class="card-body">' +
-            '<p class="small text-muted">Registre a substituição para uma turma e disciplina específicas. A grade original não é alterada; no PDF, o substituto assume essas aulas somente durante o período informado, sem duplicar a carga do titular.</p>' +
+        return '<section class="card mb-3 no-print teacher-substitution-panel"><div class="card-header d-flex align-items-center gap-2"><strong>Vigências e substituições</strong></div><div class="card-body">' +
+            '<p class="small text-muted">Substitua aulas em turmas escolhidas ou registre a saída de um professor do campus. Nesse modo, todas as aulas dele são avaliadas, as compatíveis passam ao substituto e o cadastro do docente é desativado para futuras grades; os impactos ficam listados.</p>' +
             '<form id="teacher-substitution-form" class="row g-3 align-items-end" data-edit-id="' + h(editingSubstitution ? editingSubstitution.id : '') + '">' +
-            '<div class="col-md-3"><label class="form-label" for="substitution-class">Turma</label><select class="form-select" id="substitution-class" name="turma_id" required>' +
-            classOptions +
-            '</select></div><div class="col-md-3"><label class="form-label" for="substitution-discipline">Disciplina</label><select class="form-select" id="substitution-discipline" name="disciplina_id" required' +
-            (selectedClassId ? '' : ' disabled') + '>' + disciplineOptions +
+            '<div class="col-md-4"><label class="form-label" for="substitution-scope">Tipo de movimentação</label><select class="form-select" id="substitution-scope" name="abrangencia">' +
+            '<option value="turmas-selecionadas"' + (selectedScope === 'turmas-selecionadas' ? ' selected' : '') + '>Substituir em turma(s) selecionada(s)</option>' +
+            '<option value="todas-aulas-professor"' + (selectedScope === 'todas-aulas-professor' ? ' selected' : '') + '>Saída do campus · transferir aulas e desativar cadastro</option>' +
+            '</select></div>' +
+            '<div class="col-md-4" id="substitution-class-field"' + (selectedScope === 'todas-aulas-professor' ? ' hidden' : '') + '><label class="form-label" for="substitution-class">Turma(s)</label><select class="form-select substitution-class-select" id="substitution-class" name="turma_ids" multiple size="4"' +
+            (selectedScope === 'todas-aulas-professor' ? ' disabled' : ' required') + '>' +
+            classOptions + '</select><div class="form-text">Use Ctrl (Windows) ou Command (Mac) para selecionar várias turmas.</div></div>' +
+            '<div class="col-md-4" id="substitution-discipline-field"' + (selectedScope === 'todas-aulas-professor' ? ' hidden' : '') + '><label class="form-label" for="substitution-discipline">Disciplina</label><select class="form-select" id="substitution-discipline" name="disciplina_id" required' +
+            (selectedClassIds.length ? '' : ' disabled') + '>' + disciplineOptions +
             '</select></div><div class="col-md-3"><label class="form-label" for="substitution-original-teacher">Professor substituído</label><select class="form-select" id="substitution-original-teacher" name="professor_original_id" required' +
-            (selectedClassId && selectedDisciplineId ? '' : ' disabled') + '>' + originalTeacherOptions +
+            (selectedScope === 'todas-aulas-professor' || (selectedClassIds.length && selectedDisciplineId) ? '' : ' disabled') + '>' + originalTeacherOptions +
             '</select></div><div class="col-md-3"><label class="form-label" for="substitution-new-teacher">Professor substituto</label><select class="form-select" id="substitution-new-teacher" name="professor_substituto_id" required' +
-            (selectedClassId && selectedDisciplineId ? '' : ' disabled') + '>' + replacementTeacherOptions +
+            (selectedScope === 'todas-aulas-professor' || (selectedClassIds.length && selectedDisciplineId) ? '' : ' disabled') + '>' + replacementTeacherOptions +
             '</select></div><div class="col-md-4"><label class="form-label" for="substitution-start">Início da vigência</label><input class="form-control" id="substitution-start" name="data_inicio" type="date" value="' +
             h(editingSubstitution ? editingSubstitution.data_inicio : declarationDateValue(new Date())) + '" required></div>' +
             '<div class="col-md-4"><label class="form-label" for="substitution-end">Fim da vigência (opcional)</label><input class="form-control" id="substitution-end" name="data_fim" type="date" value="' +
             h(editingSubstitution ? editingSubstitution.data_fim : '') + '"></div>' +
             '<div class="col-md-4 d-flex gap-2"><button class="btn btn-outline-primary flex-grow-1" type="submit"' + (assignments.length ? '' : ' disabled') +
-            '><i class="bi bi-arrow-left-right me-1"></i>' + (editingSubstitution ? 'Salvar alterações' : 'Registrar substituição') + '</button>' +
-            (editingSubstitution ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-teacher-substitution-edit">Cancelar</button>' : '') + '</div></form>' +
+            '><i class="bi bi-arrow-left-right me-1"></i><span id="substitution-submit-label">' +
+            (selectedScope === 'todas-aulas-professor'
+                ? (editingSubstitution ? 'Atualizar saída do campus' : 'Registrar saída do campus')
+                : (editingSubstitution ? 'Atualizar substituição' : 'Atualizar grade com substituição')) + '</span></button>' +
+            (editingSubstitution ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-teacher-substitution-edit">Cancelar</button>' : '') + '</div>' +
+            '<div class="col-12 small text-muted" id="substitution-scope-summary" hidden></div></form>' +
             '<div class="d-flex justify-content-between align-items-center gap-2 mt-4 mb-2"><strong>Substituições registradas (' + substitutions.length + ')</strong>' +
             renderDataSectionToggle('teacher-substitutions', 'Mostrar substituições', 'Recolher substituições') + '</div>' +
             renderDataSectionContent('teacher-substitutions', '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Substituição</th><th>Vigência</th><th>Aulas afetadas</th><th></th></tr></thead><tbody>' +
@@ -4594,20 +5188,22 @@
         }).join('');
     }
 
-    function getTeacherSubstitutionOptions(classId, disciplineId, startDate, assignments, semester, substitutions, editingSubstitution) {
+    function getTeacherSubstitutionOptions(classIds, disciplineId, startDate, assignments, semester, substitutions, editingSubstitution, scope) {
+        const selectedClassIds = (Array.isArray(classIds) ? classIds : classIds ? [classIds] : []).map(String);
+        const selectedClassIdSet = new Set(selectedClassIds);
         const disciplineIds = new Set();
-        if (classId) {
+        selectedClassIds.forEach(function (classId) {
             getDemandsForClass(classId, semester).forEach(function (demand) {
                 disciplineIds.add(String(demand.disciplina_id));
             });
             assignments.forEach(function (assignment) {
-                if (String(assignment.turma_id) === String(classId) && assignment.disciplina_id) {
+                if (String(assignment.turma_id) === classId && assignment.disciplina_id) {
                     disciplineIds.add(String(assignment.disciplina_id));
                 }
             });
-            if (editingSubstitution && String(editingSubstitution.turma_id) === String(classId)) {
-                disciplineIds.add(String(editingSubstitution.disciplina_id));
-            }
+        });
+        if (editingSubstitution && selectedClassIdSet.has(String(editingSubstitution.turma_id))) {
+            disciplineIds.add(String(editingSubstitution.disciplina_id));
         }
         const disciplines = readRecords(KEYS.disciplinas).filter(function (discipline) {
             return disciplineIds.has(String(discipline.id));
@@ -4631,25 +5227,30 @@
         const allTeachers = Array.from(teachersById.values()).sort(function (a, b) {
             return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
         });
+        const priorSubstitutions = substitutions.filter(function (record) {
+            return !editingSubstitution || String(record.id) !== String(editingSubstitution.id);
+        });
+        const effectiveAssignments = getDeclarationAssignments(
+            assignments, semester, priorSubstitutions, startDate || declarationDateValue(new Date())
+        );
         const originalTeacherIds = new Set();
-        if (classId && disciplineId) {
-            const priorSubstitutions = substitutions.filter(function (record) {
-                return !editingSubstitution || String(record.id) !== String(editingSubstitution.id);
+        if (scope === 'todas-aulas-professor') {
+            effectiveAssignments.forEach(function (assignment) {
+                if (assignment.professor_id) originalTeacherIds.add(String(assignment.professor_id));
             });
-            getDeclarationAssignments(
-                assignments, semester, priorSubstitutions, startDate || declarationDateValue(new Date())
-            ).forEach(function (assignment) {
-                if (String(assignment.turma_id) === String(classId) &&
+        } else if (selectedClassIds.length && disciplineId) {
+            effectiveAssignments.forEach(function (assignment) {
+                if (selectedClassIdSet.has(String(assignment.turma_id)) &&
                     String(assignment.disciplina_id) === String(disciplineId) &&
                     assignment.professor_id) {
                     originalTeacherIds.add(String(assignment.professor_id));
                 }
             });
-            if (editingSubstitution &&
-                String(editingSubstitution.turma_id) === String(classId) &&
-                String(editingSubstitution.disciplina_id) === String(disciplineId)) {
-                originalTeacherIds.add(String(editingSubstitution.professor_original_id));
-            }
+        }
+        if (editingSubstitution && (scope === 'todas-aulas-professor' ||
+            (selectedClassIds.includes(String(editingSubstitution.turma_id)) &&
+                (!disciplineId || String(editingSubstitution.disciplina_id) === String(disciplineId))))) {
+            originalTeacherIds.add(String(editingSubstitution.professor_original_id));
         }
         const originalTeachers = allTeachers.filter(function (teacher) {
             return originalTeacherIds.has(String(teacher.id));
@@ -4662,11 +5263,14 @@
     }
 
     function updateTeacherSubstitutionFields(form) {
-        const classField = form.elements.namedItem('turma_id');
+        const scopeField = form.elements.namedItem('abrangencia');
+        const classField = form.elements.namedItem('turma_ids');
         const disciplineField = form.elements.namedItem('disciplina_id');
         const originalTeacherField = form.elements.namedItem('professor_original_id');
         const replacementTeacherField = form.elements.namedItem('professor_substituto_id');
         const startDateField = form.elements.namedItem('data_inicio');
+        const scope = scopeField.value;
+        const isCampusExit = scope === 'todas-aulas-professor';
         const previousDisciplineId = disciplineField.value;
         const previousOriginalTeacherId = originalTeacherField.value;
         const previousReplacementTeacherId = replacementTeacherField.value;
@@ -4678,9 +5282,15 @@
         const editingSubstitution = readRecords(KEYS.substituicoes).find(function (record) {
             return String(record.id) === String(form.dataset.editId || '');
         }) || null;
+        const selectedClassIds = isCampusExit ? [] :
+            Array.from(classField.selectedOptions).map(function (option) { return option.value; });
+        document.getElementById('substitution-class-field').hidden = isCampusExit;
+        document.getElementById('substitution-discipline-field').hidden = isCampusExit;
+        classField.disabled = isCampusExit;
+        classField.required = !isCampusExit;
         const options = getTeacherSubstitutionOptions(
-            classField.value, previousDisciplineId, startDateField.value, assignments,
-            semester, substitutions, editingSubstitution
+            selectedClassIds, previousDisciplineId, startDateField.value, assignments,
+            semester, substitutions, editingSubstitution, scope
         );
         const validDiscipline = options.disciplines.some(function (discipline) {
             return String(discipline.id) === previousDisciplineId;
@@ -4688,11 +5298,12 @@
         disciplineField.innerHTML = renderSubstitutionSelectOptions(
             options.disciplines, 'Selecione a disciplina', validDiscipline ? previousDisciplineId : ''
         );
-        disciplineField.disabled = !classField.value;
-        const selectedDisciplineId = disciplineField.value;
+        disciplineField.disabled = isCampusExit || !selectedClassIds.length;
+        disciplineField.required = !isCampusExit;
+        const selectedDisciplineId = isCampusExit ? '' : disciplineField.value;
         const selectedOptions = getTeacherSubstitutionOptions(
-            classField.value, selectedDisciplineId, startDateField.value, assignments,
-            semester, substitutions, editingSubstitution
+            selectedClassIds, selectedDisciplineId, startDateField.value, assignments,
+            semester, substitutions, editingSubstitution, scope
         );
         const validOriginalTeacher = selectedOptions.originalTeachers.some(function (teacher) {
             return String(teacher.id) === previousOriginalTeacherId;
@@ -4701,7 +5312,7 @@
             selectedOptions.originalTeachers, 'Selecione o professor substituído',
             validOriginalTeacher ? previousOriginalTeacherId : ''
         );
-        originalTeacherField.disabled = !classField.value || !selectedDisciplineId;
+        originalTeacherField.disabled = !isCampusExit && (!selectedClassIds.length || !selectedDisciplineId);
         const validReplacementTeacher = selectedOptions.allTeachers.some(function (teacher) {
             return String(teacher.id) === previousReplacementTeacherId;
         });
@@ -4709,7 +5320,41 @@
             selectedOptions.allTeachers, 'Selecione o professor substituto',
             validReplacementTeacher ? previousReplacementTeacherId : ''
         );
-        replacementTeacherField.disabled = !classField.value || !selectedDisciplineId;
+        replacementTeacherField.disabled = !originalTeacherField.value ||
+            (!isCampusExit && (!selectedClassIds.length || !selectedDisciplineId));
+        const submitLabel = document.getElementById('substitution-submit-label');
+        if (submitLabel) {
+            submitLabel.textContent = isCampusExit
+                ? (editingSubstitution ? 'Atualizar saída do campus' : 'Registrar saída do campus')
+                : (editingSubstitution ? 'Atualizar substituição' : 'Atualizar grade com substituição');
+        }
+        const summary = document.getElementById('substitution-scope-summary');
+        if (summary) {
+            summary.hidden = !isCampusExit;
+            if (isCampusExit && originalTeacherField.value) {
+                const priorSubstitutions = substitutions.filter(function (record) {
+                    return !editingSubstitution || String(record.id) !== String(editingSubstitution.id);
+                });
+                const effectiveAssignments = getDeclarationAssignments(
+                    assignments, semester, priorSubstitutions, startDateField.value || declarationDateValue(new Date())
+                );
+                const teacherAssignments = effectiveAssignments.filter(function (assignment) {
+                    return String(assignment.professor_id) === String(originalTeacherField.value);
+                });
+                const classCount = new Set(teacherAssignments.map(function (assignment) {
+                    return String(assignment.turma_id);
+                })).size;
+                const disciplineCount = new Set(teacherAssignments.map(function (assignment) {
+                    return String(assignment.disciplina_id);
+                })).size;
+                summary.textContent = teacherAssignments.length
+                    ? teacherAssignments.length + ' aula(s) em ' + classCount + ' turma(s) e ' +
+                        disciplineCount + ' disciplina(s) serão avaliadas. O cadastro será desativado para futuras grades; somente aulas compatíveis serão transferidas e os demais impactos serão listados.'
+                    : 'Este professor não tem aulas atribuídas na grade para a data de início selecionada.';
+            } else if (isCampusExit) {
+                summary.textContent = 'Selecione o professor cuja saída do campus será registrada.';
+            }
+        }
     }
 
     function formatSubstitutionDate(value) {
@@ -4721,16 +5366,25 @@
     function getSubstitutionAffectedAssignments(assignments, semester, substitutions, substitution) {
         const earlierMappings = substitutions.filter(function (record) { return record !== substitution; });
         return getDeclarationAssignments(assignments, semester, earlierMappings, substitution.data_inicio).filter(function (assignment) {
-            return String(assignment.turma_id) === String(substitution.turma_id) &&
-                String(assignment.disciplina_id) === String(substitution.disciplina_id) &&
-                String(assignment.professor_id) === String(substitution.professor_original_id);
+            return substitutionIncludesAssignment(substitution, assignment);
         });
+    }
+
+    function substitutionIncludesAssignment(substitution, assignment) {
+        if (String(assignment.professor_id) !== String(substitution.professor_original_id)) return false;
+        if (substitution.abrangencia !== 'todas-aulas-professor' &&
+            (String(assignment.turma_id) !== String(substitution.turma_id) ||
+                String(assignment.disciplina_id) !== String(substitution.disciplina_id))) return false;
+        return !Array.isArray(substitution.aula_ids) ||
+            substitution.aula_ids.some(function (id) { return String(id) === String(assignment.id); });
     }
 
     function saveTeacherSubstitution(form) {
         const data = new FormData(form);
         const semester = getSemester();
-        const turmaId = String(data.get('turma_id') || '');
+        const scope = String(data.get('abrangencia') || 'turmas-selecionadas');
+        const isCampusExit = scope === 'todas-aulas-professor';
+        const turmaIds = Array.from(new Set(data.getAll('turma_ids').map(String).filter(Boolean)));
         const disciplineId = String(data.get('disciplina_id') || '');
         const originalTeacherId = String(data.get('professor_original_id') || '');
         const replacementTeacherId = String(data.get('professor_substituto_id') || '');
@@ -4741,12 +5395,21 @@
             ? readRecords(KEYS.substituicoes).find(function (record) { return String(record.id) === editingId; })
             : null;
         if (editingId && !existingRecord) throw new Error('A substituição que está sendo editada não foi encontrada.');
-        if (!turmaId || !disciplineId || !originalTeacherId || !replacementTeacherId || !startDate) {
-            throw new Error('Preencha turma, disciplina, professores e data inicial da vigência.');
+        if ((!isCampusExit && (!turmaIds.length || !disciplineId)) ||
+            !originalTeacherId || !replacementTeacherId || !startDate) {
+            throw new Error(isCampusExit
+                ? 'Selecione os professores e a data inicial da saída do campus.'
+                : 'Preencha ao menos uma turma, disciplina, professores e data inicial da vigência.');
         }
         if (originalTeacherId === replacementTeacherId) throw new Error('O professor substituto deve ser diferente do professor substituído.');
         if (endDate && endDate < startDate) throw new Error('A data final da vigência não pode ser anterior à data inicial.');
-        if (!findById(KEYS.professores, originalTeacherId)) throw new Error('O professor substituído não foi encontrado.');
+        const originalTeacher = findById(KEYS.professores, originalTeacherId);
+        if (!originalTeacher) throw new Error('O professor substituído não foi encontrado.');
+        if (!isCampusExit) {
+            turmaIds.forEach(function (turmaId) {
+                if (!findById(KEYS.turmas, turmaId)) throw new Error('Uma das turmas selecionadas não foi encontrada.');
+            });
+        }
         const grade = readSimulation(semester);
         const semesterSubstitutions = readRecords(KEYS.substituicoes).filter(function (record) {
             return String(record.semestre_letivo || '') === semester;
@@ -4757,62 +5420,196 @@
         const effectiveAssignmentsAtStart = getDeclarationAssignments(
             grade.assignments, semester, priorSubstitutions, startDate
         );
-        const affectedAssignments = effectiveAssignmentsAtStart.filter(function (assignment) {
-            return String(assignment.turma_id) === turmaId &&
-                String(assignment.disciplina_id) === disciplineId &&
-                String(assignment.professor_id) === originalTeacherId;
-        });
-        if (!affectedAssignments.length) {
-            throw new Error('O professor selecionado não tem aulas dessa disciplina atribuídas à turma na grade atual.');
-        }
-        const records = readRecords(KEYS.substituicoes);
-        const overlaps = semesterSubstitutions.some(function (record) {
-            if (String(record.id) === editingId ||
-                String(record.turma_id) !== turmaId ||
-                String(record.disciplina_id) !== disciplineId ||
-                String(record.professor_original_id) !== originalTeacherId) return false;
-            const existingEnd = record.data_fim || '9999-12-31';
-            const newEnd = endDate || '9999-12-31';
-            return startDate <= existingEnd && newEnd >= String(record.data_inicio || '');
-        });
-        if (overlaps) throw new Error('Já existe uma substituição com vigência sobreposta para esse professor, turma e disciplina.');
         const replacement = findById(KEYS.professores, replacementTeacherId);
         if (!replacement) throw new Error('O professor substituto não foi encontrado.');
         if (replacement.status && !['ativo', 'ativa'].includes(String(replacement.status).toLowerCase())) {
             throw new Error('Selecione um professor substituto ativo.');
         }
-        const occupiedPeriods = affectedAssignments.filter(function (assignment) {
-            return grade.assignments.some(function (other) {
-                return String(other.professor_id) === replacementTeacherId &&
-                    String(other.id) !== String(assignment.id) &&
-                    String(other.dia_semana) === String(assignment.dia_semana) &&
-                    String(other.horario_id) === String(assignment.horario_id);
+        const affectedAssignments = effectiveAssignmentsAtStart.filter(function (assignment) {
+            return String(assignment.professor_id) === originalTeacherId &&
+                (isCampusExit || (turmaIds.includes(String(assignment.turma_id)) &&
+                    String(assignment.disciplina_id) === disciplineId));
+        });
+        if (!affectedAssignments.length) {
+            throw new Error(isCampusExit
+                ? 'O professor selecionado não tem aulas atribuídas na grade atual para a data de início.'
+                : 'O professor selecionado não tem aulas dessa disciplina nas turmas selecionadas na grade atual.');
+        }
+        const overlaps = affectedAssignments.some(function (assignment) {
+            return semesterSubstitutions.some(function (record) {
+                if (String(record.id) === editingId || !substitutionIncludesAssignment(record, assignment)) return false;
+                const existingEnd = record.data_fim || '9999-12-31';
+                const newEnd = endDate || '9999-12-31';
+                return startDate <= existingEnd && newEnd >= String(record.data_inicio || '');
             });
         });
-        if (occupiedPeriods.length && !window.confirm('O professor substituto já tem ' + occupiedPeriods.length +
-            ' aula(s) em períodos coincidentes. Deseja registrar mesmo assim?')) return;
-        const newSubstitution = {
-            id: existingRecord ? existingRecord.id : nextId(records),
-            semestre_letivo: semester,
-            turma_id: Number(turmaId),
-            disciplina_id: Number(disciplineId),
-            professor_original_id: Number(originalTeacherId),
-            professor_substituto_id: Number(replacementTeacherId),
-            turma_nome: nameById(KEYS.turmas, turmaId, 'Turma'),
-            disciplina_nome: nameById(KEYS.disciplinas, disciplineId, 'Disciplina'),
-            professor_original_nome: nameById(KEYS.professores, originalTeacherId, 'Professor'),
-            professor_substituto_nome: replacement.nome || 'Professor',
-            data_inicio: startDate,
-            data_fim: endDate
-        };
-        const updatedRecords = existingRecord
-            ? records.map(function (record) { return String(record.id) === editingId ? newSubstitution : record; })
-            : records.concat(newSubstitution);
+        if (overlaps) {
+            throw new Error(isCampusExit
+                ? 'Já existe uma substituição com vigência sobreposta para uma ou mais aulas deste professor.'
+                : 'Já existe uma substituição com vigência sobreposta para uma ou mais aulas selecionadas.');
+        }
+        const records = readRecords(KEYS.substituicoes);
+        const simulatedAssignments = effectiveAssignmentsAtStart.map(function (assignment) {
+            return Object.assign({}, assignment);
+        });
+        const classPlans = new Map(turmaIds.map(function (turmaId) {
+            return [turmaId, { aulaIds: [], aulasBloqueadas: [] }];
+        }));
+        const allLessonIds = [];
+        const allBlockedLessons = [];
+        affectedAssignments.forEach(function (assignment) {
+            const options = getPreGenerationInjectionTeacherOptions(
+                assignment.turma_id, assignment.disciplina_id, assignment.dia_semana,
+                assignment.horario_id, simulatedAssignments
+            );
+            const replacementOption = options.find(function (option) {
+                return String(option.id) === replacementTeacherId;
+            });
+            const motivos = replacementOption
+                ? (replacementOption.available ? [] : replacementOption.reason.split('; ').filter(Boolean))
+                : ['sem vínculo ativo com a disciplina e a turma'];
+            const classPlan = isCampusExit ? null : classPlans.get(String(assignment.turma_id));
+            if (motivos.length) {
+                const blockedLesson = {
+                    aula_id: String(assignment.id),
+                    turma_id: assignment.turma_id,
+                    disciplina_id: assignment.disciplina_id,
+                    dia_semana: assignment.dia_semana,
+                    horario_id: assignment.horario_id,
+                    motivos: motivos
+                };
+                allBlockedLessons.push(blockedLesson);
+                if (classPlan) classPlan.aulasBloqueadas.push(blockedLesson);
+                return;
+            }
+            allLessonIds.push(String(assignment.id));
+            if (classPlan) classPlan.aulaIds.push(String(assignment.id));
+            const simulatedAssignment = simulatedAssignments.find(function (item) {
+                return String(item.id) === String(assignment.id);
+            });
+            if (simulatedAssignment) simulatedAssignment.professor_id = Number(replacementTeacherId);
+        });
+        const updatedRecords = records.filter(function (record) { return String(record.id) !== editingId; });
+        if (isCampusExit) {
+            updatedRecords.push({
+                id: existingRecord ? existingRecord.id : nextId(updatedRecords),
+                semestre_letivo: semester,
+                abrangencia: 'todas-aulas-professor',
+                motivo: 'Saída do campus',
+                turma_id: null,
+                disciplina_id: null,
+                professor_original_id: Number(originalTeacherId),
+                professor_substituto_id: Number(replacementTeacherId),
+                status_anterior_professor: existingRecord &&
+                    existingRecord.abrangencia === 'todas-aulas-professor' &&
+                    String(existingRecord.professor_original_id) === originalTeacherId
+                    ? (existingRecord.status_anterior_professor || 'Ativo')
+                    : (originalTeacher.status || 'Ativo'),
+                turma_nome: 'Todas as turmas',
+                disciplina_nome: 'Todas as disciplinas',
+                professor_original_nome: nameById(KEYS.professores, originalTeacherId, 'Professor'),
+                professor_substituto_nome: replacement.nome || 'Professor',
+                data_inicio: startDate,
+                data_fim: endDate,
+                aula_ids: allLessonIds,
+                aulas_bloqueadas: allBlockedLessons
+            });
+        } else {
+            let nextRecordId = nextId(updatedRecords);
+            let reusedExistingId = false;
+            turmaIds.forEach(function (turmaId) {
+                const classPlan = classPlans.get(turmaId);
+                if (!classPlan || (!classPlan.aulaIds.length && !classPlan.aulasBloqueadas.length)) return;
+                let recordId = nextRecordId++;
+                if (existingRecord && !reusedExistingId) {
+                    reusedExistingId = true;
+                    recordId = existingRecord.id;
+                }
+                updatedRecords.push({
+                    id: recordId,
+                    semestre_letivo: semester,
+                    abrangencia: 'turmas-selecionadas',
+                    motivo: 'Substituição por turma(s)',
+                    turma_id: Number(turmaId),
+                    disciplina_id: Number(disciplineId),
+                    professor_original_id: Number(originalTeacherId),
+                    professor_substituto_id: Number(replacementTeacherId),
+                    turma_nome: nameById(KEYS.turmas, turmaId, 'Turma'),
+                    disciplina_nome: nameById(KEYS.disciplinas, disciplineId, 'Disciplina'),
+                    professor_original_nome: nameById(KEYS.professores, originalTeacherId, 'Professor'),
+                    professor_substituto_nome: replacement.nome || 'Professor',
+                    data_inicio: startDate,
+                    data_fim: endDate,
+                    aula_ids: classPlan.aulaIds,
+                    aulas_bloqueadas: classPlan.aulasBloqueadas
+                });
+            });
+        }
+        const statusUpdates = new Map();
+        if (existingRecord && existingRecord.abrangencia === 'todas-aulas-professor' &&
+            (!isCampusExit || String(existingRecord.professor_original_id) !== originalTeacherId)) {
+            const previousTeacherId = String(existingRecord.professor_original_id);
+            const hasOtherCampusExit = updatedRecords.some(function (record) {
+                return record.abrangencia === 'todas-aulas-professor' &&
+                    String(record.professor_original_id) === previousTeacherId;
+            });
+            const previousTeacher = findById(KEYS.professores, previousTeacherId);
+            if (!hasOtherCampusExit && previousTeacher &&
+                String(previousTeacher.status || '').toLowerCase() === 'inativo') {
+                statusUpdates.set(previousTeacherId, existingRecord.status_anterior_professor || 'Ativo');
+            }
+        }
+        if (isCampusExit) statusUpdates.set(originalTeacherId, 'Inativo');
+        const transferredCount = allLessonIds.length;
+        const blockedCount = allBlockedLessons.length;
+        const affectedClassCount = new Set(affectedAssignments.map(function (assignment) {
+            return String(assignment.turma_id);
+        })).size;
         getDeclarationAssignments(grade.assignments, semester, updatedRecords, startDate);
-        saveRecords(KEYS.substituicoes, updatedRecords, 'SubstituicoesDocentes');
+        saveSubstitutionsAndTeacherStatuses(updatedRecords, statusUpdates);
         teacherSubstitutionEditingId = '';
         render();
-        notify(existingRecord ? 'Substituição atualizada sem alterar as demais aulas da grade.' : 'Substituição registrada sem alterar as demais aulas da grade.', 'success');
+        const message = (isCampusExit
+            ? existingRecord ? 'Saída do campus atualizada' : 'Saída do campus registrada'
+            : existingRecord ? 'Substituição atualizada' : 'Grade atualizada') + ': ' +
+            transferredCount + ' aula(s) transferida(s)' +
+            (isCampusExit ? ' em ' + affectedClassCount + ' turma(s)' : '') +
+            (blockedCount ? ', ' + blockedCount + ' bloqueada(s) por impacto' : '') +
+            '. As demais aulas e horários foram preservados.';
+        notify(message, blockedCount ? 'warning' : 'success');
+    }
+
+    function saveSubstitutionsAndTeacherStatuses(substitutions, statusUpdates) {
+        const updates = statusUpdates instanceof Map ? statusUpdates : new Map();
+        const teachers = readRecords(KEYS.professores);
+        let teachersChanged = false;
+        updates.forEach(function (status, teacherId) {
+            const teacher = teachers.find(function (item) { return String(item.id) === String(teacherId); });
+            if (!teacher) throw new Error('Um dos professores a atualizar não foi encontrado.');
+            if (String(teacher.status || '').toLowerCase() !== String(status).toLowerCase()) {
+                teacher.status = status;
+                teachersChanged = true;
+            }
+        });
+        const keys = teachersChanged ? [KEYS.substituicoes, KEYS.professores] : [KEYS.substituicoes];
+        const previousValues = new Map(keys.map(function (key) { return [key, localStorage.getItem(key)]; }));
+        try {
+            saveRecords(KEYS.substituicoes, substitutions, 'SubstituicoesDocentes');
+            if (teachersChanged) saveRecords(KEYS.professores, teachers, 'Professores');
+        } catch (error) {
+            let rollbackFailed = false;
+            previousValues.forEach(function (value, key) {
+                try {
+                    if (value === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, value);
+                } catch (rollbackError) {
+                    rollbackFailed = true;
+                    console.error('Falha ao reverter dados da movimentação docente:', key, rollbackError);
+                }
+            });
+            throw new Error('Não foi possível salvar a movimentação docente. ' + error.message +
+                (rollbackFailed ? ' A restauração automática dos dados também falhou; verifique o backup local.' : ''));
+        }
     }
 
     function deleteTeacherSubstitution(id) {
@@ -4822,7 +5619,21 @@
         if (!window.confirm('Excluir a substituição de ' +
             nameById(KEYS.professores, record.professor_original_id, record.professor_original_nome || 'Professor') + ' por ' +
             nameById(KEYS.professores, record.professor_substituto_id, record.professor_substituto_nome || 'Professor') + '?')) return;
-        saveRecords(KEYS.substituicoes, records.filter(function (item) { return String(item.id) !== String(id); }), 'SubstituicoesDocentes');
+        const updatedRecords = records.filter(function (item) { return String(item.id) !== String(id); });
+        const statusUpdates = new Map();
+        if (record.abrangencia === 'todas-aulas-professor') {
+            const teacherId = String(record.professor_original_id);
+            const hasOtherCampusExit = updatedRecords.some(function (item) {
+                return item.abrangencia === 'todas-aulas-professor' &&
+                    String(item.professor_original_id) === teacherId;
+            });
+            const teacher = findById(KEYS.professores, teacherId);
+            if (!hasOtherCampusExit && teacher &&
+                String(teacher.status || '').toLowerCase() === 'inativo') {
+                statusUpdates.set(teacherId, record.status_anterior_professor || 'Ativo');
+            }
+        }
+        saveSubstitutionsAndTeacherStatuses(updatedRecords, statusUpdates);
         if (teacherSubstitutionEditingId === String(id)) teacherSubstitutionEditingId = '';
         render();
         notify('Substituição removida.', 'success');
@@ -4921,32 +5732,34 @@
             return semesterMatches(row) && String(row.disciplina_id) === String(disciplineId);
         });
         const activeTeachers = activeRecords(KEYS.professores, ['ativo']);
-        const linked = [];
-        const seen = new Set();
+        const linkedByTeacher = new Map();
         links.forEach(function (link) {
             const teacherId = String(link.professor_id);
             const teacher = activeTeachers.find(function (item) { return String(item.id) === teacherId; });
-            if (!teacher || seen.has(teacherId)) return;
-            seen.add(teacherId);
-            linked.push({
-                teacher: teacher,
-                groupIds: Array.isArray(link.grupo_ids) ? link.grupo_ids.map(String) : []
-            });
+            if (!teacher) return;
+            let linkedTeacher = linkedByTeacher.get(teacherId);
+            if (!linkedTeacher) {
+                linkedTeacher = {
+                    teacher: teacher,
+                    groupIds: new Set(),
+                    unrestricted: false
+                };
+                linkedByTeacher.set(teacherId, linkedTeacher);
+            }
+            const groupIds = Array.isArray(link.grupo_ids) ? link.grupo_ids.map(String) : [];
+            if (groupIds.length) groupIds.forEach(function (id) { linkedTeacher.groupIds.add(id); });
+            else linkedTeacher.unrestricted = true;
         });
         const classGroupIds = new Set(readRecords(KEYS.grupos).filter(semesterMatches).filter(function (group) {
             return Array.isArray(group.turma_ids) && group.turma_ids.some(function (id) {
                 return String(id) === String(classId);
             });
         }).map(function (group) { return String(group.id); }));
-        const restricted = linked.filter(function (item) { return item.groupIds.length > 0; });
-        const matchingRestricted = restricted.filter(function (item) {
-            return item.groupIds.some(function (id) { return classGroupIds.has(id); });
+        const eligible = Array.from(linkedByTeacher.values()).filter(function (item) {
+            return item.unrestricted || Array.from(item.groupIds).some(function (id) {
+                return classGroupIds.has(id);
+            });
         });
-        const eligible = restricted.length
-            ? matchingRestricted.length
-                ? matchingRestricted
-                : linked.filter(function (item) { return item.groupIds.length === 0; })
-            : linked;
         const config = getQdpConfig();
         const slot = config.horarios.find(function (item) { return String(item.id) === String(slotId); });
         const discipline = config.disciplinas.find(function (item) { return String(item.id) === String(disciplineId); });
@@ -6329,7 +7142,7 @@
         const semester = getSemester();
         const state = readSimulation(semester);
         const lastReport = state.lastGenerationReport;
-        const allAssignments = state.assignments || [];
+        const allAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
         const teachers = readRecords(KEYS.professores);
         const activeTeachers = activeRecords(KEYS.professores, ['ativo']);
         const classes = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
@@ -6719,42 +7532,7 @@
     }
 
     function renderAbout() {
-        const contributors = [
-            {
-                name: 'Ozeias Meira Santos de Souza',
-                department: 'Gabinete',
-                photo: 'assets/img/fotos/ozeias.png',
-                phone: '+55 69 9272-6386',
-                phoneLink: '+556992726386',
-                email: 'ozeeiiaass@gmail.com',
-                role: 'Desenvolvedor FullStack',
-                description: 'Responsável pela construção e evolução do software.',
-                color: 'about-person-developer'
-            },
-            {
-                name: 'Wellington Dias Lima',
-                department: 'Gabinete',
-                photo: 'assets/img/fotos/well.jpg',
-                phone: '+55 69 9307-9832',
-                phoneLink: '+556993079832',
-                email: 'wellington.lima@ifro.edu.br',
-                role: 'Analista de performance',
-                description: 'Avalia a eficiência, a usabilidade e o desempenho da ferramenta.',
-                color: 'about-person-performance'
-            },
-            {
-                name: 'Bianca Luzia Carvalho de Marco',
-                department: 'SUPAE',
-                photo: 'assets/img/fotos/bianca.png',
-                phone: '+55 69 8442-5575',
-                phoneLink: '+556984425575',
-                email: 'biancademarco_smg@hotmail.com',
-                role: 'QA (Quality Assurance)',
-                description: 'Contribui com sua experiência na geração de horários e na carga horária docente, trazendo a realidade do dia a dia escolar para o projeto.',
-                color: 'about-person-practice'
-            }
-        ];
-        const people = contributors.map(function (person) {
+        const people = TEAM_MEMBERS.map(function (person) {
             return '<div class="col-md-6 col-xl-4"><article class="card about-person-card ' + person.color + '">' +
                 '<div class="card-body"><div class="about-person-heading"><img class="about-person-photo" src="' + h(person.photo) +
                 '" alt="Foto de ' + h(person.name) + '" loading="lazy"><div><h3 class="h5 mb-1">' + h(person.name) + '</h3>' +
@@ -6836,8 +7614,25 @@
                 String(index + 1).padStart(2, '0') + '</span></div><div class="about-flow-copy"><h3>' + h(step.title) +
                 '</h3><p>' + h(step.description) + '</p><ul>' + items + '</ul></div></li>';
         }).join('');
+        const releaseUpdates = [
+            'Painel repaginado com logo e fotos ampliadas da equipe; ao passar o mouse, cada foto mostra função, setor e contatos.',
+            'Removidas as seções Acesso rápido e Indisponibilidades do painel; notas recentes foram aproximadas do topo.',
+            'Gráficos de rosca e barras para cursos, professores, disciplinas e turmas, além de indicadores operacionais do semestre.',
+            'Owlly, mascote coruja do Owltime, apresentada ao lado da logo nos cards do Painel e de Sobre; no Ninho, traz um guia rápido interativo para explorar e baixar seus wallpapers favoritos.',
+            'Página Configurações acessível pela engrenagem identificada no cabeçalho; roxo é a cor padrão e há opções para personalizar o tema.',
+            'Menu alternável entre botão hambúrguer (abre/fecha) e expansão ao passar o mouse; hover é o padrão e oculta o botão. Há densidade confortável ou compacta e restauração dos padrões.',
+            'Repositório com exportações XLSX/PDF e modelos CSV/XLSX para cadastros compatíveis.',
+            'Glossário com resumos dos módulos e botão Saiba mais nas telas, com explicações em janela e textos de apoio mais enxutos.',
+            'Vigências e substituições por turma ou saída do campus, com validação de compatibilidade, impactos bloqueados e preservação da grade-base.',
+            'Declarações docentes com motivo, abrangência, turmas, disciplinas, aulas transferidas ou bloqueadas e seus motivos.',
+            'Busca global pela corujinha: encontre professores, turmas e outros registros digitando e abra o item correspondente no módulo.',
+            'Botão WhatsApp ao lado do telefone do professor, links de Configurações, Armazenamento e Sobre no cabeçalho e documentação atualizada no README.'
+        ];
+        const releaseUpdateItems = releaseUpdates.map(function (item) {
+            return '<li><i class="bi bi-check-circle-fill" aria-hidden="true"></i><span>' + h(item) + '</span></li>';
+        }).join('');
         const projectDetails = [
-            { icon: 'bi-tag', label: 'Versão', value: '1.0.0', detail: 'Criado em Novembro de 2026' },
+            { icon: 'bi-tag', label: 'Versão', value: APP_VERSION, detail: 'Criado em Novembro de 2026' },
             { icon: 'bi-code-slash', label: 'Tecnologias', value: 'JavaScript · HTML · CSS', detail: 'Lógica, marcação e apresentação da interface' },
             { icon: 'bi-globe2', label: 'Hospedagem', value: 'GitHub Pages', detail: 'Aplicação web publicada como site estático' },
             { icon: 'bi-database', label: 'Armazenamento', value: 'localStorage', detail: 'Dados guardados no navegador deste dispositivo' }
@@ -6849,7 +7644,11 @@
         }).join('');
         return pageHeader('Sobre', 'bi-info-circle', 'As pessoas por trás do Owltime e as contribuições de cada uma.') +
             '<section class="about-page">' +
-            '<div class="about-hero"><div class="about-hero-brand"><img src="assets/img/logo.png" alt="Logo do Owltime">' +
+            '<div class="about-hero"><div class="about-hero-brand"><div class="about-hero-identity-art">' +
+            '<img class="about-hero-logo" src="assets/img/logo.png" alt="Logo do Owltime">' +
+            '<figure class="about-hero-mascot"><img src="assets/img/coruja.png" alt="Owlly, mascote coruja do Owltime">' +
+            '<figcaption>Owlly · mascote do Owltime</figcaption></figure>' +
+            '</div>' +
             '<div><span class="about-eyebrow">Projeto · 2026</span><h2>Owltime</h2>' +
             '<p class="mb-2">Organização escolar com tecnologia e conhecimento da rotina educacional.</p>' +
             '<a class="about-project-email" href="mailto:owltimesistema@gmail.com"><i class="bi bi-envelope" aria-hidden="true"></i> owltimesistema@gmail.com</a></div></div>' +
@@ -6865,6 +7664,13 @@
             '<section class="about-project-details"><div class="about-team-heading"><div><span class="about-eyebrow">Sobre a aplicação</span>' +
             '<h2 class="h4 mb-1">Tecnologia e funcionamento</h2><p class="text-muted mb-0">Uma aplicação web leve, acessada pelo navegador.</p></div></div>' +
             '<div class="about-details-grid">' + projectDetailCards + '</div></section></section>' +
+            '<section class="about-release-section"><div class="about-team-heading"><div><span class="about-eyebrow">Novidades da versão ' + h(APP_VERSION) + '</span>' +
+            '<h2 class="h4 mb-1">Atualizações implementadas no Owltime ' + h(APP_VERSION) + '</h2><p class="text-muted mb-0">Resumo dos principais recursos e melhorias desta atualização.</p></div></div>' +
+            '<ul class="about-release-list">' + releaseUpdateItems + '</ul></section>' +
+            '<section class="about-release-next"><div class="about-team-heading"><div><span class="about-eyebrow">Em desenvolvimento</span>' +
+            '<h2 class="h4 mb-1">Atualização 1.6</h2></div></div><article class="about-release-roadmap">' +
+            '<i class="bi bi-play-circle" aria-hidden="true"></i><div><h3>Módulo tutorial</h3>' +
+            '<p>Em desenvolvimento.</p></div></article></section>' +
             '<section class="about-data-section"><div class="about-team-heading"><div><span class="about-eyebrow">Privacidade e segurança</span>' +
             '<h2 class="h4 mb-1">Sobre os seus dados</h2><p class="text-muted mb-0">Entenda onde as informações ficam e como evitar perdê-las.</p></div></div>' +
             '<div class="about-data-grid"><article class="about-data-card"><span class="about-detail-icon"><i class="bi bi-device-hdd" aria-hidden="true"></i></span>' +
@@ -6873,6 +7679,130 @@
             '<div><h3>Faça backups regularmente</h3><p>Em <strong>Armazenamento e backup</strong>, exporte uma cópia e guarde-a em local seguro. Se limpar os dados do navegador ou trocar de dispositivo, importe o backup para recuperar o trabalho.</p></div></article>' +
             '<article class="about-data-card about-data-warning"><span class="about-detail-icon"><i class="bi bi-shield-exclamation" aria-hidden="true"></i></span>' +
             '<div><h3>Limites de acesso</h3><p>O Owltime não tem login nem controle de acesso. Qualquer pessoa que use o mesmo perfil do navegador pode ver ou alterar os registros. Evite armazenar informações que exijam sigilo ou proteção especial.</p></div></article></div></section></section>';
+    }
+
+    function globalSearchRelatedNames(record, relationCache) {
+        const relationKeys = {
+            curso_id: KEYS.cursos,
+            disciplina_id: KEYS.disciplinas,
+            disciplina_ingresso_id: KEYS.disciplinas,
+            professor_id: KEYS.professores,
+            turma_id: KEYS.turmas,
+            turma_ids: KEYS.turmas,
+            grupo_ids: KEYS.grupos,
+            horario_id: KEYS.horarios
+        };
+        return Object.keys(relationKeys).reduce(function (names, field) {
+            if (record[field] == null) return names;
+            const key = relationKeys[field];
+            if (!relationCache[key]) {
+                relationCache[key] = Object.create(null);
+                readRecords(key).forEach(function (relatedRecord) {
+                    relationCache[key][String(relatedRecord.id)] = relatedRecord;
+                });
+            }
+            const ids = Array.isArray(record[field]) ? record[field] : [record[field]];
+            ids.forEach(function (id) {
+                const related = relationCache[key][String(id)];
+                const name = related && (related.nome || related.titulo || related.dia_semana);
+                if (name && !names.includes(name)) names.push(name);
+            });
+            return names;
+        }, []);
+    }
+
+    function renderGlobalSearchResults(query) {
+        const resultsElement = document.getElementById('global-search-results');
+        if (!resultsElement) return;
+        const normalizedQuery = normalizeCatalogValue(String(query || '').trim());
+        if (normalizedQuery.length < 2) {
+            resultsElement.innerHTML = '<p class="global-search-empty">Digite pelo menos 2 caracteres para pesquisar.</p>';
+            return;
+        }
+        const relationCache = Object.create(null);
+        const queryWords = normalizedQuery.split(/\s+/).filter(Boolean);
+        const matches = [];
+        Object.keys(specs).forEach(function (route) {
+            const spec = specs[route];
+            readRecords(spec.key).forEach(function (record) {
+                const relatedNames = globalSearchRelatedNames(record, relationCache);
+                const recordText = Object.keys(record).map(function (field) {
+                    const value = record[field];
+                    return Array.isArray(value) ? value.join(' ') : value == null ? '' : String(value);
+                }).join(' ');
+                const searchableText = normalizeCatalogValue([spec.title, recordText].concat(relatedNames).join(' '));
+                if (!queryWords.every(function (word) { return searchableText.includes(word); })) return;
+                const title = String(record.nome || record.titulo || record.dia_semana || spec.title);
+                const normalizedTitle = normalizeCatalogValue(title);
+                const context = [spec.title].concat(relatedNames).concat(record.semestre_letivo || []).filter(Boolean);
+                matches.push({
+                    route: route,
+                    id: record.id,
+                    title: title,
+                    context: Array.from(new Set(context)).join(' · '),
+                    icon: spec.icon,
+                    rank: normalizedTitle === normalizedQuery ? 0 : normalizedTitle.startsWith(normalizedQuery) ? 1 : 2
+                });
+            });
+        });
+        matches.sort(function (a, b) {
+            return a.rank - b.rank || a.title.localeCompare(b.title, 'pt-BR');
+        });
+        if (!matches.length) {
+            resultsElement.innerHTML = '<p class="global-search-empty">Nenhum registro corresponde à sua busca.</p>';
+            return;
+        }
+        const visibleMatches = matches.slice(0, 15);
+        const countLabel = matches.length > visibleMatches.length
+            ? 'Mostrando ' + visibleMatches.length + ' de ' + matches.length + ' resultados'
+            : matches.length + (matches.length === 1 ? ' resultado' : ' resultados');
+        const resultButtons = visibleMatches.map(function (match) {
+            return '<button class="global-search-result" type="button" role="option" data-action="open-global-search-result" data-route="' +
+                h(match.route) + '" data-record-id="' + h(match.id) + '"><span class="global-search-result-icon"><i class="bi ' +
+                h(match.icon) + '" aria-hidden="true"></i></span><span class="global-search-result-copy"><strong>' +
+                h(match.title) + '</strong><small>' + h(match.context) + '</small></span><i class="bi bi-arrow-up-right" aria-hidden="true"></i></button>';
+        }).join('');
+        resultsElement.innerHTML = '<p class="global-search-count">' + h(countLabel) + '</p>' + resultButtons;
+    }
+
+    function openGlobalSearchResult(button) {
+        const route = button.dataset.route || '';
+        const spec = specs[route];
+        if (!spec) throw new Error('O módulo deste resultado não está disponível.');
+        const record = readRecords(spec.key).find(function (item) {
+            return String(item.id) === String(button.dataset.recordId || '');
+        });
+        if (!record) throw new Error('Este registro não está mais disponível. Atualize a busca e tente novamente.');
+        if (['grupos', 'vinculos', 'disponibilidade', 'eventos', 'demandas'].includes(route) && record.semestre_letivo) {
+            availabilitySemester = setSemester(record.semestre_letivo);
+        }
+        globalSearchTarget = { route: route, id: String(record.id) };
+        if (route === 'disponibilidade') availabilityCourseId = '';
+        if (route === 'notas') collapsedDataSections['notes-board'] = false;
+        else collapsedDataSections['records-' + route] = false;
+        editing = null;
+        spreadsheetImport = null;
+        const dialog = document.getElementById('global-search-dialog');
+        if (dialog && dialog.open) dialog.close();
+        const currentRoute = window.location.hash.replace(/^#\/?/, '').split('/')[0];
+        if (currentRoute === route) render();
+        else window.location.hash = '#/' + route;
+    }
+
+    function focusGlobalSearchTarget(route) {
+        if (!globalSearchTarget || globalSearchTarget.route !== route) return;
+        const target = Array.from(view.querySelectorAll('[data-global-record-id]')).find(function (element) {
+            return element.dataset.globalRecordId === globalSearchTarget.id;
+        });
+        globalSearchTarget = null;
+        if (!target) {
+            notify('O registro foi encontrado, mas não está visível nesta tela. Confira o semestre ativo e tente novamente.', 'warning');
+            return;
+        }
+        target.classList.add('global-search-hit');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.focus({ preventScroll: true });
+        window.setTimeout(function () { target.classList.remove('global-search-hit'); }, 3500);
     }
 
     function render() {
@@ -6895,7 +7825,14 @@
         document.querySelectorAll('.side-link').forEach(function (link) {
             link.classList.toggle('active', link.dataset.route === route);
         });
+        document.querySelectorAll('.topbar-nav-link').forEach(function (link) {
+            const active = link.dataset.route === route;
+            link.classList.toggle('active', active);
+            if (active) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
+        });
         try {
+            applyUserPreferences();
             if (!semesterMigrationComplete) migrateLegacySemesterRecords();
             const activeSemesterDisplay = document.getElementById('active-semester-display');
             if (activeSemesterDisplay) activeSemesterDisplay.innerHTML =
@@ -6904,10 +7841,12 @@
             if (route === 'notas') view.innerHTML = renderNotes();
             else if (specs[route]) view.innerHTML = renderCrud(route);
             else if (route === 'dashboard') view.innerHTML = renderDashboard();
+            else if (route === 'ninho') view.innerHTML = renderNinho();
             else if (route === 'grade') view.innerHTML = renderGrade();
             else if (route === 'laboratorio') view.innerHTML = renderGrade(true);
             else if (route === 'relatorios') view.innerHTML = renderReports();
             else if (route === 'armazenamento') view.innerHTML = renderStorage();
+            else if (route === 'configuracoes') view.innerHTML = renderSettings();
             else if (route === 'sobre') view.innerHTML = renderAbout();
             else view.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-circle"></i>Página não encontrada.</div>';
             sortSelectOptions(view);
@@ -6924,6 +7863,7 @@
                 });
             }
             alertBox.classList.add('d-none');
+            focusGlobalSearchTarget(route);
         } catch (error) {
             console.error('Falha ao exibir o módulo:', error);
             view.innerHTML = pageHeader('Não foi possível abrir esta tela', 'bi-exclamation-triangle', '') +
@@ -7202,10 +8142,11 @@
     function exportGradeCsv() {
         const semester = getSemester();
         const state = readSimulation(semester);
+        const effectiveAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
         const rows = [['Semestre', 'Tipo', 'Turma', 'Dia', 'Início', 'Fim', 'Disciplina / proteção / evento', 'Professor']];
         const slotMap = {};
         readRecords(KEYS.horarios).forEach(function (slot) { slotMap[String(slot.id)] = slot; });
-        (state.assignments || []).forEach(function (item) {
+        effectiveAssignments.forEach(function (item) {
             const slot = slotMap[String(item.horario_id)] || {};
             rows.push([
                 semester,
@@ -7249,10 +8190,11 @@
         if (!entity) throw new Error('Selecione uma turma ou professor válido para exportar.');
         const semester = getSemester();
         const state = readSimulation(semester);
+        const effectiveAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
         const slots = readRecords(KEYS.horarios);
         const slotMap = {};
         slots.forEach(function (slot) { slotMap[String(slot.id)] = slot; });
-        const assignments = (state.assignments || []).filter(function (assignment) {
+        const assignments = effectiveAssignments.filter(function (assignment) {
             return String(type === 'turma' ? assignment.turma_id : assignment.professor_id) === String(entityId);
         }).slice().sort(function (a, b) {
             const dayA = DAYS.indexOf(String(a.dia_semana || ''));
@@ -7544,6 +8486,13 @@
             String(date.getDate()).padStart(2, '0');
     }
 
+    function getCurrentGradeAssignments(assignments, semester) {
+        const substitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || '') === semester;
+        });
+        return getDeclarationAssignments(assignments, semester, substitutions, declarationDateValue(new Date()));
+    }
+
     function getDeclarationAssignments(assignments, semester, substitutions, referenceDate) {
         return assignments.map(function (assignment) {
             let current = Object.assign({}, assignment);
@@ -7551,11 +8500,9 @@
             while (true) {
                 const matchingSubstitutions = substitutions.filter(function (record) {
                     return String(record.semestre_letivo) === semester &&
-                        String(record.turma_id) === String(current.turma_id) &&
-                        String(record.disciplina_id) === String(current.disciplina_id) &&
-                        String(record.professor_original_id) === String(current.professor_id) &&
                         String(record.data_inicio || '') <= referenceDate &&
-                        (!record.data_fim || String(record.data_fim) >= referenceDate);
+                        (!record.data_fim || String(record.data_fim) >= referenceDate) &&
+                        substitutionIncludesAssignment(record, current);
                 });
                 if (matchingSubstitutions.length > 1) {
                     throw new Error('Há vigências sobrepostas para a mesma turma, disciplina e professor. Corrija os registros antes de gerar a declaração.');
@@ -7712,17 +8659,42 @@
             return String(a.data_inicio || '').localeCompare(String(b.data_inicio || '')) ||
                 String(a.id).localeCompare(String(b.id), 'pt-BR', { numeric: true });
         }).map(function (record) {
-            const affectedCount = getSubstitutionAffectedAssignments(
+            const affectedAssignments = getSubstitutionAffectedAssignments(
                 baseAssignments, semester, substitutions, record
-            ).length;
+            );
+            const blockedAssignments = Array.isArray(record.aulas_bloqueadas) ? record.aulas_bloqueadas : [];
+            const isCampusExit = record.abrangencia === 'todas-aulas-professor';
+            const contexts = new Map();
+            affectedAssignments.concat(blockedAssignments).forEach(function (assignment) {
+                const className = nameById(KEYS.turmas, assignment.turma_id, 'Turma removida');
+                const disciplineName = nameById(KEYS.disciplinas, assignment.disciplina_id, 'Disciplina removida');
+                contexts.set(String(assignment.turma_id) + '|' + String(assignment.disciplina_id),
+                    className + ' · ' + disciplineName);
+            });
             return {
-                turma: nameById(KEYS.turmas, record.turma_id, record.turma_nome || 'Turma removida'),
-                disciplina: nameById(KEYS.disciplinas, record.disciplina_id, record.disciplina_nome || 'Disciplina removida'),
+                turma: isCampusExit ? 'Todas as turmas' :
+                    nameById(KEYS.turmas, record.turma_id, record.turma_nome || 'Turma removida'),
+                disciplina: isCampusExit ? 'Todas as disciplinas' :
+                    nameById(KEYS.disciplinas, record.disciplina_id, record.disciplina_nome || 'Disciplina removida'),
                 titular: nameById(KEYS.professores, record.professor_original_id, record.professor_original_nome || 'Professor removido'),
                 substituto: nameById(KEYS.professores, record.professor_substituto_id, record.professor_substituto_nome || 'Professor removido'),
                 vigencia: formatSubstitutionDate(record.data_inicio) + ' até ' +
                     (record.data_fim ? formatSubstitutionDate(record.data_fim) : 'sem data final'),
-                aulas: affectedCount
+                motivo: record.motivo || 'Substituição por turma(s)',
+                abrangencia: isCampusExit
+                    ? 'Todas as aulas do professor · cadastro desativado para futuras grades'
+                    : 'Turmas selecionadas',
+                contextos: Array.from(contexts.values()).join('\n') || 'Nenhuma aula transferida.',
+                aulas: affectedAssignments.length,
+                bloqueadas: blockedAssignments.length,
+                detalhesBloqueios: blockedAssignments.map(function (assignment) {
+                    const slot = findById(KEYS.horarios, assignment.horario_id);
+                    const period = slot ? slot.hora_inicio + '–' + slot.hora_fim : 'horário removido';
+                    return nameById(KEYS.turmas, assignment.turma_id, 'Turma removida') + ' · ' +
+                        nameById(KEYS.disciplinas, assignment.disciplina_id, 'Disciplina removida') + ' · ' +
+                        (assignment.dia_semana || 'Dia não informado') + ' · ' + period + ': ' +
+                        (assignment.motivos || []).join('; ');
+                })
             };
         });
         content.push({
@@ -7743,71 +8715,94 @@
             margin: [0, 8, 0, 4]
         });
         content.push({
-            text: 'Cada registro representa uma alteração específica de professor, turma e disciplina, sem acumular períodos distintos como carga simultânea.',
+            text: 'O histórico registra substituições por turma ou a saída do campus com as aulas, turmas, disciplinas e impactos correspondentes, sem acumular períodos distintos como carga simultânea.',
             style: 'substitutionIntro',
             margin: [0, 0, 0, 8]
         });
         if (substitutionItems.length) {
             substitutionItems.forEach(function (item, index) {
+                const historyRows = [
+                    [{
+                        text: 'SUBSTITUIÇÃO ' + String(index + 1).padStart(2, '0'),
+                        style: 'substitutionIndex',
+                        colSpan: 2
+                    }, {}],
+                    [
+                        {
+                            stack: [
+                                { text: 'TURMA(S)', style: 'substitutionLabel' },
+                                { text: item.turma, style: 'substitutionContext' }
+                            ]
+                        },
+                        {
+                            stack: [
+                                { text: 'DISCIPLINA(S)', style: 'substitutionLabel' },
+                                { text: item.disciplina, style: 'substitutionContext' }
+                            ]
+                        }
+                    ],
+                    [
+                        {
+                            stack: [
+                                { text: 'PROFESSOR TITULAR', style: 'substitutionLabel' },
+                                { text: item.titular, style: 'substitutionTeacher' }
+                            ],
+                            fillColor: '#f1f5f9'
+                        },
+                        {
+                            stack: [
+                                { text: 'PROFESSOR SUBSTITUTO', style: 'substitutionLabel' },
+                                { text: item.substituto, style: 'substitutionReplacement' }
+                            ],
+                            fillColor: '#eaf5ee'
+                        }
+                    ],
+                    [
+                        {
+                            stack: [
+                                { text: 'PERÍODO DE VIGÊNCIA', style: 'substitutionLabel' },
+                                { text: item.vigencia, style: 'substitutionValue' }
+                            ]
+                        },
+                        {
+                            stack: [
+                                { text: 'AULAS TRANSFERIDAS / BLOQUEADAS', style: 'substitutionLabel' },
+                                { text: item.aulas + ' transferida(s) · ' + item.bloqueadas + ' bloqueada(s)', style: 'substitutionLessons' }
+                            ]
+                        }
+                    ],
+                    [{
+                        stack: [
+                            { text: 'MOTIVO E ABRANGÊNCIA', style: 'substitutionLabel' },
+                            { text: item.motivo + ' · ' + item.abrangencia, style: 'substitutionValue' }
+                        ],
+                        colSpan: 2
+                    }, {}],
+                    [{
+                        stack: [
+                            { text: 'TURMAS E DISCIPLINAS ALCANÇADAS', style: 'substitutionLabel' },
+                            { text: item.contextos, style: 'substitutionValue' }
+                        ],
+                        colSpan: 2
+                    }, {}]
+                ];
+                if (item.bloqueadas) {
+                    historyRows.push([{
+                        stack: [
+                            { text: 'AULAS NÃO TRANSFERIDAS E MOTIVOS', style: 'substitutionLabel' },
+                            { text: item.detalhesBloqueios.join('\n'), style: 'substitutionBlocked' }
+                        ],
+                        colSpan: 2
+                    }, {}]);
+                }
+                const lastHistoryRow = historyRows.length;
                 content.push({
                     table: {
                         widths: ['*', '*'],
-                        body: [
-                            [{
-                                text: 'SUBSTITUIÇÃO ' + String(index + 1).padStart(2, '0'),
-                                style: 'substitutionIndex',
-                                colSpan: 2
-                            }, {}],
-                            [
-                                {
-                                    stack: [
-                                        { text: 'TURMA', style: 'substitutionLabel' },
-                                        { text: item.turma, style: 'substitutionContext' }
-                                    ]
-                                },
-                                {
-                                    stack: [
-                                        { text: 'DISCIPLINA', style: 'substitutionLabel' },
-                                        { text: item.disciplina, style: 'substitutionContext' }
-                                    ]
-                                }
-                            ],
-                            [
-                                {
-                                    stack: [
-                                        { text: 'PROFESSOR TITULAR', style: 'substitutionLabel' },
-                                        { text: item.titular, style: 'substitutionTeacher' }
-                                    ],
-                                    fillColor: '#f1f5f9'
-                                },
-                                {
-                                    stack: [
-                                        { text: 'PROFESSOR SUBSTITUTO', style: 'substitutionLabel' },
-                                        { text: item.substituto, style: 'substitutionReplacement' }
-                                    ],
-                                    fillColor: '#eaf5ee'
-                                }
-                            ],
-                            [
-                                {
-                                    stack: [
-                                        { text: 'PERÍODO DE VIGÊNCIA', style: 'substitutionLabel' },
-                                        { text: item.vigencia, style: 'substitutionValue' }
-                                    ]
-                                },
-                                {
-                                    stack: [
-                                        { text: 'AULAS AFETADAS NA SEMANA', style: 'substitutionLabel' },
-                                        item.aulas
-                                            ? { text: item.aulas + (item.aulas === 1 ? ' aula/semana' : ' aulas/semana'), style: 'substitutionLessons' }
-                                            : { text: 'Sem correspondência na grade', style: 'substitutionNoLessons' }
-                                    ]
-                                }
-                            ]
-                        ]
+                        body: historyRows
                     },
                     layout: {
-                        hLineWidth: function (index) { return index === 0 || index === 4 ? 0 : 0.7; },
+                        hLineWidth: function (rowIndex) { return rowIndex === 0 || rowIndex === lastHistoryRow ? 0 : 0.7; },
                         vLineWidth: function () { return 0; },
                         hLineColor: function () { return '#dbe4ed'; },
                         paddingLeft: function (index) { return index === 0 ? 8 : 10; },
@@ -7880,6 +8875,7 @@
                 substitutionReplacement: { fontSize: 9, bold: true, color: '#176b42' },
                 substitutionValue: { fontSize: 8, color: '#344b63' },
                 substitutionLessons: { fontSize: 8, bold: true, color: '#1d4e89' },
+                substitutionBlocked: { fontSize: 7.5, color: '#8a3c18', lineHeight: 1.15 },
                 substitutionNoLessons: { fontSize: 8, color: '#9a6b16', italics: true },
                 substitutionEmpty: { fontSize: 8, color: '#617286', fillColor: '#f6f9fc', margin: [8, 7, 8, 7] },
                 note: { fontSize: 7.5, color: '#617286', italics: true, alignment: 'justify' },
@@ -8035,8 +9031,9 @@
             ? activeRecords(KEYS.turmas, ['ativa', 'ativo'])
             : [entity];
         if (!entities.length) throw new Error('Não há turmas ativas para incluir no PDF.');
+        const effectiveAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
         const sections = entities.map(function (item) {
-            const assignments = state.assignments.filter(function (assignment) {
+            const assignments = effectiveAssignments.filter(function (assignment) {
                 return type === 'turma'
                     ? String(assignment.turma_id) === String(item.id)
                     : String(assignment.professor_id) === String(item.id);
@@ -8142,6 +9139,10 @@
             }
             return;
         }
+        if (event.target.id === 'ninho-lightbox' || event.target.id === 'ninho-guide-dialog') {
+            event.target.close();
+            return;
+        }
         const button = event.target.closest('[data-action]');
         if (!button) return;
         const action = button.dataset.action;
@@ -8149,6 +9150,62 @@
             if (action === 'dismiss-notification') {
                 window.clearTimeout(alertTimer);
                 alertBox.classList.add('d-none');
+            } else if (action === 'open-global-search') {
+                const dialog = document.getElementById('global-search-dialog');
+                const input = document.getElementById('global-search-input');
+                if (!dialog || !input) throw new Error('A busca global não está disponível.');
+                input.value = '';
+                renderGlobalSearchResults('');
+                if (!dialog.open) dialog.showModal();
+                input.focus();
+            } else if (action === 'close-global-search') {
+                const dialog = document.getElementById('global-search-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-global-search-result') {
+                openGlobalSearchResult(button);
+            } else if (action === 'open-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                if (!dialog) throw new Error('O guia rápido da Owlly não está disponível.');
+                updateNinhoGuide(0);
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'previous-ninho-guide' || action === 'next-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                if (!dialog || !dialog.open) throw new Error('O guia rápido da Owlly não está aberto.');
+                const step = Number(dialog.dataset.guideStep) || 0;
+                updateNinhoGuide(step + (action === 'next-ninho-guide' ? 1 : -1));
+            } else if (action === 'finish-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                const gallery = document.getElementById('ninho-wallpapers-title');
+                if (!dialog || !gallery) throw new Error('Não foi possível abrir a galeria do Ninho.');
+                dialog.close();
+                gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (action === 'close-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-ninho-image') {
+                const dialog = document.getElementById('ninho-lightbox');
+                const image = document.getElementById('ninho-lightbox-image');
+                const caption = document.getElementById('ninho-lightbox-caption');
+                const source = button.dataset.imageSrc || '';
+                if (!dialog || !image || !caption ||
+                    (!/^assets\/img\/(?:logo|coruja)\.png$/.test(source) &&
+                        !/^assets\/img\/galeria\/[a-z0-9_-]+\.png$/i.test(source))) {
+                    throw new Error('Não foi possível abrir esta imagem do Ninho.');
+                }
+                image.src = source;
+                image.alt = button.dataset.imageAlt || '';
+                caption.textContent = button.dataset.imageCaption || image.alt;
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'close-ninho-lightbox') {
+                const dialog = document.getElementById('ninho-lightbox');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-module-help') {
+                const dialog = document.getElementById('module-help-dialog');
+                if (!dialog) throw new Error('A ajuda deste módulo não está disponível.');
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'close-module-help') {
+                const dialog = document.getElementById('module-help-dialog');
+                if (dialog && dialog.open) dialog.close();
             } else if (action === 'open-entity-schedule') {
                 openEntitySchedule(button.dataset.entityType, button.dataset.entityId);
             } else if (action === 'toggle-data-section') {
@@ -8200,12 +9257,63 @@
             } else if (action === 'toggle-sidebar') {
                 const sidebar = document.getElementById('main-sidebar');
                 const toggle = document.getElementById('sidebar-toggle');
+                if (getMenuMode() === 'hover') {
+                    const activeLink = sidebar.querySelector('.side-link.active') || sidebar.querySelector('.side-link');
+                    if (activeLink) activeLink.focus();
+                    return;
+                }
                 const collapsed = sidebar.hidden;
                 sidebar.hidden = !collapsed;
                 document.querySelector('.app-layout').classList.toggle('sidebar-collapsed', !collapsed);
                 toggle.setAttribute('aria-expanded', String(collapsed));
                 toggle.setAttribute('aria-label', collapsed ? 'Fechar menu' : 'Abrir menu');
                 toggle.innerHTML = '<i class="bi ' + (collapsed ? 'bi-x-lg' : 'bi-list') + '" aria-hidden="true"></i>';
+            } else if (action === 'select-theme') {
+                const color = String(button.dataset.color || '').toUpperCase();
+                if (!/^#[0-9A-F]{6}$/.test(color)) throw new Error('Selecione uma cor válida para o sistema.');
+                localStorage.setItem(THEME_PREFERENCE_KEY, color);
+                applyUserPreferences();
+                render();
+            } else if (action === 'select-menu-mode') {
+                const mode = button.dataset.mode;
+                if (mode !== 'click' && mode !== 'hover') throw new Error('Selecione um modo de menu válido.');
+                localStorage.setItem(MENU_PREFERENCE_KEY, mode);
+                applyUserPreferences();
+                render();
+            } else if (action === 'select-density') {
+                const density = button.dataset.density;
+                if (density !== 'compact' && density !== 'comfortable') throw new Error('Selecione uma densidade válida.');
+                localStorage.setItem(DENSITY_PREFERENCE_KEY, density);
+                applyUserPreferences();
+                render();
+            } else if (action === 'restore-default-settings') {
+                localStorage.removeItem(THEME_PREFERENCE_KEY);
+                localStorage.removeItem(MENU_PREFERENCE_KEY);
+                localStorage.removeItem(DENSITY_PREFERENCE_KEY);
+                applyUserPreferences();
+                render();
+                notify('Padrões restaurados: roxo Owltime, menu por mouse e densidade confortável.', 'success');
+            } else if (action === 'download-repository-data') {
+                const route = button.dataset.route || '';
+                if (!specs[route]) throw new Error('Este módulo não possui planilha para baixar.');
+                downloadCurrentSpreadsheet(route).catch(function (error) {
+                    console.error('Falha ao gerar planilha do Repositório:', error);
+                    notify(error.message || 'Não foi possível gerar a planilha.', 'danger');
+                });
+            } else if (action === 'download-repository-pdf') {
+                const route = button.dataset.route || '';
+                if (!specs[route]) throw new Error('Este módulo não possui dados para exportar.');
+                downloadRepositoryPdf(route).catch(function (error) {
+                    console.error('Falha ao gerar PDF do Repositório:', error);
+                    notify(error.message || 'Não foi possível gerar o PDF.', 'danger');
+                });
+            } else if (action === 'download-repository-template') {
+                const route = button.dataset.route || '';
+                if (!catalogImportSchemas[route]) throw new Error('Este módulo não possui modelo de importação.');
+                downloadCatalogTemplate(route, button.dataset.format).catch(function (error) {
+                    console.error('Falha ao gerar modelo do Repositório:', error);
+                    notify(error.message || 'Não foi possível gerar o modelo.', 'danger');
+                });
             } else if (action === 'export-backup') exportBackup();
             else if (action === 'pick-backup') document.getElementById('backup-file').click();
             else if (action === 'download-catalog-template') {
@@ -8542,7 +9650,21 @@
     }
 
     function handleChange(event) {
-        if (event.target.id === 'injection-discipline' && event.target.form &&
+        if (event.target.dataset.setting === 'theme') {
+            const color = String(event.target.value || '').toUpperCase();
+            if (!/^#[0-9A-F]{6}$/.test(color)) {
+                notify('Selecione uma cor hexadecimal válida.', 'warning');
+                return;
+            }
+            try {
+                localStorage.setItem(THEME_PREFERENCE_KEY, color);
+                applyUserPreferences();
+                render();
+            } catch (error) {
+                console.error('Falha ao salvar a cor do sistema:', error);
+                notify(error.message || 'Não foi possível salvar a cor escolhida.', 'danger');
+            }
+        } else if (event.target.id === 'injection-discipline' && event.target.form &&
             event.target.form.id === 'pre-generation-injection-form') {
             updatePreGenerationInjectionOptions(event.target.form);
         } else if (event.target.classList.contains('record-filter-control')) {
@@ -8556,8 +9678,16 @@
             laboratoryPendingFilters[tab] = event.target.value;
             render();
         } else if (event.target.form && event.target.form.id === 'teacher-substitution-form' &&
-            ['substitution-class', 'substitution-discipline', 'substitution-start'].includes(event.target.id)) {
-            if (event.target.id === 'substitution-class') {
+            ['substitution-scope', 'substitution-class', 'substitution-discipline',
+                'substitution-original-teacher', 'substitution-start'].includes(event.target.id)) {
+            if (event.target.id === 'substitution-scope') {
+                Array.from(event.target.form.elements.namedItem('turma_ids').options).forEach(function (option) {
+                    option.selected = false;
+                });
+                event.target.form.elements.namedItem('disciplina_id').value = '';
+                event.target.form.elements.namedItem('professor_original_id').value = '';
+                event.target.form.elements.namedItem('professor_substituto_id').value = '';
+            } else if (event.target.id === 'substitution-class') {
                 event.target.form.elements.namedItem('disciplina_id').value = '';
                 event.target.form.elements.namedItem('professor_original_id').value = '';
             } else if (event.target.id === 'substitution-discipline') {
@@ -8735,6 +9865,17 @@
     }
 
     function handleInput(event) {
+        if (event.target.id === 'global-search-input') {
+            try {
+                renderGlobalSearchResults(event.target.value);
+            } catch (error) {
+                console.error('Falha ao pesquisar registros:', error);
+                const resultsElement = document.getElementById('global-search-results');
+                if (resultsElement) resultsElement.innerHTML =
+                    '<p class="global-search-empty">Não foi possível pesquisar: ' + h(error.message || 'erro inesperado') + '</p>';
+            }
+            return;
+        }
         if (event.target.id === 'notes-search') {
             const query = event.target.value.trim().toLocaleLowerCase('pt-BR');
             document.querySelectorAll('.note-card').forEach(function (card) {
@@ -8837,8 +9978,22 @@
         window.addEventListener('resize', updateBackToTopVisibility);
         updateBackToTopVisibility();
     }
+    const globalSearchDialog = document.getElementById('global-search-dialog');
+    if (globalSearchDialog) {
+        globalSearchDialog.addEventListener('click', function (event) {
+            if (event.target === globalSearchDialog) globalSearchDialog.close();
+        });
+    }
 
     document.addEventListener('click', handleClick);
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        const dialog = document.querySelector('#ninho-lightbox[open], #ninho-guide-dialog[open]');
+        if (dialog) {
+            event.preventDefault();
+            dialog.close();
+        }
+    });
     document.addEventListener('submit', handleSubmit);
     document.addEventListener('change', handleChange);
     document.addEventListener('input', handleInput);

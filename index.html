@@ -28,6 +28,17 @@
             </a>
         </div>
         <div class="topbar-right">
+            <nav class="topbar-navigation" aria-label="Navegação do sistema">
+                <a class="topbar-nav-link" href="#/configuracoes" data-route="configuracoes">
+                    <i class="bi bi-gear" aria-hidden="true"></i><span>Configurações</span>
+                </a>
+                <a class="topbar-nav-link" href="#/armazenamento" data-route="armazenamento">
+                    <i class="bi bi-hdd-stack" aria-hidden="true"></i><span>Armazenamento</span>
+                </a>
+                <a class="topbar-nav-link" href="#/sobre" data-route="sobre">
+                    <i class="bi bi-info-circle" aria-hidden="true"></i><span>Sobre</span>
+                </a>
+            </nav>
             <span class="active-semester-display" id="active-semester-display">
                 <i class="bi bi-calendar2-week" aria-hidden="true"></i> Semestre ativo
             </span>
@@ -38,6 +49,7 @@
         <aside class="sidebar" id="main-sidebar" aria-label="Navegação principal" hidden>
             <div class="nav-group-label">Visão geral</div>
             <a class="side-link" href="#/dashboard" data-route="dashboard"><i class="bi bi-grid-1x2"></i> Painel</a>
+            <a class="side-link" href="#/ninho" data-route="ninho"><i class="bi bi-house-heart"></i> Ninho</a>
 
             <div class="nav-group-label">Cadastros</div>
             <a class="side-link" href="#/cursos" data-route="cursos"><i class="bi bi-mortarboard"></i> Cursos</a>
@@ -65,10 +77,6 @@
             <a class="side-link" href="#/grade" data-route="grade"><i class="bi bi-calendar3"></i> Grade oficial</a>
             <a class="side-link" href="#/relatorios" data-route="relatorios"><i class="bi bi-bar-chart"></i>
                 Relatórios</a>
-            <div class="nav-group-label">Sistema</div>
-            <a class="side-link" href="#/armazenamento" data-route="armazenamento"><i class="bi bi-hdd-stack"></i>
-                Armazenamento e backup</a>
-            <a class="side-link" href="#/sobre" data-route="sobre"><i class="bi bi-info-circle"></i> Sobre</a>
         </aside>
 
         <main class="main-content">
@@ -82,10 +90,39 @@
         </main>
     </div>
 
-    <button class="back-to-top no-print" id="back-to-top" type="button" aria-label="Voltar ao topo"
-        title="Voltar ao topo" hidden>
-        <i class="bi bi-arrow-up" aria-hidden="true"></i>
-    </button>
+    <div class="floating-actions no-print">
+        <button class="global-search-trigger" type="button" data-action="open-global-search"
+            aria-label="Buscar em todo o Owltime" title="Buscar em todo o Owltime">
+            <img src="assets/img/coruja.png" alt="">
+        </button>
+        <button class="back-to-top" id="back-to-top" type="button" aria-label="Voltar ao topo"
+            title="Voltar ao topo" hidden>
+            <i class="bi bi-arrow-up" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <dialog class="global-search-dialog" id="global-search-dialog" aria-labelledby="global-search-title">
+        <div class="global-search-header">
+            <div class="global-search-brand">
+                <img src="assets/img/coruja.png" alt="">
+                <div>
+                    <h2 id="global-search-title">Busca no Owltime</h2>
+                    <p>Encontre professores, turmas e outros registros do sistema.</p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-action="close-global-search" aria-label="Fechar busca"></button>
+        </div>
+        <label class="global-search-field">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input id="global-search-input" type="search" autocomplete="off"
+                placeholder="Digite o que você procura..." aria-label="Pesquisar em todo o sistema">
+            <kbd>ESC</kbd>
+        </label>
+        <div id="global-search-results" class="global-search-results" role="listbox"
+            aria-label="Resultados da busca" aria-live="polite">
+            <p class="global-search-empty">Digite pelo menos 2 caracteres para pesquisar.</p>
+        </div>
+    </dialog>
 
     <script src="assets/js/qdp_engine.js"></script>
     <script src="assets/js/catalog-storage.js"></script>
