@@ -32,7 +32,7 @@ Grupos, demandas, vínculos e PRDs/disponibilidades são separados por semestre.
 
 ### 🗓️ Planejamento de horários
 
-Configure os horários da escola de segunda a domingo ou duplique os períodos e intervalos de um dia para outros dias. A página de horários apresenta um resumo semanal por dia, duração dos períodos, indicadores e alertas de sobreposição; a tabela também oferece filtros por dia, tipo e faixa de horário. Sábado e domingo são opcionais: só aparecem na grade e participam da geração quando há períodos de aula cadastrados nesses dias. O Painel prioriza as notas recentes e mostra gráficos de distribuição e quantidade de cadastros. As opções dos menus suspensos são ordenadas alfabeticamente, mantendo instruções como “Selecione” no início. Cadastros com quadro de registros têm filtros avançados específicos por tela, combináveis com a busca textual, e um botão para limpar todos os filtros. Em demandas, por exemplo, a tabela mostra turma e curso e permite filtrar por curso, turma, semestre, disciplina e quantidade de aulas; o quadro também exibe a quantidade de registros e a soma das aulas semanais previstas, que acompanha os filtros. Cadastre demandas de uma turma por vez ou aplique a mesma disciplina e quantidade de aulas a várias turmas de uma vez; as disciplinas e as faixas de quantidade de aulas têm cores para facilitar a leitura.
+Configure os horários da escola de segunda a domingo ou duplique os períodos e intervalos de um dia para outros dias. A página de horários apresenta um resumo semanal por dia, duração dos períodos, indicadores e alertas de sobreposição; a tabela também oferece filtros por dia, tipo e faixa de horário. Sábado e domingo são opcionais: só aparecem na grade e participam da geração quando há períodos de aula cadastrados nesses dias. O Painel mostra gráficos de distribuição e quantidade de cadastros. As opções dos menus suspensos são ordenadas alfabeticamente, mantendo instruções como “Selecione” no início. Cadastros com quadro de registros têm filtros avançados específicos por tela, combináveis com a busca textual, e um botão para limpar todos os filtros. Em demandas, por exemplo, a tabela mostra turma e curso e permite filtrar por curso, turma, semestre, disciplina e quantidade de aulas; o quadro também exibe a quantidade de registros e a soma das aulas semanais previstas, que acompanha os filtros. Cadastre demandas de uma turma por vez ou aplique a mesma disciplina e quantidade de aulas a várias turmas de uma vez; as disciplinas e as faixas de quantidade de aulas têm cores para facilitar a leitura.
 
 Em **PRD e disponibilidade**, selecione semestre e curso para consultar os professores vinculados às disciplinas demandadas. Atribua ao professor um **Plano de Trabalho Docente (PRD)** em um dia da semana, destinado a atividades de ensino, pesquisa e extensão; o PRD bloqueia o dia inteiro na geração automática. O painel indica os professores com PRD e quem ainda não tem dia atribuído. Também é possível registrar indisponibilidades para o dia inteiro ou para horários de aula específicos do dia escolhido. PRDs que coincidam com aulas já presentes na grade precisam ser corrigidos antes de salvar.
 
@@ -58,7 +58,7 @@ Na página **Relatórios**, escolha o semestre para consultar indicadores e o ra
 
 ### 📝 Anotações e backups
 
-O bloco de notas organiza tarefas em um quadro de etapas (A fazer, Em andamento e Concluído), com prioridades, prazos, busca e alertas de vencimento. Exporte uma cópia dos seus dados e importe-a quando precisar restaurar suas informações.
+O botão flutuante de notas abre o quadro em qualquer tela, sem sair do que você está fazendo. Cadastre e edite notas com anotação em uma linha, etapa, prioridade, prazo e cor; arraste cartões entre **A fazer**, **Em andamento** e **Concluído**, use a estrela para marcar favoritas e pesquise pelo título, texto ou prioridade. As notas continuam salvas localmente e incluídas nos backups.
 
 ## Comece por aqui
 
@@ -71,9 +71,11 @@ Na lista de professores e turmas, o ícone de calendário ao lado do nome abre a
 
 No cabeçalho, acesse **Configurações**, **Armazenamento** e **Sobre**. No Painel, passe o mouse sobre as fotos da equipe para ver funções e contatos. No cadastro de professores, o botão **WhatsApp** ao lado do telefone abre uma conversa com o número registrado quando ele está em formato válido.
 
-A corujinha flutuante abre a busca global: digite o nome ou outro dado para encontrar professores, turmas e registros dos módulos; selecione um resultado para abrir a tela correspondente e destacar o cadastro. A página **Sobre** resume a atualização 1.5 e informa que a **Atualização 1.6**, com o módulo tutorial, está em desenvolvimento.
+A corujinha flutuante abre a busca global: digite o nome ou outro dado para encontrar professores, turmas e registros dos módulos; selecione um resultado para abrir a tela correspondente e destacar o cadastro. O botão flutuante ao lado abre as notas em qualquer tela. A página **Sobre** resume a atualização 1.5 e informa que a **Atualização 1.6**, com o módulo tutorial, está em desenvolvimento.
 
-O módulo **Ninho**, no menu lateral, reúne downloads em PNG da logo do Owltime e da Owlly, traz o guia rápido interativo da mascote, um card sobre como ela planeja os horários e por que o planejamento importa, e dezesseis wallpapers favoritos para celular e desktop disponíveis em `assets/img/galeria`. Clique nas miniaturas para abrir as imagens em tamanho maior; use **Baixar PNG** para salvar os arquivos.
+O módulo **Ninho**, destacado no cabeçalho superior, reúne downloads em PNG da logo do Owltime e da Owlly, traz o guia rápido interativo da mascote, um card sobre como ela planeja os horários e por que o planejamento importa, e dezesseis wallpapers favoritos para celular e desktop disponíveis em `assets/img/galeria`. Clique nas miniaturas para abrir as imagens em tamanho maior; use **Baixar PNG** para salvar os arquivos.
+
+Em **Configurações**, além de personalizar cor, menu e densidade, escolha o ponteiro Owlly inclinado ou o cursor clássico roxo. Cliques esquerdo e direito mostram uma propagação de cor abaixo da Owlly; os cursores de mão para arrastar também são personalizados. A preferência de cursor vale para todas as telas e fica salva neste navegador.
 
 ## Seus dados
 

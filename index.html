@@ -29,6 +29,9 @@
         </div>
         <div class="topbar-right">
             <nav class="topbar-navigation" aria-label="Navegação do sistema">
+                <a class="topbar-nav-link topbar-nav-link-ninho" href="#/ninho" data-route="ninho">
+                    <i class="bi bi-house-heart" aria-hidden="true"></i><span>Ninho</span>
+                </a>
                 <a class="topbar-nav-link" href="#/configuracoes" data-route="configuracoes">
                     <i class="bi bi-gear" aria-hidden="true"></i><span>Configurações</span>
                 </a>
@@ -49,7 +52,6 @@
         <aside class="sidebar" id="main-sidebar" aria-label="Navegação principal" hidden>
             <div class="nav-group-label">Visão geral</div>
             <a class="side-link" href="#/dashboard" data-route="dashboard"><i class="bi bi-grid-1x2"></i> Painel</a>
-            <a class="side-link" href="#/ninho" data-route="ninho"><i class="bi bi-house-heart"></i> Ninho</a>
 
             <div class="nav-group-label">Cadastros</div>
             <a class="side-link" href="#/cursos" data-route="cursos"><i class="bi bi-mortarboard"></i> Cursos</a>
@@ -91,6 +93,10 @@
     </div>
 
     <div class="floating-actions no-print">
+        <button class="global-notes-trigger" type="button" data-action="open-notes"
+            aria-label="Abrir bloco de notas" title="Bloco de notas">
+            <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+        </button>
         <button class="global-search-trigger" type="button" data-action="open-global-search"
             aria-label="Buscar em todo o Owltime" title="Buscar em todo o Owltime">
             <img src="assets/img/coruja.png" alt="">
@@ -100,6 +106,8 @@
             <i class="bi bi-arrow-up" aria-hidden="true"></i>
         </button>
     </div>
+
+    <dialog class="notes-dialog" id="notes-dialog" aria-label="Bloco de notas"></dialog>
 
     <dialog class="global-search-dialog" id="global-search-dialog" aria-labelledby="global-search-title">
         <div class="global-search-header">

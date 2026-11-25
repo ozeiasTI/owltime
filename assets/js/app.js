@@ -30,6 +30,7 @@
     const THEME_PREFERENCE_KEY = 'owltime_cor_sistema_v1';
     const MENU_PREFERENCE_KEY = 'owltime_menu_modo_v1';
     const DENSITY_PREFERENCE_KEY = 'owltime_densidade_interface_v1';
+    const CURSOR_PREFERENCE_KEY = 'owltime_ponteiro_v1';
     const DEFAULT_THEME_COLOR = '#7E5EF2';
     const THEME_COLORS = [
         { value: '#F24B6A', label: 'Rosa intenso' },
@@ -346,6 +347,10 @@
         return localStorage.getItem(DENSITY_PREFERENCE_KEY) === 'compact' ? 'compact' : 'comfortable';
     }
 
+    function getCursorMode() {
+        return localStorage.getItem(CURSOR_PREFERENCE_KEY) === 'classic' ? 'classic' : 'owl';
+    }
+
     function applyUserPreferences() {
         const color = getThemeColor();
         const channels = [1, 3, 5].map(function (offset) {
@@ -361,6 +366,7 @@
         document.documentElement.style.setProperty('--bs-primary', color);
         document.documentElement.style.setProperty('--bs-primary-rgb',
             [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16)].join(', '));
+        document.documentElement.dataset.cursorMode = getCursorMode();
         const themeMeta = document.querySelector('meta[name="theme-color"]');
         if (themeMeta) themeMeta.content = color;
         const layout = document.querySelector('.app-layout');
@@ -1147,7 +1153,7 @@
             title: 'Bloco de notas', icon: 'bi-journal-text', key: KEYS.notas, module: 'Notas',
             fields: [
                 { name: 'titulo', label: 'Título', required: true },
-                { name: 'texto', label: 'Anotação', type: 'textarea', required: true, rows: 5 },
+                { name: 'texto', label: 'Anotação', type: 'text', required: true },
                 { name: 'status', label: 'Etapa', type: 'select', defaultValue: 'standby', options: [['standby', 'A fazer'], ['andamento', 'Em andamento'], ['concluido', 'Concluído']] },
                 { name: 'prioridade', label: 'Prioridade', type: 'select', defaultValue: 'media', options: [['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta']] },
                 { name: 'prazo', label: 'Prazo', type: 'date' },
@@ -1299,15 +1305,6 @@
             return '<li><span class="development-timeline-date">' + h(milestone[0]) +
                 '</span><strong>' + h(milestone[1]) + '</strong></li>';
         }).join('');
-        const recentNotes = readRecords(KEYS.notas).slice().sort(function (a, b) {
-            return String(b.updated_at || '').localeCompare(String(a.updated_at || ''));
-        }).slice(0, 4);
-        const recentNotesCard = '<section class="card dashboard-recent-notes-card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2"><span>Notas recentes</span><div class="d-flex gap-2">' +
-            renderDataSectionToggle('dashboard-recent-notes', 'Mostrar notas', 'Recolher notas') +
-            '<a class="btn btn-sm btn-outline-primary" href="#/notas">Abrir bloco de notas</a></div></div>' +
-            renderDataSectionContent('dashboard-recent-notes', (recentNotes.length ? '<div class="list-group list-group-flush">' + recentNotes.map(function (note) {
-                return '<div class="list-group-item"><div class="d-flex justify-content-between gap-3"><strong>' + h(note.titulo) + '</strong>' + statusBadge(noteStatusLabel(note.status)) + '</div><div class="small text-muted mt-1">' + h(String(note.texto || '').slice(0, 220)) + '</div></div>';
-            }).join('') + '</div>' : '<div class="empty-state"><i class="bi bi-journal"></i>Nenhuma nota registrada ainda.</div>')) + '</section>';
         const operationalMetrics = [
             { label: 'Aulas alocadas', value: gradeState.assignments.length, hint: 'Na grade atual deste semestre', icon: 'bi-calendar-check', color: '#7E5EF2' },
             { label: 'Aulas pendentes', value: lastGeneration ? (lastGeneration.totalPendentes || 0) : '—', hint: lastGeneration ? 'Na última geração do QDP' : 'Disponível após gerar a grade', icon: 'bi-exclamation-diamond', color: '#F2B84B' },
@@ -1357,7 +1354,6 @@
             dashboardTeamMembers + '</div></div><div class="dashboard-welcome-actions"><a class="btn btn-light" href="#/grade"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>Abrir grade</a>' +
             '</div></div></section>' +
             '<div class="alert local-callout"><i class="bi bi-shield-check me-2"></i>Sem conta e sem servidor: seus registros ficam no armazenamento deste navegador. Faça backups periódicos em Armazenamento e backup.</div>' +
-            recentNotesCard +
             dashboardOperationalSummary +
             '<section class="dashboard-indicators mb-4" aria-label="Indicadores dos cadastros"><div class="row g-3 mb-3">' + stats + '</div>' +
             indicatorCharts + '</section>' +
@@ -1617,7 +1613,7 @@
             ['Relatórios', 'Apresenta indicadores, cobertura das demandas, pendências e distribuição de aulas.'],
             ['Bloco de notas', 'Organiza tarefas e lembretes por etapa, prioridade e prazo.'],
             ['Armazenamento e backup', 'Exibe dados locais e permite exportar ou restaurar cópias de segurança.'],
-            ['Configurações', 'Personaliza cor e comportamento do menu, reúne planilhas e explica os módulos.']
+            ['Configurações', 'Personaliza cor, menu, densidade e ponteiro, reúne planilhas e explica os módulos.']
         ];
         return modules.map(function (module) {
             return '<article class="glossary-card"><i class="bi bi-bookmark-check" aria-hidden="true"></i><div><h3>' +
@@ -1629,6 +1625,7 @@
         const selectedColor = getThemeColor();
         const hoverMenu = getMenuMode() === 'hover';
         const density = getDensityMode();
+        const cursorMode = getCursorMode();
         const swatches = THEME_COLORS.map(function (theme) {
             return '<button class="theme-swatch' + (selectedColor === theme.value ? ' is-selected' : '') +
                 '" type="button" data-action="select-theme" data-color="' + theme.value + '" aria-label="' + h(theme.label) +
@@ -1653,8 +1650,15 @@
             '" type="button" data-action="select-density" data-density="comfortable" aria-pressed="' + String(density === 'comfortable') + '"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span><strong>Confortável</strong><small>Mais espaço para leitura.</small></span></button>' +
             '<button class="density-option' + (density === 'compact' ? ' is-selected' : '') +
             '" type="button" data-action="select-density" data-density="compact" aria-pressed="' + String(density === 'compact') + '"><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i><span><strong>Compacta</strong><small>Mais conteúdo na tela.</small></span></button></div></div>' +
+            '<div class="settings-control"><div><h3>Ponteiro do mouse</h3><p>Escolha o ponteiro usado em todo o Owltime.</p></div>' +
+            '<div class="menu-mode-options"><button class="menu-mode-option cursor-mode-option' + (cursorMode === 'owl' ? ' is-selected' : '') +
+            '" type="button" data-action="select-cursor-mode" data-mode="owl" aria-pressed="' + String(cursorMode === 'owl') + '">' +
+            '<img src="assets/img/coruja-cursor.png" alt=""><span><strong>Owlly</strong><small>Use a corujinha como ponteiro em todas as telas.</small></span></button>' +
+            '<button class="menu-mode-option cursor-mode-option' + (cursorMode === 'classic' ? ' is-selected' : '') +
+            '" type="button" data-action="select-cursor-mode" data-mode="classic" aria-pressed="' + String(cursorMode === 'classic') + '">' +
+            '<i class="bi bi-cursor" aria-hidden="true"></i><span><strong>Clássico</strong><small>Use o ponteiro padrão do dispositivo.</small></span></button></div></div>' +
             '<div class="settings-defaults"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="restore-default-settings"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restaurar padrões</button>' +
-            '<span>Roxo Owltime · menu por mouse · densidade confortável</span></div></section>' +
+            '<span>Roxo Owltime · menu por mouse · densidade confortável · ponteiro Owlly</span></div></section>' +
             '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-archive" aria-hidden="true"></i></span>' +
             '<div><h2>Repositório de planilhas</h2><p>Baixe planilhas preenchidas para consulta/edição ou modelos para importar cadastros.</p></div></div>' +
             '<div class="repository-grid">' + renderRepository() + '</div>' +
@@ -1756,8 +1760,8 @@
             '<i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Adicionar subgrupo</button></div>';
     }
 
-    function renderField(field, value) {
-        const id = 'field-' + field.name;
+    function renderField(field, value, idPrefix, columnClass) {
+        const id = (idPrefix || '') + 'field-' + field.name;
         const current = value == null ? (field.defaultValue == null ? '' : field.defaultValue) : value;
         const required = field.required ? ' required' : '';
         const min = field.min == null ? '' : ' min="' + h(field.min) + '"';
@@ -1799,7 +1803,7 @@
             ? '<div class="form-label" id="' + (field.type === 'sort-groups' ? id + '-label' : id) + '">' +
             h(field.label) + (field.required ? ' *' : '') + '</div>'
             : '<label class="form-label" for="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</label>';
-        return '<div class="' + (field.type === 'sort-groups' ? 'col-12' : 'col-md-6') + '">' + label + control +
+        return '<div class="' + (field.type === 'sort-groups' ? 'col-12' : columnClass || 'col-md-6') + '">' + label + control +
             (field.help ? '<div class="form-text">' + h(field.help) + '</div>' : '') + '</div>';
     }
 
@@ -3029,23 +3033,18 @@
                 '<div class="schedule-week-grid">' + dayCards + '</div></div>') + '</section>';
     }
 
-    function noteStatusLabel(status) {
-        const labels = { standby: 'A fazer', andamento: 'Em andamento', concluido: 'Concluído' };
-        return labels[status] || labels.standby;
-    }
-
     function notePriorityLabel(priority) {
         const labels = { baixa: 'Baixa', media: 'Média', alta: 'Alta' };
         return labels[priority] || labels.media;
     }
 
-    function renderNotes() {
+    function renderNotes(isPopup) {
         const records = readRecords(KEYS.notas).slice().sort(function (a, b) {
             return String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || ''));
         });
         const fields = specs.notas.fields.map(function (field) {
             const value = editing && editing.route === 'notas' ? editing.record[field.name] : undefined;
-            return renderField(field, value);
+            return renderField(field, value, isPopup ? 'notes-popup-' : '', 'col-md-4');
         }).join('');
         const todayDate = new Date();
         const today = todayDate.getFullYear() + '-' + String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
@@ -3070,40 +3069,64 @@
                     '<i class="bi bi-calendar-event"></i>' + h(new Date(note.prazo + 'T00:00:00').toLocaleDateString('pt-BR')) +
                     (note.status !== 'concluido' && note.prazo < today ? ' · vencida' : '') + '</span>'
                     : '';
-                const nextStatus = column[0] === 'standby' ? 'andamento' : column[0] === 'andamento' ? 'concluido' : 'standby';
-                const nextLabel = column[0] === 'concluido' ? 'Reabrir' : column[0] === 'andamento' ? 'Concluir' : 'Iniciar';
-                return '<article class="note-card note-color-' + h(color) + '" data-global-record-id="' + h(note.id) + '" tabindex="-1" data-note-search="' +
+                const favorite = note.favorita === true || note.favorita === 1 || note.favorita === 'true';
+                return '<article class="note-card note-color-' + h(color) + '" data-global-record-id="' + h(note.id) + '" data-note-id="' + h(note.id) +
+                    '" draggable="true" tabindex="-1" data-note-search="' +
                     h([note.titulo, note.texto, notePriorityLabel(priority)].join(' ').toLocaleLowerCase('pt-BR')) + '">' +
                     '<div class="note-card-top"><span class="note-priority note-priority-' + h(priority) + '">' +
                     h(notePriorityLabel(priority)) + '</span><div class="note-card-actions">' +
-                    '<button type="button" class="btn btn-sm btn-light" data-action="edit" data-id="' + h(note.id) + '" aria-label="Editar nota"><i class="bi bi-pencil"></i></button>' +
-                    '<button type="button" class="btn btn-sm btn-light text-danger" data-action="delete" data-id="' + h(note.id) + '" aria-label="Excluir nota"><i class="bi bi-trash"></i></button></div></div>' +
+                    '<button type="button" class="note-star' + (favorite ? ' is-favorite' : '') + '" data-action="note-star" data-id="' + h(note.id) +
+                    '" aria-label="' + (favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos') + '" aria-pressed="' + String(favorite) +
+                    '"><i class="bi ' + (favorite ? 'bi-star-fill' : 'bi-star') + '" aria-hidden="true"></i></button>' +
+                    '<button type="button" class="btn btn-sm btn-light" data-action="edit" data-route="notas" data-id="' + h(note.id) + '" aria-label="Editar nota"><i class="bi bi-pencil"></i></button>' +
+                    '<button type="button" class="btn btn-sm btn-light text-danger" data-action="delete" data-route="notas" data-id="' + h(note.id) + '" aria-label="Excluir nota"><i class="bi bi-trash"></i></button></div></div>' +
                     '<h3>' + h(note.titulo || 'Sem título') + '</h3><p>' + h(note.texto || '') + '</p><div class="note-card-meta">' + due +
-                    '<span>Atualizada ' + h(formatDate(note.updated_at || note.created_at)) + '</span></div>' +
-                    '<button type="button" class="btn btn-sm btn-outline-primary note-next-action" data-action="note-status" data-id="' +
-                    h(note.id) + '" data-status="' + h(nextStatus) + '">' + h(nextLabel) + '</button></article>';
+                    '<span>Atualizada ' + h(formatDate(note.updated_at || note.created_at)) + '</span></div></article>';
             }).join('') : '<div class="notes-column-empty">Nenhuma anotação nesta etapa.</div>';
             return '<section class="notes-column notes-column-' + h(column[0]) + '"><header><h2><i class="bi ' + column[2] +
-                '"></i>' + h(column[1]) + '</h2><span>' + notes.length + '</span></header><div class="notes-column-body">' + cards + '</div></section>';
+                '"></i>' + h(column[1]) + '</h2><span>' + notes.length + '</span></header><div class="notes-column-body" data-note-status="' +
+                h(column[0]) + '">' + cards + '</div></section>';
         }).join('');
         const heading = editing && editing.route === 'notas' ? 'Editar anotação' : 'Nova anotação';
-        return pageHeader('Bloco de notas', 'bi-journal-richtext', 'Organize decisões, tarefas e lembretes em um quadro visual.') +
-            '<section class="notes-summary row g-2 mb-3"><div class="col-6 col-lg-3"><div><span>Total de notas</span><strong>' + records.length +
-            '</strong></div></div><div class="col-6 col-lg-3"><div><span>A fazer</span><strong>' + records.filter(function (note) { return !note.status || note.status === 'standby'; }).length +
-            '</strong></div></div><div class="col-6 col-lg-3"><div><span>Em andamento</span><strong>' + records.filter(function (note) { return note.status === 'andamento'; }).length +
-            '</strong></div></div><div class="col-6 col-lg-3"><div class="' + (overdue ? 'has-overdue' : '') + '"><span>Prazos vencidos</span><strong>' + overdue +
-            '</strong></div></div></section>' +
-            '<section class="card mb-4 notes-editor"><div class="card-header d-flex justify-content-between align-items-center gap-2"><strong>' + heading +
+        const summaryColumn = isPopup ? 'col-6 col-sm-3' : 'col-6 col-lg-3';
+        const noteSummary = '<section class="notes-summary row g-2 mb-3"><div class="' + summaryColumn + '"><div><span>Total de notas</span><strong>' + records.length +
+            '</strong></div></div><div class="' + summaryColumn + '"><div><span>A fazer</span><strong>' + records.filter(function (note) { return !note.status || note.status === 'standby'; }).length +
+            '</strong></div></div><div class="' + summaryColumn + '"><div><span>Em andamento</span><strong>' + records.filter(function (note) { return note.status === 'andamento'; }).length +
+            '</strong></div></div><div class="' + summaryColumn + '"><div class="' + (overdue ? 'has-overdue' : '') + '"><span>Prazos vencidos</span><strong>' + overdue +
+            '</strong></div></div></section>';
+        const editor = '<section class="card mb-4 notes-editor"><div class="card-header d-flex justify-content-between align-items-center gap-2"><strong>' + heading +
             '</strong><span class="small text-muted">As notas ficam salvas neste navegador.</span></div><div class="card-body">' +
-            '<form id="record-form" data-route="notas"><div class="row g-3">' + fields + '</div><div class="d-flex gap-2 mt-3">' +
+            '<form id="' + (isPopup ? 'notes-popup-record-form' : 'record-form') + '" data-route="notas"><div class="row g-2">' + fields + '</div><div class="d-flex gap-2 mt-2">' +
             '<button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (editing && editing.route === 'notas' ? 'Salvar alterações' : 'Adicionar nota') + '</button>' +
             (editing && editing.route === 'notas' ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-edit">Cancelar</button>' : '') +
-            '</div></form></div></section>' +
-            '<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3"><div><h2 class="h5 mb-1">Quadro de anotações</h2>' +
-            '<p class="small text-muted mb-0">Defina prioridade e prazo; avance cada cartão conforme a tarefa evolui.</p></div>' +
-            '<div class="d-flex flex-wrap align-items-end gap-2"><div><label class="form-label mb-1" for="notes-search">Buscar nas anotações</label><input id="notes-search" class="form-control form-control-sm" type="search" placeholder="Título, texto ou prioridade"></div>' +
-            renderDataSectionToggle('notes-board', 'Mostrar anotações', 'Recolher anotações') + '</div></div>' +
-            renderDataSectionContent('notes-board', '<div class="notes-board">' + notesBoard + '</div>');
+            '</div></form></div></section>';
+        const board = '<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3"><div><h2 class="h5 mb-1">Quadro de anotações</h2>' +
+            '<p class="small text-muted mb-0">Defina prioridade e prazo; arraste cada cartão para outra etapa conforme a tarefa evolui.</p></div>' +
+            '<div class="d-flex flex-wrap align-items-end gap-2"><div><label class="form-label mb-1" for="' + (isPopup ? 'notes-popup-search' : 'notes-search') +
+            '">Buscar nas anotações</label><input id="' + (isPopup ? 'notes-popup-search' : 'notes-search') +
+            '" class="form-control form-control-sm" type="search" placeholder="Título, texto ou prioridade"></div>' +
+            (isPopup ? '' : renderDataSectionToggle('notes-board', 'Mostrar anotações', 'Recolher anotações')) + '</div></div>' +
+            (isPopup ? '<div class="notes-board">' + notesBoard + '</div>' :
+                renderDataSectionContent('notes-board', '<div class="notes-board">' + notesBoard + '</div>'));
+        if (!isPopup) {
+            return pageHeader('Bloco de notas', 'bi-journal-richtext', 'Organize decisões, tarefas e lembretes em um quadro visual.') +
+                noteSummary + editor + board;
+        }
+        return '<div class="notes-dialog-header"><div><h2><i class="bi bi-journal-richtext" aria-hidden="true"></i>Bloco de notas</h2>' +
+            '<p>Crie, organize e acompanhe suas notas em qualquer tela.</p></div>' +
+            '<button type="button" class="btn-close" data-action="close-notes" aria-label="Fechar bloco de notas"></button></div>' +
+            noteSummary + editor + board;
+    }
+
+    function refreshNotesDialog() {
+        const dialog = document.getElementById('notes-dialog');
+        if (dialog && dialog.open) dialog.innerHTML = renderNotes(true);
+    }
+
+    function renderNotesAfterMutation() {
+        const dialog = document.getElementById('notes-dialog');
+        if (dialog && dialog.open) refreshNotesDialog();
+        if (!dialog || !dialog.open || window.location.hash.replace(/^#\/?/, '').split('/')[0] === 'notas') render();
     }
 
     function openEntitySchedule(entityType, entityId) {
@@ -8033,7 +8056,8 @@
         if (route === 'notas') record.updated_at = new Date().toISOString();
         saveRecords(spec.key, oldRecord ? records.map(function (row) { return String(row.id) === String(record.id) ? record : row; }) : records.concat(record), spec.module);
         editing = null;
-        render();
+        if (route === 'notas') renderNotesAfterMutation();
+        else render();
         notify('Registro salvo neste navegador.', 'success');
     }
 
@@ -8127,7 +8151,8 @@
             saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'EventosGrade');
         }
         editing = null;
-        render();
+        if (route === 'notas') renderNotesAfterMutation();
+        else render();
         notify('Registro excluído.', 'success');
     }
 
@@ -9158,6 +9183,21 @@
                 renderGlobalSearchResults('');
                 if (!dialog.open) dialog.showModal();
                 input.focus();
+            } else if (action === 'open-notes') {
+                const dialog = document.getElementById('notes-dialog');
+                if (!dialog) throw new Error('O bloco de notas não está disponível.');
+                if (editing && editing.route === 'notas') {
+                    editing = null;
+                    render();
+                }
+                dialog.innerHTML = renderNotes(true);
+                if (!dialog.open) dialog.showModal();
+                const titleInput = dialog.querySelector('#notes-popup-field-titulo');
+                if (titleInput) titleInput.focus();
+            } else if (action === 'close-notes') {
+                const dialog = document.getElementById('notes-dialog');
+                if (dialog && dialog.open) dialog.close();
+                if (editing && editing.route === 'notas') editing = null;
             } else if (action === 'close-global-search') {
                 const dialog = document.getElementById('global-search-dialog');
                 if (dialog && dialog.open) dialog.close();
@@ -9286,13 +9326,20 @@
                 localStorage.setItem(DENSITY_PREFERENCE_KEY, density);
                 applyUserPreferences();
                 render();
+            } else if (action === 'select-cursor-mode') {
+                const mode = button.dataset.mode;
+                if (mode !== 'owl' && mode !== 'classic') throw new Error('Selecione um ponteiro válido.');
+                localStorage.setItem(CURSOR_PREFERENCE_KEY, mode);
+                applyUserPreferences();
+                render();
             } else if (action === 'restore-default-settings') {
                 localStorage.removeItem(THEME_PREFERENCE_KEY);
                 localStorage.removeItem(MENU_PREFERENCE_KEY);
                 localStorage.removeItem(DENSITY_PREFERENCE_KEY);
+                localStorage.removeItem(CURSOR_PREFERENCE_KEY);
                 applyUserPreferences();
                 render();
-                notify('Padrões restaurados: roxo Owltime, menu por mouse e densidade confortável.', 'success');
+                notify('Padrões restaurados: roxo Owltime, menu por mouse, densidade confortável e ponteiro Owlly.', 'success');
             } else if (action === 'download-repository-data') {
                 const route = button.dataset.route || '';
                 if (!specs[route]) throw new Error('Este módulo não possui planilha para baixar.');
@@ -9368,18 +9415,18 @@
                 const search = document.getElementById('table-search');
                 if (search) search.value = '';
                 applyRecordFilters();
-            } else if (action === 'note-status') {
+            } else if (action === 'note-star') {
                 const record = findById(KEYS.notas, button.dataset.id);
                 if (!record) throw new Error('A anotação não foi encontrada.');
+                const isFavorite = record.favorita === true || record.favorita === 1 || record.favorita === 'true';
                 const updated = Object.assign({}, record, {
-                    status: button.dataset.status,
-                    prioridade: record.prioridade || 'media',
+                    favorita: !isFavorite,
                     updated_at: new Date().toISOString()
                 });
                 saveRecords(KEYS.notas, readRecords(KEYS.notas).map(function (note) {
                     return String(note.id) === String(updated.id) ? updated : note;
                 }), specs.notas.module);
-                render();
+                renderNotesAfterMutation();
             } else if (action === 'availability-apply') {
                 const requestedSemester = String(document.getElementById('availability-semester').value || '').trim();
                 if (!/^\d{4}\/[12]$/.test(requestedSemester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
@@ -9392,18 +9439,23 @@
                 render();
                 notify('Consulta de disponibilidade atualizada para ' + availabilitySemester + '.', 'success');
             } else if (action === 'edit') {
-                const route = (window.location.hash.replace(/^#\/?/, '').split('/')[0] || '');
+                const route = button.dataset.route || (window.location.hash.replace(/^#\/?/, '').split('/')[0] || '');
                 const record = findById(specs[route].key, button.dataset.id);
                 if (!record) throw new Error('O registro não foi encontrado.');
                 editing = { route: route, id: record.id, record: record };
-                render();
-                document.getElementById('field-' + specs[route].fields[0].name).focus();
+                if (route === 'notas' && document.getElementById('notes-dialog').open) refreshNotesDialog();
+                else render();
+                const editField = route === 'notas' && document.getElementById('notes-dialog').open
+                    ? document.getElementById('notes-dialog').querySelector('#notes-popup-field-' + specs[route].fields[0].name)
+                    : document.getElementById('field-' + specs[route].fields[0].name);
+                if (editField) editField.focus();
             } else if (action === 'delete') {
-                const route = (window.location.hash.replace(/^#\/?/, '').split('/')[0] || '');
+                const route = button.dataset.route || (window.location.hash.replace(/^#\/?/, '').split('/')[0] || '');
                 deleteRecord(route, button.dataset.id);
             } else if (action === 'cancel-edit') {
                 editing = null;
-                render();
+                if (document.getElementById('notes-dialog').open) refreshNotesDialog();
+                else render();
             } else if (action === 'generate-grade') generateGrade();
             else if (action === 'apply-laboratory') applyLaboratory();
             else if (action === 'cancel-laboratory') cancelLaboratory();
@@ -9608,7 +9660,7 @@
     function handleSubmit(event) {
         const form = event.target;
         try {
-            if (form.id === 'record-form') {
+            if (form.id === 'record-form' || form.id === 'notes-popup-record-form') {
                 event.preventDefault();
                 submitRecord(form);
             } else if (form.id === 'prd-form') {
@@ -9876,12 +9928,13 @@
             }
             return;
         }
-        if (event.target.id === 'notes-search') {
+        if (event.target.id === 'notes-search' || event.target.id === 'notes-popup-search') {
             const query = event.target.value.trim().toLocaleLowerCase('pt-BR');
-            document.querySelectorAll('.note-card').forEach(function (card) {
+            const scope = event.target.closest('.notes-dialog') || document;
+            scope.querySelectorAll('.note-card').forEach(function (card) {
                 card.hidden = query && !card.dataset.noteSearch.includes(query);
             });
-            document.querySelectorAll('.notes-column').forEach(function (column) {
+            scope.querySelectorAll('.notes-column').forEach(function (column) {
                 const cards = Array.from(column.querySelectorAll('.note-card'));
                 const visible = cards.filter(function (card) { return !card.hidden; }).length;
                 const count = column.querySelector('header > span');
@@ -9917,6 +9970,13 @@
     }
 
     function handleDragStart(event) {
+        const note = event.target.closest('.note-card');
+        if (note) {
+            event.dataTransfer.setData('text/plain', note.dataset.noteId || '');
+            event.dataTransfer.effectAllowed = 'move';
+            note.classList.add('is-dragging');
+            return;
+        }
         const assignment = event.target.closest('[data-drag-assignment-id]');
         if (!assignment || window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
         event.dataTransfer.setData('text/plain', assignment.dataset.dragAssignmentId);
@@ -9925,12 +9985,24 @@
     }
 
     function handleDragEnd(event) {
+        const note = event.target.closest('.note-card');
+        if (note) note.classList.remove('is-dragging');
+        document.querySelectorAll('.notes-column-body.is-drop-target').forEach(function (target) {
+            target.classList.remove('is-drop-target');
+        });
         const assignment = event.target.closest('[data-drag-assignment-id]');
         if (assignment) assignment.classList.remove('is-dragging');
         document.querySelectorAll('.grade-drop-target').forEach(function (target) { target.classList.remove('grade-drop-target'); });
     }
 
     function handleDragOver(event) {
+        const noteTarget = event.target.closest('.notes-column-body[data-note-status]');
+        if (noteTarget && Array.from(event.dataTransfer.types).includes('text/plain')) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            noteTarget.classList.add('is-drop-target');
+            return;
+        }
         if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
         const target = event.target.closest('td[data-drop-class-id]');
         if (!target || !Array.from(event.dataTransfer.types).includes('text/plain')) return;
@@ -9940,11 +10012,36 @@
     }
 
     function handleDragLeave(event) {
+        const noteTarget = event.target.closest('.notes-column-body[data-note-status]');
+        if (noteTarget && !noteTarget.contains(event.relatedTarget)) noteTarget.classList.remove('is-drop-target');
         const target = event.target.closest('td[data-drop-class-id]');
         if (target && !target.contains(event.relatedTarget)) target.classList.remove('grade-drop-target');
     }
 
     function handleDrop(event) {
+        const noteTarget = event.target.closest('.notes-column-body[data-note-status]');
+        if (noteTarget) {
+            event.preventDefault();
+            noteTarget.classList.remove('is-drop-target');
+            const noteId = event.dataTransfer.getData('text/plain');
+            const record = findById(KEYS.notas, noteId);
+            const allowedStatuses = ['standby', 'andamento', 'concluido'];
+            const nextStatus = noteTarget.dataset.noteStatus;
+            if (!record || !allowedStatuses.includes(nextStatus)) {
+                notify('Não foi possível mover esta anotação.', 'warning');
+                return;
+            }
+            if ((record.status || 'standby') === nextStatus) return;
+            const updated = Object.assign({}, record, {
+                status: nextStatus,
+                updated_at: new Date().toISOString()
+            });
+            saveRecords(KEYS.notas, readRecords(KEYS.notas).map(function (note) {
+                return String(note.id) === String(updated.id) ? updated : note;
+            }), specs.notas.module);
+            renderNotesAfterMutation();
+            return;
+        }
         if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
         const target = event.target.closest('td[data-drop-class-id]');
         if (!target) return;
@@ -9968,6 +10065,21 @@
         if (backToTopButton) backToTopButton.hidden = window.scrollY < 320;
     }
 
+    function showPointerClickRipple(event) {
+        if ((event.button !== 0 && event.button !== 2) || event.isPrimary === false) return;
+        const ripple = document.createElement('span');
+        ripple.className = 'pointer-click-ripple';
+        ripple.setAttribute('aria-hidden', 'true');
+        const owlCursor = document.documentElement.dataset.cursorMode === 'owl';
+        ripple.style.left = event.clientX + (owlCursor ? 6 : 0) + 'px';
+        ripple.style.top = event.clientY + (owlCursor ? 30 : 0) + 'px';
+        const layer = event.target.closest('dialog[open]') || document.body;
+        layer.appendChild(ripple);
+        ripple.addEventListener('animationend', function () {
+            ripple.remove();
+        }, { once: true });
+    }
+
     if (backToTopButton) {
         backToTopButton.addEventListener('click', function () {
             const prefersReducedMotion = window.matchMedia &&
@@ -9984,7 +10096,17 @@
             if (event.target === globalSearchDialog) globalSearchDialog.close();
         });
     }
+    const notesDialog = document.getElementById('notes-dialog');
+    if (notesDialog) {
+        notesDialog.addEventListener('click', function (event) {
+            if (event.target === notesDialog) notesDialog.close();
+        });
+        notesDialog.addEventListener('close', function () {
+            if (editing && editing.route === 'notas') editing = null;
+        });
+    }
 
+    document.addEventListener('pointerdown', showPointerClickRipple, { passive: true });
     document.addEventListener('click', handleClick);
     document.addEventListener('keydown', function (event) {
         if (event.key !== 'Escape') return;
