@@ -177,7 +177,10 @@
             'A limpeza de dados é permanente; confira o resumo e mantenha um backup antes de excluir informações.'
         ]
     };
-    const PLAIN_TEXT_PREFERENCE_KEYS = ['owltime_fixture_profile_id', KEYS.semestre, DECLARATION_INSTITUTION_KEY];
+    const PLAIN_TEXT_PREFERENCE_KEYS = [
+        'owltime_fixture_profile_id', KEYS.semestre, DECLARATION_INSTITUTION_KEY,
+        THEME_PREFERENCE_KEY, MENU_PREFERENCE_KEY, DENSITY_PREFERENCE_KEY, CURSOR_PREFERENCE_KEY
+    ];
     const view = document.getElementById('view');
     const alertBox = document.getElementById('app-alert');
     let editing = null;
