@@ -1,0 +1,10372 @@
+(function () {
+    'use strict';
+
+    const KEYS = {
+        cursos: 'owltime_cursos_v1',
+        professores: 'owltime_professores_v1',
+        disciplinas: 'owltime_disciplinas_v1',
+        turmas: 'owltime_turmas_v1',
+        grupos: 'owltime_grupos_v1',
+        horarios: 'owltime_horarios_v1',
+        vinculos: 'owltime_professor_disciplina_v1',
+        disponibilidade: 'owltime_professor_disponibilidade_v1',
+        demandas: 'owltime_turma_disciplina_v1',
+        substituicoes: 'owltime_substituicoes_docentes_v1',
+        peculiaridades: 'owltime_peculiaridades_v1',
+        protecoesGrade: 'owltime_protecoes_grade_v1',
+        eventos: 'owltime_eventos_v1',
+        eventosGrade: 'owltime_eventos_grade_v1',
+        sorts: 'owltime_sorts_teste_v1',
+        notas: 'owltime_notas_v1',
+        semestre: 'owltime_semestre_atual'
+    };
+    const WEEKDAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+    const DAYS = WEEKDAYS.concat(['Sábado', 'Domingo']);
+    const PERIODOS = ['Matutino', 'Vespertino', 'Integral', 'Noturno', 'EAD'];
+    const PRE_GENERATION_INJECTION_ORIGIN = 'pre-geracao-manual';
+    const SUBJECT_COLORS = ['#dceeff', '#fce4ec', '#e4f4e8', '#fff0d6', '#ece5ff', '#dff5f3', '#f7e8d8', '#e7eafc', '#f3e5f5', '#e8f0df', '#ffe8dc', '#dcecf2'];
+    const DECLARATION_INSTITUTION_KEY = 'owltime_declaracao_instituicao_v1';
+    const APP_VERSION = '1.6';
+    const THEME_PREFERENCE_KEY = 'owltime_cor_sistema_v1';
+    const MENU_PREFERENCE_KEY = 'owltime_menu_modo_v1';
+    const DENSITY_PREFERENCE_KEY = 'owltime_densidade_interface_v1';
+    const CURSOR_PREFERENCE_KEY = 'owltime_ponteiro_v1';
+    const DEFAULT_THEME_COLOR = '#7E5EF2';
+    const THEME_COLORS = [
+        { value: '#F24B6A', label: 'Rosa intenso' },
+        { value: '#000000', label: 'Preto' },
+        { value: '#F2778D', label: 'Rosa claro' },
+        { value: '#7E5EF2', label: 'Roxo' },
+        { value: '#4ED998', label: 'Verde' },
+        { value: '#F2B84B', label: 'Dourado' },
+        { value: '#1D4E89', label: 'Azul' },
+        { value: '#0F766E', label: 'Verde-azulado' }
+    ];
+    const TEAM_MEMBERS = [
+        {
+            name: 'Ozeias Meira Santos de Souza',
+            department: 'Gabinete',
+            photo: 'assets/img/fotos/ozeias.png',
+            phone: '+55 69 9272-6386',
+            phoneLink: '+556992726386',
+            email: 'ozeeiiaass@gmail.com',
+            role: 'Desenvolvedor FullStack',
+            description: 'Responsável pela construção e evolução do software.',
+            color: 'about-person-developer'
+        },
+        {
+            name: 'Wellington Dias Lima',
+            department: 'Gabinete',
+            photo: 'assets/img/fotos/well.jpg',
+            phone: '+55 69 9307-9832',
+            phoneLink: '+556993079832',
+            email: 'wellington.lima@ifro.edu.br',
+            role: 'Analista de performance',
+            description: 'Avalia a eficiência, a usabilidade e o desempenho da ferramenta.',
+            color: 'about-person-performance'
+        },
+        {
+            name: 'Bianca Luzia Carvalho de Marco',
+            department: 'SUPAE',
+            photo: 'assets/img/fotos/bianca.png',
+            phone: '+55 69 8442-5575',
+            phoneLink: '+556984425575',
+            email: 'biancademarco_smg@hotmail.com',
+            role: 'QA (Quality Assurance)',
+            description: 'Contribui com sua experiência na geração de horários e na carga horária docente, trazendo a realidade do dia a dia escolar para o projeto.',
+            color: 'about-person-practice'
+        }
+    ];
+    // CADASTRO DOS VÍDEOS
+    const CATEGORIAS_TUTORIAIS = [
+        'Módulo 1 - Básico', // [Configurações, Cursos, Discipinas, Professores, Turmas, Grupos, Horários]
+        'Módulo 2 - Intermediário', // [Demandas da turmas, vinculo professor]
+        'Módulo 3 - Avançado', // [PRD e Disponibilidade, Peculiaridades]
+        'Módulo 4 - Parametrização', // [Eventos, Sort]
+
+
+        'Módulo 5 - Grade Oficial', // [Grade Oficial, Laboratório]
+        'Módulo 6 - Relatórios', // [Relatórios]
+        'Módulo 7 - Dúvidas Frequentes'
+
+
+    ];
+    const VIDEOS_TUTORIAIS = [
+
+        // INÍCIO DO BLOCO EM DESTAQUE
+        {
+            title: 'Módulo 1 - Cadastros Básicos',
+            description: 'Nesse video falamos sobre as configurações básicas do sistema, bem como os cadastros de: Cursos, Disciplinas, Professores, Turmas, Grupos e Horários.',
+            categoria: 'Módulo 1 - Básico',
+            link: 'https://youtu.be/lkWfofRqxLc',
+            destaque: true
+        },
+        {
+            title: 'Módulo 2 - Cadastros Intermediários',
+            description: 'Nesse vídeo cadastramos  as demandas de disciplinas para as turmas, bem como realizamos os vinculos de professores com as disciplinas com o semestre, fizemos esse vínculo observando os grupos de turmas.',
+            categoria: 'Módulo 2 - Intermediário',
+            link: 'https://youtu.be/jGHLaqUMdUM',
+            destaque: true
+        },
+        {
+            title: 'Módulo 3 - Cadastros Avançados',
+            description: 'Nesse vídeo cadastramos  os PRD e as Indisponibilidades dos professores, bem como as peculiaridades da instiuição.',
+            categoria: 'Módulo 3 - Avançado',
+            link: 'https://youtu.be/FB07Dj899GU',
+            destaque: true
+        },
+        {
+            title: 'Módulo 4 - Parametrização',
+            description: 'Nesse Vídeo cadastramos os eventos instituicionais e o sort.',
+            categoria: 'Módulo 4 - Parametrização',
+            link: 'https://youtu.be/Y1jnTGlIM-Y',
+            destaque: true
+        },
+        {
+            title: 'Módulo 5 - Grade Oficial',
+            description: 'Nesse Vídeo geramos a Grade Oficial.',
+            categoria: 'Módulo 5 - Grade Oficial',
+            link: 'https://youtu.be/HXNjKR8Jw5g',
+            destaque: true
+        }
+    ];
+    const MODULE_HELP = {
+        'Ninho': [
+            'Encontre e baixe a logo oficial do Owltime e a imagem da Owlly em PNG.',
+            'A galeria reúne os papéis de parede PNG favoritos da Owlly, organizados para desktop e celular. O guia rápido interativo mostra como ampliar e baixar as imagens.',
+            'O card Como a Owlly planeja seus horários resume as etapas da montagem da grade e a importância do planejamento.',
+            'Use o botão Baixar PNG no item desejado para salvar uma cópia no seu dispositivo. Clique em uma miniatura para abrir a imagem em tamanho maior.'
+        ],
+        'Configurações': [
+            'Defina o semestre ativo em Semestre letivo. A seleção é aplicada aos cadastros e à Grade oficial.',
+            'Use Copiar dados de outro semestre para iniciar um período com grupos, demandas, vínculos, disponibilidades e eventos existentes.',
+            'Escolha uma cor pronta ou use o seletor para definir uma cor personalizada. A preferência fica salva neste navegador.',
+            'O menu por mouse fica compacto na lateral e expande ao passar o ponteiro ou navegar por teclado. No modo tradicional, use o botão de menu.',
+            'No Repositório, baixe as planilhas preenchidas em XLSX ou PDF. Os cadastros principais também oferecem modelos XLSX/CSV para importação.',
+            'A densidade compacta reduz espaços entre os elementos; restaure os padrões quando quiser voltar ao roxo e ao menu por mouse.'
+        ],
+        'Bloco de notas': [
+            'Crie notas para registrar tarefas, decisões e lembretes do planejamento.',
+            'Organize cada nota por etapa, prioridade e prazo; arraste os cartões entre as colunas para atualizar o andamento.',
+            'As anotações ficam apenas no armazenamento local deste navegador e entram no backup do sistema.'
+        ],
+        'Cursos': [
+            'Cadastre os cursos oferecidos pela escola. Eles ajudam a organizar disciplinas, turmas e filtros do planejamento.',
+            'Use status ativo/inativo para preservar registros antigos sem disponibilizá-los em novos cadastros.',
+            'Importe um modelo CSV ou XLSX pelo cadastro, ou baixe a planilha preenchida no Repositório.'
+        ],
+        'Professores': [
+            'Cadastre cada docente e informe sua carga semanal, limite diário e área de ingresso quando aplicável.',
+            'Depois, relacione o professor às disciplinas que pode ministrar em Vínculos e registre PRDs ou indisponibilidades.',
+            'Os limites informados ajudam a avaliar a distribuição de aulas; revise os dados antes de gerar a grade.'
+        ],
+        'Disciplinas': [
+            'Mantenha o catálogo de disciplinas e associe cada uma ao curso correspondente.',
+            'Use Demandas para informar quantas aulas semanais cada turma precisa e Vínculos para indicar docentes aptos.',
+            'As cores automáticas ajudam a distinguir disciplinas na grade e nos relatórios.'
+        ],
+        'Turmas': [
+            'Cadastre as turmas com curso, ano letivo, turno e semestre.',
+            'Associe disciplinas e quantidades de aulas em Demandas; use Grupos para reunir turmas quando necessário.',
+            'O semestre da turma identifica a qual período letivo ela pertence; confira-o antes de importar uma planilha.'
+        ],
+        'Grupos de turmas': [
+            'Crie grupos de turmas para organizar classes relacionadas, como turmas do mesmo ano.',
+            'Ao marcar um grupo em um vínculo professor-disciplina, o docente será considerado apenas para as turmas daquele grupo.',
+            'Grupos e vínculos são separados por semestre. Remova associações de vínculos antes de excluir um grupo.'
+        ],
+        'Horários da escola': [
+            'Defina os períodos de aula e intervalos por dia da semana. Os horários de aula alimentam a geração da grade.',
+            'Evite períodos sobrepostos no mesmo dia. Sábado e domingo são opcionais e só entram no planejamento quando configurados.',
+            'Use a duplicação de horários para copiar períodos e intervalos entre dias.'
+        ],
+        'Vínculos professor × disciplina': [
+            'Associe professores às disciplinas que podem lecionar no semestre selecionado.',
+            'Vínculos sem grupo são gerais. Selecione um ou mais grupos para restringir o docente às turmas correspondentes.',
+            'Use o painel de cobertura para localizar disciplinas demandadas sem professor vinculado.'
+        ],
+        'PRD e disponibilidade dos professores': [
+            'Registre PRDs, que bloqueiam o dia inteiro, e indisponibilidades de um dia ou período específico.',
+            'Esses registros são considerados na geração da grade e devem corresponder ao semestre selecionado.',
+            'Confira conflitos com aulas existentes antes de salvar alterações.'
+        ],
+        'Peculiaridades': [
+            'Cadastre tipos de proteção usados pela escola, como DEPAE ou PPS.',
+            'Na Grade oficial, aplique a proteção a um horário específico da turma para impedir alocações incompatíveis.',
+            'As proteções são consideradas na geração e aparecem nas visualizações e exportações da grade.'
+        ],
+        'Eventos': [
+            'Cadastre eventos recorrentes e indique, se necessário, os cursos compatíveis.',
+            'Aplique eventos pela Grade oficial. Eles marcam o mesmo dia e horário nas turmas que atendem aos critérios.',
+            'A aplicação é recusada quando encontra aulas ou proteções conflitantes, evitando bloqueios parciais.'
+        ],
+        'Sort': [
+            'Crie subgrupos de turmas e escolha quantos horários cada uma deve reservar.',
+            'Dentro de cada subgrupo, as turmas recebem horários diferentes; subgrupos distintos podem coincidir.',
+            'Aplique o sort na Grade oficial antes de gerar a grade. As reservas serão respeitadas pelo gerador.'
+        ],
+        'Demandas das turmas': [
+            'Registre a quantidade semanal de aulas de cada disciplina para cada turma.',
+            'As demandas são a referência do gerador e dos relatórios para medir aulas previstas, preenchidas e pendentes.',
+            'Você pode cadastrar uma turma por vez ou aplicar a mesma demanda a várias turmas.'
+        ],
+        'Grade oficial': [
+            'Confira o semestre ativo em Configurações e revise horários, demandas, vínculos e disponibilidades antes de gerar a grade.',
+            'A geração do QDP distribui as aulas respeitando regras da escola; acompanhe o resumo para revisar pendências.',
+            'Injete aulas manualmente ou aplique eventos, proteções e sorts quando necessário. As exportações e o Laboratório ficam nesta tela.',
+            'Em Vigências e substituições, registre mudanças por turma ou a saída do campus. Aulas compatíveis são transferidas, impactos ficam listados e a declaração inclui o histórico.'
+        ],
+        'Laboratório': [
+            'O Laboratório cria uma cópia local isolada da grade oficial para testar mudanças sem afetar os dados publicados.',
+            'Edite, mova ou adicione aulas e confira as pendências. Aplique o rascunho somente quando estiver satisfeito.',
+            'Cancelar e descartar elimina o rascunho. Se a grade oficial mudar durante o teste, a aplicação é bloqueada para evitar sobrescrita.'
+        ],
+        'Relatórios': [
+            'Acompanhe aulas previstas e preenchidas, distribuição por disciplina, carga docente e pendências da geração.',
+            'Use filtros por semestre, curso, turma, disciplina e professor para analisar recortes específicos.',
+            'Exporte os resultados para PDF ou CSV pelos controles da tela.'
+        ],
+        'Armazenamento e backup': [
+            'Os dados são salvos no navegador atual e não são sincronizados entre dispositivos.',
+            'Exporte backups regularmente e guarde-os em local seguro. Importe uma cópia para restaurar os registros.',
+            'A limpeza de dados é permanente; confira o resumo e mantenha um backup antes de excluir informações.'
+        ]
+    };
+    const PLAIN_TEXT_PREFERENCE_KEYS = [
+        'owltime_fixture_profile_id', KEYS.semestre, DECLARATION_INSTITUTION_KEY,
+        THEME_PREFERENCE_KEY, MENU_PREFERENCE_KEY, DENSITY_PREFERENCE_KEY, CURSOR_PREFERENCE_KEY
+    ];
+    const view = document.getElementById('view');
+    const alertBox = document.getElementById('app-alert');
+    let editing = null;
+    let gradeEditingId = null;
+    let gradeFocusDay = '';
+    let gradeFocusSlotId = '';
+    let gradeDisciplineFilter = '';
+    let gradeCourseFilter = '';
+    let gradeTurmaFilter = '';
+    let gradeTeacherFilter = '';
+    let gradeProtectionFilter = '';
+    let gradeCompletionFilter = '';
+    let gradeScheduleCollapsed = false;
+    let workloadPanelCollapsed = false;
+    let gradeLegendCollapsed = true;
+    let manualLegendCollapsed = true;
+    let laboratoryPendingTab = 'professores';
+    let laboratoryPendingCollapsed = false;
+    const laboratoryPendingFilters = { professores: '', turmas: '', disciplinas: '' };
+    let reportTeacherRankingCollapsed = true;
+    let workloadTeacherFilter = '';
+    let workloadCourseFilter = '';
+    let workloadTurmaFilter = '';
+    let workloadDisciplineFilter = '';
+    let workloadStatusFilter = '';
+    const collapsedDataSections = Object.create(null);
+    let teacherSubstitutionEditingId = '';
+    let coverageCourseId = '';
+    let availabilityCourseId = '';
+    let reportSearchQuery = '';
+    let tutorialCategoryFilter = 'Todos';
+    let globalSearchTarget = null;
+    let reportCourseFilter = '';
+    let reportTeacherFilter = '';
+    let reportTurmaFilter = '';
+    let reportDisciplineFilter = '';
+    let reportMinimumLessons = '';
+    let reportMaximumLessons = '';
+    let pdfExportType = 'turma';
+    let pdfExportId = '';
+    let availabilitySemester = getSemester();
+    let catalogImport = null;
+    let spreadsheetImport = null;
+    let semesterMigrationComplete = false;
+    let alertTimer = 0;
+    let generationSummaryTimer = 0;
+    let qdpGenerationInProgress = false;
+    let qdpProcessingTimer = 0;
+    const catalogImportSchemas = {
+        cursos: {
+            filename: 'modelo_cursos.csv',
+            headers: ['ID', 'Nome', 'Sigla', 'Status'],
+            aliases: { id: ['id'], nome: ['nome'], sigla: ['sigla'], status: ['status'] }
+        },
+        professores: {
+            filename: 'modelo_professores.csv',
+            headers: ['ID', 'Nome', 'Disciplina de ingresso', 'Matrícula', 'E-mail', 'Telefone', 'Titulação', 'Carga semanal (aulas)', 'Limite de aulas por dia', 'Status'],
+            aliases: {
+                id: ['id'], nome: ['nome'], disciplina_ingresso: ['disciplina_de_ingresso', 'disciplina_ingresso'],
+                matricula: ['matricula'], email: ['email', 'e_mail'],
+                telefone: ['telefone', 'celular'], titulacao: ['titulacao'],
+                carga_horaria_semanal: ['carga_semanal_aulas', 'carga_horaria_semanal', 'carga_semanal'],
+                limite_aulas_dia: ['limite_de_aulas_por_dia', 'limite_aulas_dia'], status: ['status']
+            }
+        },
+        disciplinas: {
+            filename: 'modelo_disciplinas.csv',
+            headers: ['ID', 'Nome', 'Curso', 'Status'],
+            aliases: { id: ['id'], nome: ['nome'], curso_nome: ['curso', 'curso_nome', 'nome_do_curso'], status: ['status'] }
+        },
+        turmas: {
+            filename: 'modelo_turmas.csv',
+            headers: ['ID', 'Nome da turma', 'Curso', 'Ano letivo', 'Período/turno', 'Semestre letivo', 'Status'],
+            aliases: {
+                id: ['id'],
+                nome: ['nome_da_turma', 'nome', 'turma'],
+                curso_nome: ['curso', 'curso_nome', 'nome_do_curso'],
+                ano_letivo: ['ano_letivo', 'ano'], periodo: ['periodo_turno', 'periodo', 'turno'],
+                semestre_letivo: ['semestre_letivo', 'semestre'], status: ['status']
+            }
+        }
+    };
+
+    function h(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function whatsappNumber(value) {
+        const raw = String(value || '').trim();
+        let digits = raw.replace(/\D/g, '');
+        if (digits.startsWith('00')) digits = digits.slice(2);
+        if (raw.startsWith('+')) return digits.length >= 10 && digits.length <= 15 ? digits : '';
+        if (digits.length === 10 || digits.length === 11) return '55' + digits;
+        if ((digits.length === 12 || digits.length === 13) && digits.startsWith('55')) return digits;
+        return '';
+    }
+
+    function notify(message, type) {
+        const notificationType = ['success', 'warning', 'danger', 'info'].includes(type) ? type : 'info';
+        alertBox.className = 'app-notification app-notification-' + notificationType;
+        document.getElementById('app-alert-message').textContent = message;
+        window.clearTimeout(alertTimer);
+        alertTimer = window.setTimeout(function () {
+            alertBox.classList.add('d-none');
+        }, 10000);
+    }
+
+    function copyTextToClipboard(value) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(value);
+        }
+        const field = document.createElement('textarea');
+        field.value = value;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.opacity = '0';
+        document.body.appendChild(field);
+        let copied = false;
+        try {
+            field.select();
+            copied = document.execCommand('copy');
+        } finally {
+            field.remove();
+        }
+        if (!copied) throw new Error('Não foi possível copiar este valor. Selecione-o e copie manualmente.');
+        return Promise.resolve();
+    }
+
+    function readRecords(key) {
+        if (!window.OwltimeCatalogStorage) throw new Error('O armazenamento local não foi carregado. Atualize a página e tente novamente.');
+        return window.OwltimeCatalogStorage.extractRecords(key);
+    }
+
+    function saveRecords(key, records, moduleName) {
+        if (!window.OwltimeCatalogStorage) throw new Error('O armazenamento local não foi carregado. Atualize a página e tente novamente.');
+        window.OwltimeCatalogStorage.saveRecords(key, records, { module: moduleName || key, semestre: getSemester() });
+    }
+
+    function getSemester() {
+        const stored = localStorage.getItem(KEYS.semestre);
+        if (stored && /^\d{4}\/[12]$/.test(stored)) return stored;
+        const now = new Date();
+        return now.getFullYear() + '/' + (now.getMonth() < 6 ? '1' : '2');
+    }
+
+    function setSemester(value) {
+        const semester = String(value || '').trim();
+        if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+        localStorage.setItem(KEYS.semestre, semester);
+        return semester;
+    }
+
+    function getThemeColor() {
+        const stored = localStorage.getItem(THEME_PREFERENCE_KEY) || DEFAULT_THEME_COLOR;
+        return /^#[0-9A-F]{6}$/i.test(stored) ? stored.toUpperCase() : DEFAULT_THEME_COLOR;
+    }
+
+    function getMenuMode() {
+        return localStorage.getItem(MENU_PREFERENCE_KEY) === 'click' ? 'click' : 'hover';
+    }
+
+    function getDensityMode() {
+        return localStorage.getItem(DENSITY_PREFERENCE_KEY) === 'compact' ? 'compact' : 'comfortable';
+    }
+
+    function getCursorMode() {
+        return localStorage.getItem(CURSOR_PREFERENCE_KEY) === 'classic' ? 'classic' : 'owl';
+    }
+
+    function applyUserPreferences() {
+        const color = getThemeColor();
+        const channels = [1, 3, 5].map(function (offset) {
+            const value = parseInt(color.slice(offset, offset + 2), 16) / 255;
+            return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+        });
+        const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+        const accentText = luminance > 0.23 ? '#172B4D' : '#FFFFFF';
+        document.documentElement.style.setProperty('--owltime-blue', color);
+        document.documentElement.style.setProperty('--owltime-blue-dark', color);
+        document.documentElement.style.setProperty('--owltime-scroll-thumb', color);
+        document.documentElement.style.setProperty('--owltime-on-accent', accentText);
+        document.documentElement.style.setProperty('--bs-primary', color);
+        document.documentElement.style.setProperty('--bs-primary-rgb',
+            [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16)].join(', '));
+        document.documentElement.dataset.cursorMode = getCursorMode();
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.content = color;
+        const layout = document.querySelector('.app-layout');
+        const sidebar = document.getElementById('main-sidebar');
+        const toggle = document.getElementById('sidebar-toggle');
+        const hoverMenu = getMenuMode() === 'hover';
+        const density = getDensityMode();
+        document.body.classList.toggle('app-density-compact', density === 'compact');
+        document.body.classList.toggle('app-density-comfortable', density !== 'compact');
+        const wasHoverMenu = layout && layout.classList.contains('sidebar-hover-mode');
+        if (layout && sidebar) {
+            layout.classList.toggle('sidebar-hover-mode', hoverMenu);
+            if (hoverMenu) {
+                sidebar.hidden = false;
+                layout.classList.add('sidebar-collapsed');
+            } else if (wasHoverMenu) {
+                sidebar.hidden = true;
+                layout.classList.add('sidebar-collapsed');
+            }
+        }
+        if (toggle) toggle.hidden = hoverMenu;
+        if (toggle && hoverMenu) {
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'O menu abre ao passar o mouse');
+            toggle.title = 'O menu abre ao passar o mouse';
+            toggle.innerHTML = '<i class="bi bi-list" aria-hidden="true"></i>';
+        } else if (toggle) {
+            toggle.removeAttribute('title');
+            toggle.setAttribute('aria-expanded', String(Boolean(sidebar && !sidebar.hidden)));
+            toggle.setAttribute('aria-label', sidebar && !sidebar.hidden ? 'Fechar menu' : 'Abrir menu');
+            toggle.innerHTML = '<i class="bi ' + (sidebar && !sidebar.hidden ? 'bi-x-lg' : 'bi-list') + '" aria-hidden="true"></i>';
+        }
+    }
+
+    function previousSemester(value) {
+        const parts = /^(\d{4})\/([12])$/.exec(String(value || ''));
+        if (!parts) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+        const year = Number(parts[1]);
+        if (parts[2] === '1' && year === 0) throw new Error('Não há semestre anterior válido para 0000/1.');
+        return parts[2] === '1' ? String(year - 1).padStart(4, '0') + '/2' : String(year).padStart(4, '0') + '/1';
+    }
+
+    function semesterOf(record) {
+        return String(record && (record.semestre_letivo || record.semestre) || getSemester()).trim();
+    }
+
+    function migrateLegacySemesterRecords() {
+        [
+            [KEYS.grupos, 'Grupos'],
+            [KEYS.demandas, 'TurmaDisciplina'],
+            [KEYS.vinculos, 'ProfessorDisciplina'],
+            [KEYS.disponibilidade, 'ProfessorDisponibilidade'],
+            [KEYS.eventosGrade, 'EventosGrade']
+        ].forEach(function (item) {
+            const records = readRecords(item[0]);
+            let changed = false;
+            records.forEach(function (record) {
+                if (!String(record.semestre_letivo || record.semestre || '').trim()) {
+                    record.semestre_letivo = getSemester();
+                    changed = true;
+                }
+            });
+            if (changed) saveRecords(item[0], records, item[1]);
+        });
+        semesterMigrationComplete = true;
+    }
+
+    function nextId(records) {
+        return records.reduce(function (max, record) {
+            const id = Number.parseInt(record.id, 10);
+            return Number.isFinite(id) && id > max ? id : max;
+        }, 0) + 1;
+    }
+
+    function activeRecords(key, statusValues) {
+        return readRecords(key).filter(function (record) {
+            return !record.status || statusValues.includes(String(record.status).toLowerCase());
+        });
+    }
+
+    function findById(key, id) {
+        return readRecords(key).find(function (record) {
+            return String(record.id) === String(id);
+        });
+    }
+
+    function nameById(key, id, fallback) {
+        const record = findById(key, id);
+        return record ? record.nome : (fallback || '—');
+    }
+
+    function teacherIngressName(teacher) {
+        return teacher.disciplina_ingresso ||
+            (teacher.disciplina_ingresso_id ? nameById(KEYS.disciplinas, teacher.disciplina_ingresso_id, '') : '');
+    }
+
+    function scheduleDays(slots) {
+        return WEEKDAYS.concat(DAYS.slice(5).filter(function (day) {
+            return slots.some(function (slot) {
+                return slot.dia_semana === day && String(slot.tipo || 'Aula').toLowerCase() === 'aula';
+            });
+        }));
+    }
+
+    function statusBadge(value) {
+        const active = ['ativo', 'ativa', 'sim', 'andamento'].includes(String(value || '').toLowerCase());
+        const done = ['concluido', 'concluída', 'concluida'].includes(String(value || '').toLowerCase());
+        return '<span class="badge text-bg-' + (done ? 'success' : active ? 'primary' : 'secondary') + '">' + h(value || '—') + '</span>';
+    }
+
+    function scheduleTypeBadge(value) {
+        const isClass = String(value || 'Aula').toLocaleLowerCase('pt-BR') === 'aula';
+        const label = isClass ? 'Aula' : 'Intervalo';
+        return '<span class="schedule-type-badge schedule-type-' + (isClass ? 'class' : 'break') + '">' + h(label) + '</span>';
+    }
+
+    function demandQuantityBadge(value) {
+        const count = Number(value) || 0;
+        const level = count <= 2 ? 'low' : count <= 4 ? 'medium' : 'high';
+        return '<span class="demand-count demand-count-' + level + '">' + h(count) + ' aula(s)</span>';
+    }
+
+    function semesterMatches(record, semester) {
+        const selectedSemester = typeof semester === 'string' && semester ? semester : getSemester();
+        return semesterOf(record) === selectedSemester;
+    }
+
+    function groupIdentity(group) {
+        return normalizeCatalogValue(group.nome) + '|' +
+            (Array.isArray(group.turma_ids) ? group.turma_ids.map(String).sort().join(',') : '');
+    }
+
+    function getStoredSemesters() {
+        const keys = [
+            KEYS.grupos, KEYS.demandas, KEYS.vinculos, KEYS.disponibilidade,
+            KEYS.eventosGrade, KEYS.protecoesGrade, KEYS.substituicoes
+        ];
+        const semesters = new Set([getSemester()]);
+        keys.forEach(function (key) {
+            readRecords(key).forEach(function (record) {
+                const semester = semesterOf(record);
+                if (/^\d{4}\/[12]$/.test(semester)) semesters.add(semester);
+            });
+        });
+        const simulationPrefix = 'owltime_simulacao_painel_';
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index) || '';
+            const match = new RegExp('^(?:' + simulationPrefix + '|owltime_laboratorio_)(\\d{4}/[12])$').exec(key);
+            if (match) semesters.add(match[1]);
+        }
+        return Array.from(semesters).sort(function (a, b) { return b.localeCompare(a); });
+    }
+
+    function semesterCopyDefinitions(sourceSemester) {
+        return [
+            { key: 'grupos', label: 'Grupos', records: readRecords(KEYS.grupos) },
+            { key: 'demandas', label: 'Demandas', records: readRecords(KEYS.demandas) },
+            { key: 'vinculos', label: 'Vínculos professor-disciplina', records: readRecords(KEYS.vinculos) },
+            { key: 'disponibilidade', label: 'PRD e disponibilidade', records: readRecords(KEYS.disponibilidade) },
+            { key: 'eventos', label: 'Eventos aplicados na grade', records: readRecords(KEYS.eventosGrade) }
+        ].map(function (item) {
+            return {
+                key: item.key,
+                label: item.label,
+                count: item.records.filter(function (record) {
+                    return semesterMatches(record, sourceSemester);
+                }).length
+            };
+        });
+    }
+
+    function renderSemesterTools() {
+        return '<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">' +
+            '<span class="small text-muted">Semestre ativo: <strong>' + h(getSemester()) + '</strong></span>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="open-semester-copy" data-target-semester="' +
+            h(getSemester()) + '"><i class="bi bi-copy me-1"></i>Copiar dados de outro semestre</button></div>';
+    }
+
+    function renderSemesterCopyDialog() {
+        const moduleOptions = [
+            ['grupos', 'Grupos'],
+            ['demandas', 'Demandas'],
+            ['vinculos', 'Vínculos professor-disciplina'],
+            ['disponibilidade', 'PRD e disponibilidade'],
+            ['eventos', 'Eventos aplicados na grade']
+        ];
+        return '<dialog class="assignment-dialog" id="semester-copy-dialog" aria-labelledby="semester-copy-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="semester-copy-title">Copiar dados de outro semestre</h2>' +
+            '<p class="mb-0 text-muted" id="semester-copy-context"></p></div>' +
+            '<button type="button" class="btn-close" data-action="close-semester-copy" aria-label="Fechar"></button></div>' +
+            '<form id="semester-copy-form"><input type="hidden" name="target_semester">' +
+            '<div class="mb-3"><label class="form-label" for="semester-copy-source">Semestre de origem</label>' +
+            '<select class="form-select" id="semester-copy-source" name="source_semester"><option value="">Não copiar dados</option></select></div>' +
+            '<p>Selecione os módulos que deseja replicar. Os registros copiados recebem novos IDs e ficam associados ao semestre de destino, sem alterar a origem.</p>' +
+            '<div class="d-grid gap-2 mb-3">' + moduleOptions.map(function (item) {
+                return '<label class="form-check"><input class="form-check-input semester-copy-module" type="checkbox" name="copy_module" value="' +
+                    item[0] + '"><span class="form-check-label">' + item[1] + ' <small class="text-muted" data-copy-count="' + item[0] + '"></small></span></label>';
+            }).join('') + '</div>' +
+            '<p class="form-text">Ao copiar vínculos que usam grupos, os grupos necessários também serão copiados para manter as associações. As definições de eventos são compartilhadas; aqui são copiadas as aplicações na grade.</p>' +
+            '<div class="d-flex flex-wrap justify-content-end gap-2"><button type="button" class="btn btn-outline-secondary" data-action="close-semester-copy">Cancelar</button>' +
+            '<button type="submit" class="btn btn-primary">Continuar</button></div></form></dialog>';
+    }
+
+    function openSemesterCopyDialog(targetValue) {
+        const target = String(targetValue || '').trim();
+        if (!/^\d{4}\/[12]$/.test(target)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+        const dialog = document.getElementById('semester-copy-dialog');
+        if (!dialog) throw new Error('A janela de cópia de semestre não está disponível nesta tela.');
+        const form = document.getElementById('semester-copy-form');
+        form.elements.namedItem('target_semester').value = target;
+        const sourceSelect = document.getElementById('semester-copy-source');
+        const sourceSemesters = getStoredSemesters().filter(function (semester) { return semester !== target; });
+        sourceSelect.innerHTML = '<option value="">Não copiar dados</option>' + sourceSemesters.map(function (semester) {
+            return '<option value="' + h(semester) + '">' + h(semester) + '</option>';
+        }).join('');
+        const preferredSource = target === '0000/1' ? '' : previousSemester(target);
+        sourceSelect.value = sourceSemesters.includes(preferredSource) ? preferredSource : (sourceSemesters[0] || '');
+        const updateOptions = function () {
+            const source = sourceSelect.value;
+            document.getElementById('semester-copy-context').textContent = source
+                ? 'Origem: ' + source + ' · destino: ' + target + '.'
+                : 'Nenhum dado será copiado · destino: ' + target + '.';
+            const counts = new Map((source ? semesterCopyDefinitions(source) : []).map(function (item) {
+                return [item.key, item.count];
+            }));
+            dialog.querySelectorAll('.semester-copy-module').forEach(function (input) {
+                const count = counts.get(input.value) || 0;
+                input.checked = false;
+                input.disabled = !source || count === 0;
+                const countLabel = dialog.querySelector('[data-copy-count="' + input.value + '"]');
+                countLabel.textContent = count ? '· ' + count + ' registro(s)' : '· nenhum registro na origem';
+            });
+        };
+        if (!form.dataset.sourceChangeBound) {
+            sourceSelect.addEventListener('change', updateOptions);
+            form.dataset.sourceChangeBound = 'true';
+        }
+        updateOptions();
+        if (!dialog.open) dialog.showModal();
+    }
+
+    function copySemesterModules(source, target, selectedModules) {
+        if (!/^\d{4}\/[12]$/.test(source) || source === target) {
+            throw new Error('Selecione um semestre de origem válido e diferente do destino.');
+        }
+        const selected = new Set(selectedModules);
+        const allKeys = [KEYS.grupos, KEYS.demandas, KEYS.vinculos, KEYS.disponibilidade, KEYS.eventosGrade];
+        const lists = {};
+        allKeys.forEach(function (key) { lists[key] = readRecords(key); });
+        lists[KEYS.protecoesGrade] = readRecords(KEYS.protecoesGrade);
+        const result = {};
+        const copied = {};
+        const groupIds = new Map();
+        let nextGroupId = nextId(lists[KEYS.grupos]);
+        let nextDemandId = nextId(lists[KEYS.demandas]);
+        let nextLinkId = nextId(lists[KEYS.vinculos]);
+        let nextAvailabilityId = nextId(lists[KEYS.disponibilidade]);
+        let nextEventId = nextId(lists[KEYS.eventosGrade]);
+        let nextEventGroup = Date.now();
+        const sourceGroups = lists[KEYS.grupos].filter(function (record) {
+            return semesterMatches(record, source);
+        });
+        const sourceLinks = lists[KEYS.vinculos].filter(function (record) {
+            return semesterMatches(record, source);
+        });
+        const neededGroupIds = new Set();
+        if (selected.has('vinculos')) {
+            sourceLinks.forEach(function (link) {
+                (Array.isArray(link.grupo_ids) ? link.grupo_ids : []).forEach(function (id) {
+                    neededGroupIds.add(String(id));
+                });
+            });
+        }
+        const groupsById = new Map(lists[KEYS.grupos].map(function (group) {
+            return [String(group.id), group];
+        }));
+        const missingGroupIds = Array.from(neededGroupIds).filter(function (id) {
+            return !groupsById.has(id);
+        });
+        if (missingGroupIds.length) {
+            throw new Error('Não foi possível copiar os vínculos: há grupo(s) associado(s) que não existem mais. Corrija os grupos do semestre de origem e tente novamente.');
+        }
+        const linkedGroups = Array.from(neededGroupIds).map(function (id) { return groupsById.get(id); });
+        const groupsToCopy = selected.has('grupos')
+            ? sourceGroups.concat(linkedGroups.filter(function (group) {
+                return !sourceGroups.some(function (sourceGroup) { return String(sourceGroup.id) === String(group.id); });
+            }))
+            : linkedGroups;
+        result[KEYS.grupos] = lists[KEYS.grupos].slice();
+        copied.grupos = 0;
+        copied.gruposExistentes = 0;
+        groupsToCopy.forEach(function (group) {
+            let targetGroup = result[KEYS.grupos].find(function (candidate) {
+                return semesterMatches(candidate, target) && groupIdentity(candidate) === groupIdentity(group);
+            });
+            if (!targetGroup) {
+                targetGroup = Object.assign({}, group, { id: nextGroupId++, semestre_letivo: target });
+                result[KEYS.grupos].push(targetGroup);
+                copied.grupos += 1;
+            } else {
+                copied.gruposExistentes += 1;
+            }
+            groupIds.set(String(group.id), targetGroup.id);
+        });
+
+        result[KEYS.demandas] = lists[KEYS.demandas].slice();
+        copied.demandas = 0;
+        if (selected.has('demandas')) {
+            lists[KEYS.demandas].filter(function (record) {
+                return semesterMatches(record, source);
+            }).forEach(function (record) {
+                const exists = result[KEYS.demandas].some(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        String(candidate.turma_id) === String(record.turma_id) &&
+                        String(candidate.disciplina_id) === String(record.disciplina_id);
+                });
+                if (exists) return;
+                result[KEYS.demandas].push(Object.assign({}, record, {
+                    id: nextDemandId++,
+                    semestre_letivo: target
+                }));
+                copied.demandas += 1;
+            });
+        }
+
+        result[KEYS.vinculos] = lists[KEYS.vinculos].slice();
+        copied.vinculos = 0;
+        if (selected.has('vinculos')) {
+            sourceLinks.forEach(function (record) {
+                const exists = result[KEYS.vinculos].some(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        String(candidate.professor_id) === String(record.professor_id) &&
+                        String(candidate.disciplina_id) === String(record.disciplina_id);
+                });
+                if (exists) return;
+                result[KEYS.vinculos].push(Object.assign({}, record, {
+                    id: nextLinkId++,
+                    semestre_letivo: target,
+                    grupo_ids: (Array.isArray(record.grupo_ids) ? record.grupo_ids : []).map(function (id) {
+                        return groupIds.has(String(id)) ? groupIds.get(String(id)) : id;
+                    })
+                }));
+                copied.vinculos += 1;
+            });
+        }
+
+        result[KEYS.disponibilidade] = lists[KEYS.disponibilidade].slice();
+        copied.disponibilidade = 0;
+        if (selected.has('disponibilidade')) {
+            lists[KEYS.disponibilidade].filter(function (record) {
+                return semesterMatches(record, source);
+            }).forEach(function (record) {
+                const exists = result[KEYS.disponibilidade].some(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        String(candidate.professor_id) === String(record.professor_id) &&
+                        String(candidate.dia_semana) === String(record.dia_semana) &&
+                        String(candidate.tipo || 'indisponibilidade') === String(record.tipo || 'indisponibilidade') &&
+                        String(candidate.horario_id || '') === String(record.horario_id || '');
+                });
+                if (exists) return;
+                result[KEYS.disponibilidade].push(Object.assign({}, record, {
+                    id: nextAvailabilityId++,
+                    semestre_letivo: target
+                }));
+                copied.disponibilidade += 1;
+            });
+        }
+
+        result[KEYS.eventosGrade] = lists[KEYS.eventosGrade].slice();
+        copied.eventos = 0;
+        copied.eventosIgnorados = 0;
+        if (selected.has('eventos')) {
+            const sourceEvents = lists[KEYS.eventosGrade].filter(function (record) {
+                return semesterMatches(record, source);
+            });
+            const targetAssignments = (readSimulation(target).assignments || []);
+            const eventGroups = new Map();
+            sourceEvents.forEach(function (record) {
+                const groupKey = record.evento_grade_id
+                    ? String(record.evento_grade_id)
+                    : 'row:' + String(record.id);
+                if (!eventGroups.has(groupKey)) eventGroups.set(groupKey, []);
+                eventGroups.get(groupKey).push(record);
+            });
+            eventGroups.forEach(function (group) {
+                const fullyPresent = group.every(function (record) {
+                    return result[KEYS.eventosGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.evento_id) === String(record.evento_id) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id);
+                    });
+                });
+                if (fullyPresent) return;
+                const conflict = group.some(function (record) {
+                    const hasTargetEvent = result[KEYS.eventosGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id) &&
+                            String(candidate.evento_id) !== String(record.evento_id);
+                    });
+                    const hasProtection = lists[KEYS.protecoesGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id);
+                    });
+                    const hasLesson = targetAssignments.some(function (assignment) {
+                        return String(assignment.turma_id) === String(record.turma_id) &&
+                            String(assignment.dia_semana) === String(record.dia_semana) &&
+                            String(assignment.horario_id) === String(record.horario_id);
+                    });
+                    return hasTargetEvent || hasProtection || hasLesson;
+                });
+                if (conflict) {
+                    copied.eventosIgnorados += group.length;
+                    return;
+                }
+                const matchingEvent = result[KEYS.eventosGrade].find(function (candidate) {
+                    return semesterMatches(candidate, target) &&
+                        group.some(function (record) {
+                            return String(candidate.evento_id) === String(record.evento_id) &&
+                                String(candidate.dia_semana) === String(record.dia_semana) &&
+                                String(candidate.horario_id) === String(record.horario_id);
+                        });
+                });
+                const eventGroupId = matchingEvent && matchingEvent.evento_grade_id
+                    ? matchingEvent.evento_grade_id
+                    : 'evento_copia_' + nextEventGroup++;
+                group.forEach(function (record) {
+                    const exists = result[KEYS.eventosGrade].some(function (candidate) {
+                        return semesterMatches(candidate, target) &&
+                            String(candidate.evento_id) === String(record.evento_id) &&
+                            String(candidate.turma_id) === String(record.turma_id) &&
+                            String(candidate.dia_semana) === String(record.dia_semana) &&
+                            String(candidate.horario_id) === String(record.horario_id);
+                    });
+                    if (exists) return;
+                    result[KEYS.eventosGrade].push(Object.assign({}, record, {
+                        id: nextEventId++,
+                        evento_grade_id: eventGroupId,
+                        semestre_letivo: target
+                    }));
+                    copied.eventos += 1;
+                });
+            });
+        }
+
+        const changedKeys = allKeys.filter(function (key) {
+            return (key === KEYS.grupos && copied.grupos > 0) ||
+                (key === KEYS.demandas && copied.demandas > 0) ||
+                (key === KEYS.vinculos && copied.vinculos > 0) ||
+                (key === KEYS.disponibilidade && copied.disponibilidade > 0) ||
+                (key === KEYS.eventosGrade && copied.eventos > 0);
+        });
+        const previousActiveSemester = localStorage.getItem(KEYS.semestre);
+        const previousValues = {};
+        changedKeys.forEach(function (key) { previousValues[key] = localStorage.getItem(key); });
+        try {
+            setSemester(target);
+            changedKeys.forEach(function (key) {
+                const moduleName = key === KEYS.eventosGrade ? 'EventosGrade' :
+                    key === KEYS.disponibilidade ? 'ProfessorDisponibilidade' :
+                        key === KEYS.vinculos ? 'ProfessorDisciplina' :
+                            key === KEYS.demandas ? 'TurmaDisciplina' : 'Grupos';
+                saveRecords(key, result[key], moduleName);
+            });
+        } catch (error) {
+            Object.keys(previousValues).forEach(function (key) {
+                try {
+                    if (previousValues[key] === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, previousValues[key]);
+                } catch (rollbackError) {
+                    console.error('Falha ao restaurar registros após erro na cópia:', key, rollbackError);
+                }
+            });
+            try {
+                if (previousActiveSemester === null) localStorage.removeItem(KEYS.semestre);
+                else localStorage.setItem(KEYS.semestre, previousActiveSemester);
+            } catch (rollbackError) {
+                console.error('Falha ao restaurar o semestre após erro na cópia:', rollbackError);
+            }
+            throw new Error('Não foi possível concluir a cópia do semestre. ' + error.message);
+        }
+        return copied;
+    }
+
+    function applySemesterSelection(semester) {
+        const selectedSemester = setSemester(semester);
+        availabilitySemester = selectedSemester;
+        editing = null;
+        gradeEditingId = null;
+        teacherSubstitutionEditingId = '';
+        gradeFocusDay = '';
+        gradeFocusSlotId = '';
+        render();
+        return selectedSemester;
+    }
+    function getDemandsForClass(classId, semester) {
+        const relations = readRecords(KEYS.demandas).filter(function (row) {
+            return String(row.turma_id) === String(classId) && semesterMatches(row, semester);
+        });
+        if (relations.length) {
+            return relations.map(function (row) {
+                return {
+                    disciplina_id: Number(row.disciplina_id),
+                    disciplina_nome: nameById(KEYS.disciplinas, row.disciplina_id, row.disciplina_nome),
+                    aulas_semanais: Number(row.aulas_semanais || row.aulas_previstas || 0)
+                };
+            }).filter(function (row) { return row.disciplina_id && row.aulas_semanais > 0; });
+        }
+        const turma = findById(KEYS.turmas, classId);
+        const matrix = turma && Array.isArray(turma.matriz) ? turma.matriz : [];
+        return matrix.map(function (row) {
+            return {
+                disciplina_id: Number(row.disciplina_id),
+                disciplina_nome: nameById(KEYS.disciplinas, row.disciplina_id, row.disciplina_nome),
+                aulas_semanais: Number(row.aulas_semanais || row.aulas_previstas || 0)
+            };
+        }).filter(function (row) { return row.disciplina_id && row.aulas_semanais > 0; });
+    }
+
+    function renderScheduleShortcut(entityType, record, assignments) {
+        const assignmentKey = entityType === 'professor' ? 'professor_id' : 'turma_id';
+        const hasAssignments = assignments.some(function (assignment) {
+            return String(assignment[assignmentKey]) === String(record.id);
+        });
+        if (!hasAssignments) return '';
+        const entityName = entityType === 'professor' ? 'professor' : 'turma';
+        return '<button class="btn btn-sm btn-outline-primary py-0 px-1" type="button" data-action="open-entity-schedule" data-entity-type="' +
+            entityType + '" data-entity-id="' + h(record.id) + '" aria-label="Abrir grade do ' + entityName + ' ' +
+            h(record.nome) + '" title="Abrir grade do ' + entityName + '"><i class="bi bi-calendar-week" aria-hidden="true"></i></button>';
+    }
+
+    const specs = {
+        cursos: {
+            title: 'Cursos', icon: 'bi-mortarboard', key: KEYS.cursos, module: 'Cursos',
+            fields: [
+                { name: 'nome', label: 'Nome', required: true },
+                { name: 'sigla', label: 'Sigla', placeholder: 'Ex.: EF II' },
+                { name: 'status', label: 'Status', type: 'select', defaultValue: 'Ativo', options: [['Ativo', 'Ativo'], ['Inativo', 'Inativo']] }
+            ],
+            columns: [
+                ['nome', 'Nome'], ['sigla', 'Sigla'], ['status', 'Status', statusBadge]
+            ]
+        },
+        professores: {
+            title: 'Professores', icon: 'bi-person-workspace', key: KEYS.professores, module: 'Professores',
+            fields: [
+                { name: 'nome', label: 'Nome', required: true },
+                { name: 'disciplina_ingresso', label: 'Disciplina de ingresso', placeholder: 'Ex.: área ou especialidade do concurso' },
+                { name: 'matricula', label: 'Matrícula' },
+                { name: 'email', label: 'E-mail', type: 'email' },
+                { name: 'telefone', label: 'Telefone', type: 'tel' },
+                { name: 'titulacao', label: 'Titulação' },
+                { name: 'carga_horaria_semanal', label: 'Carga semanal (aulas)', type: 'number', min: 0, defaultValue: 40 },
+                { name: 'limite_aulas_dia', label: 'Limite de aulas por dia', type: 'number', min: 0, defaultValue: 5 },
+                { name: 'status', label: 'Status', type: 'select', defaultValue: 'Ativo', options: [['Ativo', 'Ativo'], ['Inativo', 'Inativo']] }
+            ],
+            columns: [
+                ['nome', 'Professor', function (value, record, assignments) {
+                    const discipline = record.disciplina_ingresso || (record.disciplina_ingresso_id ? nameById(KEYS.disciplinas, record.disciplina_ingresso_id, '') : '');
+                    return '<span class="d-inline-flex align-items-center gap-1"><strong>' + h(value) +
+                        '</strong>' + renderScheduleShortcut('professor', record, assignments) + '</span>' +
+                        (discipline ? '<div class="small text-muted">Ingresso: ' + h(discipline) + '</div>' : '');
+                }],
+                ['matricula', 'Matrícula'],
+                ['telefone', 'Telefone', function (value, record) {
+                    const phone = String(value || '').trim();
+                    if (!phone) return '—';
+                    const destination = whatsappNumber(phone);
+                    return '<span class="teacher-phone-cell"><span>' + h(phone) + '</span>' +
+                        (destination
+                            ? '<a class="btn btn-sm btn-outline-success teacher-whatsapp-link" href="https://wa.me/' + h(destination) +
+                            '" target="_blank" rel="noopener noreferrer" aria-label="Iniciar conversa no WhatsApp com ' + h(record.nome) +
+                            '" title="Conversar pelo WhatsApp"><i class="bi bi-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></a>'
+                            : '') + '</span>';
+                }],
+                ['carga_horaria_semanal', 'Carga/semana'], ['status', 'Status', statusBadge]
+            ]
+        },
+        disciplinas: {
+            title: 'Disciplinas', icon: 'bi-book', key: KEYS.disciplinas, module: 'Disciplinas',
+            fields: [
+                { name: 'nome', label: 'Nome', required: true },
+                { name: 'curso_id', label: 'Curso', type: 'select', optionsFrom: 'cursos', optional: true },
+                { name: 'status', label: 'Status', type: 'select', defaultValue: 'Ativa', options: [['Ativa', 'Ativa'], ['Inativa', 'Inativa']] }
+            ],
+            columns: [
+                ['nome', 'Disciplina'], ['curso_nome', 'Curso'], ['status', 'Status', statusBadge]
+            ]
+        },
+        turmas: {
+            title: 'Turmas', icon: 'bi-people', key: KEYS.turmas, module: 'Turmas',
+            fields: [
+                { name: 'nome', label: 'Nome da turma', required: true },
+                { name: 'curso_id', label: 'Curso', type: 'select', optionsFrom: 'cursos', optional: true },
+                { name: 'ano_letivo', label: 'Ano letivo', type: 'number', min: 2000, defaultValue: new Date().getFullYear() },
+                { name: 'periodo', label: 'Período/turno', type: 'select', optional: true, options: PERIODOS.map(function (period) { return [period, period]; }) },
+                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' },
+                { name: 'status', label: 'Status', type: 'select', defaultValue: 'Ativa', options: [['Ativa', 'Ativa'], ['Inativa', 'Inativa']] }
+            ],
+            columns: [
+                ['nome', 'Turma', function (value, record, assignments) {
+                    return '<span class="d-inline-flex align-items-center gap-1"><strong>' + h(value) +
+                        '</strong>' + renderScheduleShortcut('turma', record, assignments) + '</span>';
+                }],
+                ['curso_nome', 'Curso'],
+                ['periodo', 'Período', function (value) {
+                    if (!value) return '<span class="turno-badge turno-indefinido">Não informado</span>';
+                    const className = 'turno-' + normalizeCatalogValue(value).replace(/[^a-z0-9]+/g, '-');
+                    return '<span class="turno-badge ' + h(className) + '">' + h(value) + '</span>';
+                }],
+                ['semestre_letivo', 'Semestre'], ['status', 'Status', statusBadge]
+            ]
+        },
+        grupos: {
+            title: 'Grupos de turmas', icon: 'bi-collection', key: KEYS.grupos, module: 'Grupos',
+            fields: [
+                { name: 'nome', label: 'Nome do grupo', required: true, placeholder: 'Ex.: Grupo 1º Ano' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva o objetivo deste grupo' },
+                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' },
+                { name: 'turma_ids', label: 'Turmas do grupo', type: 'multi-check', optionsFrom: 'turmas', help: 'Marque todas as turmas que pertencem a este grupo.' }
+            ],
+            columns: [
+                ['nome', 'Grupo'],
+                ['descricao', 'Descrição'],
+                ['semestre_letivo', 'Semestre'],
+                ['turma_ids', 'Turmas', function (ids) {
+                    const names = (Array.isArray(ids) ? ids : []).map(function (id) {
+                        return nameById(KEYS.turmas, id, '');
+                    }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                    return h(names.length ? names.join(', ') : 'Nenhuma turma selecionada');
+                }]
+            ]
+        },
+        horarios: {
+            title: 'Horários da escola', icon: 'bi-clock', key: KEYS.horarios, module: 'Horarios',
+            fields: [
+                { name: 'dia_semana', label: 'Dia da semana', type: 'select', required: true, options: DAYS.map(function (day) { return [day, day]; }) },
+                { name: 'hora_inicio', label: 'Início', type: 'time', required: true },
+                { name: 'hora_fim', label: 'Fim', type: 'time', required: true },
+                { name: 'tipo', label: 'Tipo', type: 'select', defaultValue: 'Aula', options: [['Aula', 'Aula'], ['Intervalo', 'Intervalo']] }
+            ],
+            columns: [
+                ['dia_semana', 'Dia'], ['hora_inicio', 'Início'], ['hora_fim', 'Fim'], ['tipo', 'Tipo', scheduleTypeBadge]
+            ]
+        },
+        vinculos: {
+            title: 'Vínculos professor × disciplina', icon: 'bi-link-45deg', key: KEYS.vinculos, module: 'ProfessorDisciplina',
+            fields: [
+                { name: 'professor_id', label: 'Professor', type: 'select', optionsFrom: 'professores', includeIngress: true, required: true },
+                { name: 'disciplina_id', label: 'Disciplina', type: 'select', optionsFrom: 'disciplinas', required: true },
+                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' },
+                { name: 'grupo_ids', label: 'Grupos de turmas (opcional)', type: 'multi-check', optionsFrom: 'grupos', help: 'Se marcar grupos, este professor será considerado apenas nas turmas deles. Sem grupo, o vínculo continua geral.' },
+                { name: 'prioridade', label: 'Prioridade na grade', type: 'select', defaultValue: 'Não', options: [['Sim', 'Sim'], ['Não', 'Não']], help: 'Prioriza uma dupla consecutiva; no máximo duas aulas, nunca três no mesmo dia.' }
+            ],
+            columns: [
+                ['professor_id', 'Professor', function (id) {
+                    const teacher = findById(KEYS.professores, id);
+                    const name = teacher ? teacher.nome : nameById(KEYS.professores, id);
+                    const ingress = teacher ? teacherIngressName(teacher) : '';
+                    return h(name) + (ingress ? '<small class="d-block text-muted">Ingresso: ' + h(ingress) + '</small>' : '');
+                }],
+                ['disciplina_id', 'Disciplina', function (id) { return h(nameById(KEYS.disciplinas, id)); }],
+                ['semestre_letivo', 'Semestre'],
+                ['grupo_ids', 'Grupos', function (ids) {
+                    const names = (Array.isArray(ids) ? ids : []).map(function (id) {
+                        return nameById(KEYS.grupos, id, '');
+                    }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                    return h(names.length ? names.join(', ') : 'Todos os grupos');
+                }],
+                ['prioridade', 'Prioridade', function (value) { return h(value || 'Não'); }]
+            ]
+        },
+        disponibilidade: {
+            title: 'PRD e disponibilidade dos professores', icon: 'bi-calendar2-check', key: KEYS.disponibilidade, module: 'ProfessorDisponibilidade',
+            fields: [
+                { name: 'professor_id', label: 'Professor', type: 'select', optionsFrom: 'professores', required: true },
+                { name: 'dia_semana', label: 'Dia', type: 'select', required: true, options: DAYS.map(function (day) { return [day, day]; }) },
+                { name: 'tipo', label: 'Registro', type: 'select', defaultValue: 'indisponibilidade', options: [['indisponibilidade', 'Indisponibilidade'], ['prd', 'PRD · dia todo sem aulas']] },
+                { name: 'horario_id', label: 'Horário (vazio = dia todo)', type: 'select', optionsFrom: 'horarios', optional: true },
+                { name: 'disponivel', label: 'Situação', type: 'select', defaultValue: '0', options: [['0', 'Indisponível'], ['1', 'Disponível']] },
+                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' }
+            ],
+            columns: [
+                ['professor_id', 'Professor', function (id) { return h(nameById(KEYS.professores, id)); }],
+                ['dia_semana', 'Dia'],
+                ['tipo', 'Registro', function (value) {
+                    return String(value || '').toLowerCase() === 'prd'
+                        ? '<span class="badge text-bg-primary">PRD · dia todo</span>'
+                        : '<span class="badge text-bg-secondary">Indisponibilidade</span>';
+                }],
+                ['horario_id', 'Horário', function (id, row) {
+                    if (String(row.tipo || '').toLowerCase() === 'prd') return 'Dia todo';
+                    if (!id) return 'Dia todo';
+                    const slot = findById(KEYS.horarios, id);
+                    return h(slot ? slot.hora_inicio + '–' + slot.hora_fim : 'Horário removido');
+                }],
+                ['disponivel', 'Situação', function (value, row) {
+                    if (String(row.tipo || '').toLowerCase() === 'prd') return '<span class="text-primary fw-semibold">Sem aulas</span>';
+                    return statusBadge(Number(value) === 1 ? 'Disponível' : 'Indisponível');
+                }],
+                ['semestre_letivo', 'Semestre']
+            ]
+        },
+        peculiaridades: {
+            title: 'Peculiaridades', icon: 'bi-shield-check', key: KEYS.peculiaridades, module: 'Peculiaridades',
+            fields: [
+                { name: 'nome', label: 'Nome da proteção', required: true, placeholder: 'Ex.: Momento cívico, DEPAE, PPS' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva o uso deste horário protegido' }
+            ],
+            columns: [
+                ['nome', 'Proteção'],
+                ['descricao', 'Descrição', function (value) { return h(value || '—'); }]
+            ]
+        },
+        eventos: {
+            title: 'Eventos', icon: 'bi-calendar-event', key: KEYS.eventos, module: 'Eventos',
+            fields: [
+                { name: 'nome', label: 'Nome do evento', required: true, placeholder: 'Ex.: Momento cívico' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva este evento recorrente da escola' },
+                { name: 'curso_ids', label: 'Cursos onde o evento pode ser aplicado (opcional)', type: 'multi-check', optionsFrom: 'cursos', help: 'Sem curso marcado, o evento poderá ser aplicado em todos os cursos compatíveis com o turno.' }
+            ],
+            columns: [
+                ['nome', 'Evento'],
+                ['descricao', 'Descrição', function (value) { return h(value || '—'); }],
+                ['curso_ids', 'Cursos', function (ids) {
+                    const names = (Array.isArray(ids) ? ids : []).map(function (id) {
+                        return nameById(KEYS.cursos, id, '');
+                    }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                    return h(names.length ? names.join(', ') : 'Todos os cursos');
+                }]
+            ]
+        },
+        sorts: {
+            title: 'Sort', icon: 'bi-shuffle', key: KEYS.sorts, module: 'Sort',
+            fields: [
+                { name: 'nome', label: 'Nome', required: true, placeholder: 'Ex.: Aula vaga' },
+                { name: 'descricao', label: 'Descrição', placeholder: 'Descreva esta reserva de horários' },
+                { name: 'subgrupos', label: 'Subgrupos do sort', type: 'sort-groups', required: true, help: 'Crie subgrupos e selecione as turmas de cada um. Dentro do mesmo subgrupo, cada turma receberá horários diferentes; cada turma deve pertencer a apenas um subgrupo deste sort.' },
+                { name: 'ocorrencias', label: 'Quantidade de horários por turma', type: 'number', min: 1, required: true, defaultValue: 1 },
+                { name: 'consecutivas', label: 'Horários consecutivos?', type: 'select', required: true, defaultValue: '0', options: [['1', 'Sim'], ['0', 'Não']] }
+            ],
+            columns: [
+                ['nome', 'Sort'],
+                ['descricao', 'Descrição', function (value) { return h(value || '—'); }],
+                ['subgrupos', 'Subgrupos', function (groups, record) {
+                    return h(getSortSubgroups(record).map(function (group) {
+                        const classNames = (Array.isArray(group.turma_ids) ? group.turma_ids : []).map(function (id) {
+                            return nameById(KEYS.turmas, id, '');
+                        }).filter(Boolean).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+                        return (group.nome || 'Subgrupo') + ': ' + (classNames.length ? classNames.join(', ') : 'Nenhuma turma');
+                    }).join(' · ') || 'Nenhum subgrupo cadastrado');
+                }],
+                ['ocorrencias', 'Quantidade'],
+                ['consecutivas', 'Consecutivas', function (value) { return Number(value) === 1 || value === true ? 'Sim' : 'Não'; }]
+            ]
+        },
+        demandas: {
+            title: 'Demandas das turmas', icon: 'bi-journal-plus', key: KEYS.demandas, module: 'TurmaDisciplina',
+            fields: [
+                { name: 'turma_id', label: 'Turma', type: 'select', optionsFrom: 'turmas', required: true },
+                { name: 'disciplina_id', label: 'Disciplina', type: 'select', optionsFrom: 'disciplinas', required: true },
+                { name: 'aulas_semanais', label: 'Aulas por semana', type: 'number', min: 1, required: true, defaultValue: 1 },
+                { name: 'semestre_letivo', label: 'Semestre letivo', defaultValue: getSemester(), placeholder: 'AAAA/1' }
+            ],
+            columns: [
+                ['turma_id', 'Turma', function (id) { return h(nameById(KEYS.turmas, id)); }],
+                ['curso_id', 'Curso', function (id, demand) {
+                    const turma = findById(KEYS.turmas, demand.turma_id);
+                    return h(turma && (turma.curso_nome || nameById(KEYS.cursos, turma.curso_id || id, '—')));
+                }],
+                ['disciplina_id', 'Disciplina', function (id) {
+                    return '<span class="demand-discipline"><i style="--demand-color:' + subjectColor(id) + '"></i>' + h(nameById(KEYS.disciplinas, id)) + '</span>';
+                }],
+                ['aulas_semanais', 'Aulas/semana', demandQuantityBadge],
+                ['semestre_letivo', 'Semestre']
+            ]
+        },
+        notas: {
+            title: 'Bloco de notas', icon: 'bi-journal-text', key: KEYS.notas, module: 'Notas',
+            fields: [
+                { name: 'titulo', label: 'Título', required: true },
+                { name: 'texto', label: 'Anotação', type: 'text', required: true },
+                { name: 'status', label: 'Etapa', type: 'select', defaultValue: 'standby', options: [['standby', 'A fazer'], ['andamento', 'Em andamento'], ['concluido', 'Concluído']] },
+                { name: 'prioridade', label: 'Prioridade', type: 'select', defaultValue: 'media', options: [['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta']] },
+                { name: 'prazo', label: 'Prazo', type: 'date' },
+                { name: 'cor', label: 'Cor do cartão', type: 'select', defaultValue: 'azul', options: [['azul', 'Azul'], ['verde', 'Verde'], ['laranja', 'Laranja'], ['rosa', 'Rosa'], ['roxo', 'Roxo'], ['cinza', 'Cinza']] }
+            ],
+            columns: [
+                ['titulo', 'Título'], ['texto', 'Nota', function (value) { return '<div class="notes-text">' + h(value) + '</div>'; }],
+                ['status', 'Coluna', statusBadge], ['updated_at', 'Atualizado', function (value) { return h(formatDate(value)); }]
+            ]
+        }
+    };
+
+    function formatDate(value) {
+        if (!value) return '—';
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('pt-BR');
+    }
+
+    function pageHeader(title, icon, description, actions, printScope, hidePrint) {
+        const hasDedicatedPdf = ['Grade oficial', 'Laboratório', 'Relatórios'].includes(title);
+        const printAction = hasDedicatedPdf || hidePrint ? '' :
+            '<button class="btn btn-sm btn-danger no-print" type="button" data-action="print-module-pdf" data-print-scope="' +
+            h(printScope || 'page') + '" data-print-title="' + h(title) +
+            '" title="Na janela de impressão, escolha Salvar como PDF."><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Gerar PDF</button>';
+        const helpContent = MODULE_HELP[title];
+        const helpAction = helpContent
+            ? '<button class="btn btn-sm btn-outline-primary" type="button" data-action="open-module-help"><i class="bi bi-question-circle me-1" aria-hidden="true"></i>Saiba mais</button>'
+            : '';
+        const actionContent = (actions || printAction) + helpAction;
+        const pageActions = actionContent
+            ? '<div class="page-heading-actions">' + actionContent + '</div>'
+            : '';
+        return '<div class="page-heading"><div><h1><i class="bi ' + h(icon) + ' page-icon"></i>' + h(title) + '</h1>' +
+            (description ? '<p>' + h(description) + '</p>' : '') +
+            '<p class="module-print-meta print-only">Documento gerado pelo Owltime em ' + h(new Date().toLocaleDateString('pt-BR')) + '.</p>' +
+            '</div>' + pageActions + '</div>' + (helpContent ? renderModuleHelpDialog(title, helpContent) : '');
+    }
+
+    function renderModuleHelpDialog(title, paragraphs) {
+        return '<dialog class="module-help-dialog" id="module-help-dialog" aria-labelledby="module-help-title">' +
+            '<div class="module-help-dialog-header"><span class="settings-section-icon"><i class="bi bi-lightbulb" aria-hidden="true"></i></span>' +
+            '<button class="btn-close" type="button" data-action="close-module-help" aria-label="Fechar"></button></div>' +
+            '<h2 id="module-help-title">Como funciona: ' + h(title) + '</h2>' +
+            '<ul>' + paragraphs.map(function (paragraph) { return '<li>' + h(paragraph) + '</li>'; }).join('') + '</ul>' +
+            '<div class="d-flex justify-content-end"><button class="btn btn-primary" type="button" data-action="close-module-help">Entendi</button></div></dialog>';
+    }
+
+    function printModulePdf(scope, title) {
+        const recordsOnly = scope === 'records';
+        const previousTitle = document.title;
+        document.body.classList.toggle('print-records-only', recordsOnly);
+        const cleanup = function () {
+            document.body.classList.remove('print-records-only');
+            document.title = previousTitle;
+        };
+        window.addEventListener('afterprint', cleanup, { once: true });
+        document.title = 'Owltime - ' + String(title || 'Módulo');
+        try {
+            window.print();
+        } catch (error) {
+            window.removeEventListener('afterprint', cleanup);
+            cleanup();
+            throw error;
+        }
+    }
+
+    function renderDataSectionToggle(key, showLabel, hideLabel) {
+        const collapsed = collapsedDataSections[key] === true;
+        const id = 'data-section-' + key;
+        return '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-data-section" data-section="' + h(key) +
+            '" aria-controls="' + h(id) + '" aria-expanded="' + String(!collapsed) + '"><i class="bi ' +
+            (collapsed ? 'bi-chevron-down' : 'bi-chevron-up') + ' me-1" aria-hidden="true"></i>' +
+            (collapsed ? h(showLabel) : h(hideLabel)) + '</button>';
+    }
+
+    function renderDataSectionContent(key, content, className) {
+        const id = 'data-section-' + key;
+        const collapsed = collapsedDataSections[key] === true;
+        const classes = ['data-section-content', className].filter(Boolean).join(' ');
+        return '<div id="' + h(id) + '" class="' + h(classes) + '"' +
+            (collapsed ? ' hidden' : '') + '>' + content + '</div>';
+    }
+
+    function renderDashboard() {
+        const gradeState = readSimulation(getSemester());
+        const lastGeneration = gradeState.lastGenerationReport;
+        const semester = getSemester();
+        const today = declarationDateValue(new Date());
+        const activeSubstitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || semester) === semester &&
+                String(record.data_inicio || '') <= today &&
+                (!record.data_fim || String(record.data_fim) >= today);
+        }).length;
+        const counts = [
+            ['Cursos', KEYS.cursos, 'bi-mortarboard', 'cursos', 'var(--owltime-blue)'],
+            ['Professores', KEYS.professores, 'bi-person-workspace', 'professores', '#4ED998'],
+            ['Disciplinas', KEYS.disciplinas, 'bi-book', 'disciplinas', '#F2778D'],
+            ['Turmas', KEYS.turmas, 'bi-people', 'turmas', '#F2B84B']
+        ];
+        const indicators = counts.map(function (item) {
+            return { label: item[0], total: readRecords(item[1]).length, icon: item[2], color: item[4] };
+        });
+        const totalRecords = indicators.reduce(function (sum, item) { return sum + item.total; }, 0);
+        const maximumCount = Math.max.apply(null, indicators.map(function (item) { return item.total; }).concat([1]));
+        const stats = indicators.map(function (item) {
+            return '<div class="col-6 col-xl-3"><div class="card stat-card"><div class="stat-icon"><i class="bi ' + item.icon + '"></i></div>' +
+                '<div class="stat-number">' + item.total + '</div><div class="stat-label">' + h(item.label) + '</div></div></div>';
+        }).join('');
+        let chartPercent = 0;
+        const chartStops = indicators.filter(function (item) { return item.total > 0; }).map(function (item) {
+            const start = chartPercent;
+            chartPercent += item.total / totalRecords * 100;
+            return item.color + ' ' + start.toFixed(2) + '% ' + chartPercent.toFixed(2) + '%';
+        });
+        const donutBackground = chartStops.length
+            ? 'conic-gradient(' + chartStops.join(', ') + ')'
+            : 'conic-gradient(var(--owltime-border) 0 100%)';
+        const chartLegend = indicators.map(function (item) {
+            const share = totalRecords ? Math.round(item.total / totalRecords * 100) : 0;
+            return '<li><i style="--dashboard-chart-color:' + item.color + '"></i><span>' + h(item.label) +
+                '</span><strong>' + item.total + ' <small>' + share + '%</small></strong></li>';
+        }).join('');
+        const chartBars = indicators.map(function (item) {
+            const width = Math.round(item.total / maximumCount * 100);
+            return '<div class="dashboard-chart-bar-row"><span>' + h(item.label) + '</span><div class="dashboard-chart-bar-track">' +
+                '<i style="width:' + width + '%;--dashboard-chart-color:' + item.color + '"></i></div><strong>' + item.total + '</strong></div>';
+        }).join('');
+        const indicatorCharts = '<div class="row g-3 mb-4 dashboard-indicators-charts">' +
+            '<div class="col-lg-5"><section class="card dashboard-chart-card h-100"><div class="card-header"><i class="bi bi-pie-chart me-2" aria-hidden="true"></i>Distribuição dos cadastros</div>' +
+            '<div class="card-body"><div class="dashboard-donut-layout"><div class="dashboard-donut" role="img" aria-label="' +
+            h('Distribuição de ' + totalRecords + ' registros cadastrados') + '" style="background:' + donutBackground +
+            '"><div><strong>' + totalRecords + '</strong><span>registros</span></div></div><ul class="dashboard-chart-legend">' +
+            chartLegend + '</ul></div></div></section></div>' +
+            '<div class="col-lg-7"><section class="card dashboard-chart-card h-100"><div class="card-header"><i class="bi bi-bar-chart-line me-2" aria-hidden="true"></i>Cadastros por módulo</div>' +
+            '<div class="card-body"><div class="dashboard-chart-bars" role="img" aria-label="Quantidade de cadastros por módulo">' +
+            chartBars + '</div></div></section></div></div>';
+        const developmentMilestones = [
+            ['Novembro de 2025', 'Idealização do projeto'],
+            ['Janeiro de 2026', 'Projeção de Módulos'],
+            ['Fevereiro de 2026', 'Escolha de Tecnologias'],
+            ['Março de 2026', 'Definição de Hospedagem e Armazenamento'],
+            ['Março a novembro de 2026', 'Construção base do QDP'],
+            ['Maio de 2026', 'Construção de Classes de Relatórios'],
+            ['Novembro de 2026', 'Repaginação com novos módulos'],
+            ['Novembro de 2026', 'Atualização 1.5 · Recursos Visuais e Aquisição da Owlly'],
+            ['Novembro de 2026', 'Atualização 1.6 · Central de tutoriais e vídeos em destaque'],
+            ['Novembro de 2026', 'Estilização final'],
+            ['Novembro de 2026', 'Submissão de pedido de certificação INPI']
+        ].map(function (milestone) {
+            return '<li><span class="development-timeline-date">' + h(milestone[0]) +
+                '</span><strong>' + h(milestone[1]) + '</strong></li>';
+        }).join('');
+        const operationalMetrics = [
+            { label: 'Aulas alocadas', value: gradeState.assignments.length, hint: 'Na grade atual deste semestre', icon: 'bi-calendar-check', color: '#7E5EF2' },
+            { label: 'Aulas pendentes', value: lastGeneration ? (lastGeneration.totalPendentes || 0) : '—', hint: lastGeneration ? 'Na última geração do QDP' : 'Disponível após gerar a grade', icon: 'bi-exclamation-diamond', color: '#F2B84B' },
+            { label: 'Substituições vigentes', value: activeSubstitutions, hint: 'Ativas hoje neste semestre', icon: 'bi-arrow-left-right', color: '#F2778D' },
+            { label: 'Professores ativos', value: activeRecords(KEYS.professores, ['ativo']).length, hint: 'Disponíveis nos cadastros', icon: 'bi-person-check', color: '#4ED998' }
+        ];
+        const dashboardOperationalSummary = '<section class="dashboard-operational-card card mb-4" aria-label="Acompanhamento do semestre">' +
+            '<div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap"><strong><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Acompanhamento do semestre</strong>' +
+            '<span class="small text-muted">Indicadores atualizados com os dados locais</span></div><div class="card-body"><div class="dashboard-operational-grid">' +
+            operationalMetrics.map(function (item) {
+                return '<article class="dashboard-operational-metric" style="--dashboard-metric-color:' + item.color + '">' +
+                    '<span class="dashboard-operational-icon"><i class="bi ' + item.icon + '" aria-hidden="true"></i></span>' +
+                    '<div class="dashboard-operational-value">' + h(item.value) + '</div><div class="dashboard-operational-label">' + h(item.label) +
+                    '</div><div class="dashboard-operational-hint">' + h(item.hint) + '</div></article>';
+            }).join('') + '</div></div></section>';
+        const lastGenerationCard = lastGeneration
+            ? '<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Última grade gerada pelo QDP</strong><a class="btn btn-sm btn-outline-primary" href="#/grade">Abrir grade oficial</a></div>' +
+            '<div class="card-body"><div class="row g-3"><div class="col-sm-6 col-lg-3"><span class="text-muted small">Gerada em</span><div class="fw-semibold">' + h(formatDate(lastGeneration.geradoEm)) + '</div></div>' +
+            '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas previstas</span><div class="fw-semibold">' + h(lastGeneration.totalPrevistas || 0) + '</div></div>' +
+            '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Aulas alocadas</span><div class="fw-semibold">' + h(lastGeneration.totalAtendidas || 0) + '</div></div>' +
+            '<div class="col-sm-6 col-lg-3"><span class="text-muted small">Pendências</span><div class="fw-semibold">' + h(lastGeneration.totalPendentes || 0) + ' · ' + h(lastGeneration.percentual || 0) + '% atendidas</div></div></div>' +
+            (gradeState.assignments.length ? '<div class="small text-muted mt-3">A grade atual contém ' + gradeState.assignments.length + ' aula(s).' +
+                (gradeState.laboratoryAdjustments && gradeState.laboratoryAdjustments.length
+                    ? ' Último ajuste no Laboratório: ' + h(formatDate(gradeState.laboratoryAdjustments[gradeState.laboratoryAdjustments.length - 1].aplicadoEm)) + '.'
+                    : '') + '</div>' : '') + '</div></div>'
+            : '<div class="alert alert-info mb-4">Ainda não há uma grade QDP gerada para este semestre. <a href="#/grade" class="alert-link">Acesse a Grade oficial</a> para gerar.</div>';
+        const dashboardTeamMembers = TEAM_MEMBERS.map(function (person) {
+            return '<div class="dashboard-team-member" tabindex="0" role="group" aria-label="Contato de ' + h(person.name) + '">' +
+                '<img src="' + h(person.photo) + '" alt="Foto de ' + h(person.name) + '" loading="lazy">' +
+                '<div class="dashboard-team-tooltip"><strong>' + h(person.name) + '</strong>' +
+                '<span class="dashboard-team-role">' + h(person.role) + '</span>' +
+                '<span class="dashboard-team-department">Assistente de Administração · ' + h(person.department) + '</span>' +
+                '<p>' + h(person.description) + '</p>' +
+                '<a href="tel:' + h(person.phoneLink) + '"><i class="bi bi-telephone" aria-hidden="true"></i>' + h(person.phone) + '</a>' +
+                '<a href="mailto:' + h(person.email) + '"><i class="bi bi-envelope" aria-hidden="true"></i>' + h(person.email) + '</a></div></div>';
+        }).join('');
+        return '<section class="dashboard-welcome"><div class="dashboard-welcome-brand"><div class="dashboard-welcome-brand-art">' +
+            '<img class="dashboard-welcome-logo" src="assets/img/logo.png" alt="Logo do Owltime">' +
+            '<figure class="dashboard-welcome-mascot"><img src="assets/img/coruja.png" alt="Owlly, mascote coruja do Owltime">' +
+            '<figcaption>Owlly</figcaption></figure>' +
+            '</div>' +
+            '<div class="dashboard-welcome-copy"><span class="dashboard-eyebrow"><i class="bi bi-stars me-1" aria-hidden="true"></i>Gestão escolar em um só lugar</span>' +
+            '<h1>Olá, seja bem-vindo ao Owltime</h1><p>Organize os dados da escola, planeje as aulas e acompanhe a montagem da grade.</p>' +
+            '<div class="dashboard-welcome-meta"><span class="dashboard-semester"><i class="bi bi-calendar2-week me-1" aria-hidden="true"></i>Semestre ativo · ' + h(getSemester()) + '</span>' +
+            '<span class="dashboard-version-pill"><i class="bi bi-stars me-1" aria-hidden="true"></i>Versão ' + h(APP_VERSION) + '</span></div></div>' +
+            '</div><div class="dashboard-welcome-side"><div class="dashboard-team"><span>Conheça nossa equipe · passe o mouse</span><div class="dashboard-team-photos">' +
+            dashboardTeamMembers + '</div></div><div class="dashboard-welcome-actions"><a class="btn btn-light" href="#/grade"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>Abrir grade</a>' +
+            '</div></div></section>' +
+            '<div class="alert local-callout"><i class="bi bi-shield-check me-2"></i>Sem conta e sem servidor: seus registros ficam no armazenamento deste navegador. Faça backups periódicos em Armazenamento e backup.</div>' +
+            dashboardOperationalSummary +
+            '<section class="dashboard-indicators mb-4" aria-label="Indicadores dos cadastros"><div class="row g-3 mb-3">' + stats + '</div>' +
+            indicatorCharts + '</section>' +
+            lastGenerationCard +
+            '<section class="card development-timeline-card mb-4"><div class="card-header d-flex align-items-center gap-2">' +
+            '<i class="bi bi-clock-history" aria-hidden="true"></i><strong>Linha do tempo do desenvolvimento</strong></div>' +
+            '<div class="card-body"><ol class="development-timeline">' + developmentMilestones + '</ol></div></section>';
+    }
+
+    function renderRepository() {
+        return Object.keys(specs).map(function (route) {
+            const spec = specs[route];
+            const total = getRepositoryRecords(route).length;
+            const templateActions = catalogImportSchemas[route]
+                ? '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="download-repository-template" data-route="' + h(route) + '" data-format="xlsx"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Modelo XLSX</button>' +
+                '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="download-repository-template" data-route="' + h(route) + '" data-format="csv"><i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Modelo CSV</button>'
+                : '';
+            return '<article class="repository-card"><div class="repository-card-icon"><i class="bi ' + h(spec.icon) + '" aria-hidden="true"></i></div>' +
+                '<div class="repository-card-content"><h3>' + h(spec.title) + '</h3><p>' + total + ' registro(s) · XLSX ou PDF preenchido.</p>' +
+                '<div class="repository-card-actions"><button class="btn btn-sm btn-primary" type="button" data-action="download-repository-data" data-route="' + h(route) + '">' +
+                '<i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>XLSX</button>' +
+                '<button class="btn btn-sm btn-outline-primary" type="button" data-action="download-repository-pdf" data-route="' + h(route) + '">' +
+                '<i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF</button>' + templateActions + '</div></div></article>';
+        }).join('');
+    }
+
+    function renderNinho() {
+        const brandAssets = [
+            {
+                title: 'Logo do Owltime',
+                src: 'assets/img/logo.png',
+                filename: 'owltime-logo.png',
+                description: 'A identidade visual oficial do sistema em PNG.',
+                icon: 'bi-calendar-heart'
+            },
+            {
+                title: 'Owlly',
+                src: 'assets/img/coruja.png',
+                filename: 'owlly.png',
+                description: 'A coruja mascote do Owltime, pronta para salvar e compartilhar.',
+                icon: 'bi-stars'
+            }
+        ];
+        const planningSteps = [
+            { title: 'Mapeia as aulas', description: 'Registra turmas, disciplinas e quantas aulas cada turma precisa por semana.' },
+            { title: 'Conhece os professores', description: 'Confere vínculos, PRDs, disponibilidades e limites de carga horária.' },
+            { title: 'Considera as regras', description: 'Leva em conta grupos, peculiaridades, eventos e horários definidos pela escola.' },
+            { title: 'Monta e revisa a grade', description: 'Gera uma proposta, verifica pendências e ajusta conflitos antes de confirmar.' }
+        ];
+        const planningStepCards = planningSteps.map(function (step, index) {
+            return '<li><span class="ninho-planning-step-number">' + String(index + 1).padStart(2, '0') +
+                '</span><div><h3>' + h(step.title) + '</h3><p>' + h(step.description) + '</p></div></li>';
+        }).join('');
+        const wallpapers = [
+            { file: 'owltime_wallpaper-1.png', title: 'Owlly entre as estrelas', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_weekend.png', title: 'Fim de semana', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_study.png', title: 'Hora de estudar', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_funny.png', title: 'Owlly divertida', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_phone_calendar.png', title: 'Calendário Owltime', device: 'Celular', size: '1584 × 2816 px', portrait: true },
+            { file: 'owltime_desktop_night.png', title: 'Noite Owltime', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_funny.png', title: 'Owlly divertida', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_focus.png', title: 'Foco nos estudos', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_calendar.png', title: 'Calendário Owltime', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owltime_desktop_reports.png', title: 'Painel de relatórios', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'formado.png', title: 'Owlly formada', device: 'Desktop', size: '2752 × 1536 px', portrait: false },
+            { file: 'owlly_higiene.png', title: 'Hora de cuidar', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_estudar.png', title: 'Hora de aprender', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_cafe.png', title: 'Hora de se alimentar', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_arrumar.png', title: 'Hora de se preparar', device: 'Desktop', size: '2816 × 1584 px', portrait: false },
+            { file: 'owlly_acordar.png', title: 'Hora de acordar', device: 'Desktop', size: '2816 × 1584 px', portrait: false }
+        ];
+        const brandCards = brandAssets.map(function (asset) {
+            return '<article class="ninho-brand-card"><button class="ninho-brand-preview" type="button" data-action="open-ninho-image" data-image-src="' +
+                h(asset.src) + '" data-image-alt="' + h(asset.title) + '" data-image-caption="' + h(asset.title) +
+                '" aria-label="Abrir imagem ampliada: ' + h(asset.title) + '"><img src="' + h(asset.src) +
+                '" alt="" loading="lazy"><span class="ninho-zoom-hint"><i class="bi bi-zoom-in" aria-hidden="true"></i>Ampliar</span></button>' +
+                '<div class="ninho-brand-copy"><span class="ninho-card-kicker">' +
+                h(asset.title) + '</span><h3>' + h(asset.title) + '</h3><p>' + h(asset.description) +
+                '</p><a class="btn btn-primary" href="' + h(asset.src) + '" download="' + h(asset.filename) +
+                '"><i class="bi bi-download me-1" aria-hidden="true"></i>Baixar PNG</a></div></article>';
+        }).join('');
+        const wallpaperCards = wallpapers.map(function (wallpaper) {
+            const src = 'assets/img/galeria/' + wallpaper.file;
+            const previewClass = wallpaper.portrait ? 'ninho-wallpaper-preview is-portrait' : 'ninho-wallpaper-preview';
+            const imageAlt = wallpaper.title + ' para ' + wallpaper.device.toLowerCase();
+            return '<article class="ninho-wallpaper-card"><button class="' + previewClass + '" type="button" data-action="open-ninho-image" data-image-src="' +
+                h(src) + '" data-image-alt="' + h(imageAlt) + '" data-image-caption="' + h(wallpaper.title) +
+                '" aria-label="Abrir imagem ampliada: ' + h(wallpaper.title) + '"><img src="' + h(src) +
+                '" alt="" loading="lazy"><span class="ninho-wallpaper-device"><i class="bi ' +
+                (wallpaper.portrait ? 'bi-phone' : 'bi-display') + '" aria-hidden="true"></i>' + h(wallpaper.device) +
+                '</span><span class="ninho-zoom-hint"><i class="bi bi-zoom-in" aria-hidden="true"></i>Ampliar</span></button>' +
+                '<div class="ninho-wallpaper-copy"><div><h3>' + h(wallpaper.title) +
+                '</h3><span>' + h(wallpaper.size) + '</span></div><a class="btn btn-sm btn-outline-primary" href="' +
+                h(src) + '" download="' + h(wallpaper.file) + '" aria-label="Baixar ' + h(wallpaper.title) + ' em PNG">' +
+                '<i class="bi bi-download" aria-hidden="true"></i><span>Baixar PNG</span></a></div></article>';
+        }).join('');
+        return pageHeader('Ninho', 'bi-house-heart', 'Um espaço para encontrar e baixar a identidade visual e os papéis de parede do Owltime.', '', 'page', true) +
+            '<section class="ninho-page"><section class="ninho-hero"><div class="ninho-hero-copy">' +
+            '<span class="ninho-eyebrow"><i class="bi bi-stars me-1" aria-hidden="true"></i>O cantinho da Owlly</span>' +
+            '<h2>Bem-vindo ao Ninho</h2><p>Leve um pedacinho do Owltime com você. Baixe a logo, conheça a Owlly e escolha um papel de parede para seu celular ou computador.</p>' +
+            '<div class="ninho-hero-tags"><span><i class="bi bi-image me-1" aria-hidden="true"></i>PNG em alta resolução</span>' +
+            '<span><i class="bi bi-phone me-1" aria-hidden="true"></i>Celular e desktop</span></div>' +
+            '<button type="button" class="btn btn-primary ninho-guide-trigger" data-action="open-ninho-guide">' +
+            '<i class="bi bi-stars me-1" aria-hidden="true"></i>Guia rápido interativo da Owlly</button></div>' +
+            '<div class="ninho-hero-art"><div class="ninho-hero-orbit" aria-hidden="true"></div>' +
+            '<img src="assets/img/coruja.png" alt="Owlly, mascote do Owltime"></div></section>' +
+            '<section class="ninho-planning-card" aria-labelledby="ninho-planning-title"><div class="ninho-planning-header">' +
+            '<div class="ninho-planning-copy"><span class="ninho-planning-icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span>' +
+            '<div><span class="ninho-card-kicker">O método da Owlly</span><h2 id="ninho-planning-title">Como a Owlly planeja seus horários</h2>' +
+            '<p>Um bom horário começa com informações organizadas e regras claras para toda a escola.</p></div></div>' +
+            '<div class="ninho-planning-art"><img src="assets/img/coruja.png" alt="" loading="lazy"></div></div>' +
+            '<ol class="ninho-planning-steps">' + planningStepCards + '</ol>' +
+            '<div class="ninho-planning-importance"><i class="bi bi-lightbulb-fill" aria-hidden="true"></i>' +
+            '<p><strong>Por que planejar?</strong> Ajuda a evitar choques de horários, distribuir melhor a carga docente, reduzir retrabalho e garantir as aulas das turmas.</p></div></section>' +
+            '<section class="ninho-brand-section" aria-labelledby="ninho-brand-title"><div class="ninho-section-heading">' +
+            '<span class="ninho-section-icon"><i class="bi bi-gem" aria-hidden="true"></i></span><div>' +
+            '<h2 id="ninho-brand-title">Logo e mascote</h2><p>Arquivos oficiais do Owltime disponíveis para baixar.</p></div></div>' +
+            '<div class="ninho-brand-grid">' + brandCards + '</div></section>' +
+            '<section class="ninho-wallpapers-section" aria-labelledby="ninho-wallpapers-title"><div class="ninho-section-heading">' +
+            '<span class="ninho-section-icon"><i class="bi bi-images" aria-hidden="true"></i></span><div>' +
+            '<h2 id="ninho-wallpapers-title">Galeria de papéis de parede</h2><p>' + wallpapers.length +
+            ' imagens PNG para personalizar seus dispositivos com as cores do Owltime e da Owlly. Clique em qualquer imagem para ampliar.</p></div></div>' +
+            '<div class="ninho-wallpaper-grid">' + wallpaperCards + '</div></section>' +
+            '<dialog class="ninho-lightbox" id="ninho-lightbox" aria-labelledby="ninho-lightbox-caption">' +
+            '<div class="ninho-lightbox-header"><div><span>Visualização ampliada</span><h2 id="ninho-lightbox-caption"></h2></div>' +
+            '<button type="button" class="btn-close btn-close-white" data-action="close-ninho-lightbox" aria-label="Fechar imagem ampliada"></button></div>' +
+            '<img id="ninho-lightbox-image" src="" alt=""></dialog>' +
+            '<dialog class="ninho-guide-dialog" id="ninho-guide-dialog" aria-labelledby="ninho-guide-title">' +
+            '<div class="ninho-guide-layout"><div class="ninho-guide-owlly"><img src="assets/img/coruja.png" alt="Owlly, sua guia no Ninho"></div>' +
+            '<div class="ninho-guide-content"><div class="ninho-guide-heading"><span>Owlly apresenta</span>' +
+            '<button type="button" class="btn-close" data-action="close-ninho-guide" aria-label="Fechar guia rápido"></button></div>' +
+            '<h2 id="ninho-guide-title">Guia rápido do Ninho</h2>' +
+            '<div class="ninho-guide-progress" role="progressbar" aria-label="Progresso do guia" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1"><span></span></div>' +
+            '<p class="ninho-guide-step" id="ninho-guide-step">Passo 1 de 3</p>' +
+            '<h3 id="ninho-guide-step-title"></h3><p id="ninho-guide-step-description"></p>' +
+            '<div class="ninho-guide-actions"><button type="button" class="btn btn-outline-secondary" data-action="previous-ninho-guide" disabled>Voltar</button>' +
+            '<button type="button" class="btn btn-primary" data-action="next-ninho-guide">Próximo<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></button></div>' +
+            '</div></div></dialog></section>';
+    }
+
+    function updateNinhoGuide(step) {
+        const dialog = document.getElementById('ninho-guide-dialog');
+        const stepLabel = document.getElementById('ninho-guide-step');
+        const stepTitle = document.getElementById('ninho-guide-step-title');
+        const stepDescription = document.getElementById('ninho-guide-step-description');
+        const progress = dialog && dialog.querySelector('.ninho-guide-progress');
+        const progressFill = progress && progress.querySelector('span');
+        const previousButton = dialog && dialog.querySelector('[data-action="previous-ninho-guide"]');
+        const nextButton = dialog && dialog.querySelector('[data-action="next-ninho-guide"], [data-action="finish-ninho-guide"]');
+        const steps = [
+            {
+                title: 'Escolha seu papel de parede',
+                description: 'Explore a coleção de wallpapers favoritos da Owlly e encontre uma opção para celular ou desktop.'
+            },
+            {
+                title: 'Veja a imagem em tamanho maior',
+                description: 'Clique na miniatura ou no botão Ampliar para conferir todos os detalhes antes de baixar.'
+            },
+            {
+                title: 'Baixe seu PNG favorito',
+                description: 'Use Baixar PNG no cartão escolhido para salvar a imagem no seu dispositivo.'
+            }
+        ];
+        if (!dialog || !stepLabel || !stepTitle || !stepDescription || !progress || !progressFill || !previousButton || !nextButton) {
+            throw new Error('O guia rápido da Owlly não está disponível.');
+        }
+        const currentStep = Math.max(0, Math.min(steps.length - 1, Number(step) || 0));
+        const current = steps[currentStep];
+        dialog.dataset.guideStep = String(currentStep);
+        stepLabel.textContent = 'Passo ' + (currentStep + 1) + ' de ' + steps.length;
+        stepTitle.textContent = current.title;
+        stepDescription.textContent = current.description;
+        progress.setAttribute('aria-valuenow', String(currentStep + 1));
+        progressFill.style.width = ((currentStep + 1) / steps.length * 100) + '%';
+        previousButton.disabled = currentStep === 0;
+        if (currentStep === steps.length - 1) {
+            nextButton.dataset.action = 'finish-ninho-guide';
+            nextButton.innerHTML = 'Ver wallpapers<i class="bi bi-images ms-2" aria-hidden="true"></i>';
+        } else {
+            nextButton.dataset.action = 'next-ninho-guide';
+            nextButton.innerHTML = 'Próximo<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>';
+        }
+    }
+
+    function getRepositoryRecords(route) {
+        const spec = specs[route];
+        if (!spec) throw new Error('Não há dados exportáveis para este módulo.');
+        let records = readRecords(spec.key);
+        if (['grupos', 'demandas', 'vinculos'].includes(route)) {
+            records = records.filter(function (record) { return semesterMatches(record, getSemester()); });
+        } else if (route === 'disponibilidade') {
+            records = records.filter(function (record) { return semesterMatches(record, availabilitySemester); });
+        }
+        return records;
+    }
+
+    async function downloadRepositoryPdf(route) {
+        const spec = specs[route];
+        if (!spec) throw new Error('Este módulo não possui dados para exportar.');
+        const records = getRepositoryRecords(route);
+        const headers = ['ID'].concat(spec.fields.map(function (field) { return field.label; }));
+        const body = [headers.map(function (label) { return { text: label, style: 'tableHeader' }; })];
+        records.forEach(function (record) {
+            body.push([record.id].concat(spec.fields.map(function (field) {
+                const value = spreadsheetDisplayValue(field, record);
+                return value == null || value === '' ? '—' : Array.isArray(value) ? value.join(', ') : String(value);
+            })).map(function (value) { return String(value == null ? '' : value); }));
+        });
+        if (!records.length) body.push([{ text: 'Nenhum registro cadastrado.', colSpan: headers.length, alignment: 'center', color: '#64748b', margin: [0, 8, 0, 8] }]
+            .concat(Array(Math.max(0, headers.length - 1)).fill('')));
+        const columnWidths = ['auto'].concat(spec.fields.map(function () { return '*'; }));
+        const documentDefinition = {
+            pageSize: 'A4',
+            pageOrientation: 'landscape',
+            pageMargins: [28, 30, 28, 34],
+            content: [
+                { text: 'OWLTIME · REPOSITÓRIO', style: 'eyebrow' },
+                { text: spec.title, style: 'title' },
+                {
+                    text: 'Exportado em ' + new Date().toLocaleString('pt-BR') + ' · ' + records.length + ' registro(s)' +
+                        (['grupos', 'demandas', 'vinculos', 'disponibilidade'].includes(route) ? ' · Semestre ' + getSemester() : ''),
+                    style: 'meta', margin: [0, 0, 0, 12]
+                },
+                { table: { headerRows: 1, widths: columnWidths, body: body }, layout: 'lightHorizontalLines', fontSize: 7 }
+            ],
+            defaultStyle: { font: 'Roboto', fontSize: 8, color: '#172b4d' },
+            styles: {
+                eyebrow: { fontSize: 8, bold: true, color: '#7E5EF2', characterSpacing: 1.1, margin: [0, 0, 0, 5] },
+                title: { fontSize: 19, bold: true, color: '#172b4d', margin: [0, 0, 0, 7] },
+                meta: { fontSize: 8, color: '#64748b' },
+                tableHeader: { bold: true, fontSize: 7, color: '#172b4d', fillColor: '#f0ebff' }
+            },
+            footer: function (currentPage, pageCount) {
+                return { text: 'Owltime · ' + currentPage + ' / ' + pageCount, alignment: 'right', margin: [0, 10, 28, 0], fontSize: 7, color: '#64748b' };
+            }
+        };
+        const blob = await createPdfBlob(documentDefinition);
+        downloadCatalogBlob('dados_' + route + '.pdf', blob);
+    }
+
+    function renderGlossary() {
+        const modules = [
+            ['Painel', 'Resumo dos cadastros, PRDs e indisponibilidades, notas recentes e situação da última grade.'],
+            ['Ninho', 'Reúne a logo, a Owlly, seus papéis de parede PNG favoritos, um guia rápido interativo e um resumo visual do planejamento da grade.'],
+            ['Cursos', 'Organiza as etapas ou formações oferecidas pela escola e agrupa disciplinas.'],
+            ['Disciplinas', 'Catálogo das matérias que podem ser demandadas pelas turmas e vinculadas aos professores.'],
+            ['Professores', 'Cadastro dos docentes, incluindo titulação, carga horária semanal e limite diário.'],
+            ['Turmas', 'Grupos de estudantes associados a um curso, ano letivo e período.'],
+            ['Grupos', 'Agrupa turmas relacionadas para restringir, quando necessário, os vínculos de professores.'],
+            ['Horários da escola', 'Define os períodos de aula e intervalos disponíveis em cada dia da semana.'],
+            ['Demandas das turmas', 'Registra quantas aulas semanais de cada disciplina cada turma precisa.'],
+            ['Vincular Professor', 'Relaciona docentes às disciplinas que podem lecionar, opcionalmente por grupo.'],
+            ['PRD e disponibilidade', 'Marca dias de trabalho docente e períodos em que o professor não pode dar aulas.'],
+            ['Peculiaridades', 'Define proteções de horários específicos de turmas, como DEPAE ou PPS.'],
+            ['Eventos', 'Marca eventos recorrentes que podem ser aplicados aos horários de turmas compatíveis.'],
+            ['Sort', 'Reserva horários para subgrupos de turmas, evitando coincidências dentro do mesmo subgrupo.'],
+            ['Grade oficial', 'Gera, consulta e ajusta a grade do semestre com base nas demandas e restrições.'],
+            ['Laboratório', 'Permite testar alterações em uma cópia local da grade antes de aplicá-las à grade oficial.'],
+            ['Relatórios', 'Apresenta indicadores, cobertura das demandas, pendências e distribuição de aulas.'],
+            ['Bloco de notas', 'Organiza tarefas e lembretes por etapa, prioridade e prazo.'],
+            ['Armazenamento e backup', 'Exibe dados locais e permite exportar ou restaurar cópias de segurança.'],
+            ['Configurações', 'Personaliza cor, menu, densidade e ponteiro, reúne planilhas e explica os módulos.']
+        ];
+        return modules.map(function (module) {
+            return '<article class="glossary-card"><i class="bi bi-bookmark-check" aria-hidden="true"></i><div><h3>' +
+                h(module[0]) + '</h3><p>' + h(module[1]) + '</p></div></article>';
+        }).join('');
+    }
+
+    function renderSettings() {
+        const selectedColor = getThemeColor();
+        const hoverMenu = getMenuMode() === 'hover';
+        const density = getDensityMode();
+        const cursorMode = getCursorMode();
+        const semesterControl = '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span>' +
+            '<div><h2>Semestre letivo</h2><p>Defina o período ativo usado pelos cadastros e pela Grade oficial.</p></div></div>' +
+            '<div class="settings-control"><div><h3>Semestre ativo</h3><p>Semestre atual: <strong>' + h(getSemester()) + '</strong>. Use o formato AAAA/1 ou AAAA/2.</p></div>' +
+            '<form id="semester-form" class="d-flex flex-wrap align-items-end gap-2"><div><label class="form-label mb-1" for="semester-input">Semestre</label>' +
+            '<input id="semester-input" class="form-control" value="' + h(getSemester()) + '" pattern="\\d{4}/[12]" placeholder="AAAA/1" required></div>' +
+            '<button class="btn btn-primary" type="submit">Aplicar</button>' +
+            '<button class="btn btn-outline-secondary" type="button" data-action="open-semester-copy" data-target-semester="' +
+            h(getSemester()) + '"><i class="bi bi-copy me-1"></i>Copiar dados de outro semestre</button></form></div></section>';
+        const swatches = THEME_COLORS.map(function (theme) {
+            return '<button class="theme-swatch' + (selectedColor === theme.value ? ' is-selected' : '') +
+                '" type="button" data-action="select-theme" data-color="' + theme.value + '" aria-label="' + h(theme.label) +
+                ', ' + theme.value + '" title="' + h(theme.label) + '" aria-pressed="' + String(selectedColor === theme.value) +
+                '" style="--swatch-color:' + theme.value + '"></button>';
+        }).join('');
+        return pageHeader('Configurações', 'bi-gear', 'Gerencie o semestre letivo e personalize a aparência e a navegação.') +
+            semesterControl + renderSemesterCopyDialog() +
+            '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-palette" aria-hidden="true"></i></span>' +
+            '<div><h2>Aparência e navegação</h2><p>Suas preferências são salvas apenas neste navegador.</p></div></div>' +
+            '<div class="settings-control"><div><h3>Cor do sistema</h3><p>Escolha uma cor para os destaques da interface ou selecione outra cor.</p></div>' +
+            '<div class="theme-options">' + swatches + '<label class="theme-custom-color" title="Escolher outra cor"><i class="bi bi-eyedropper" aria-hidden="true"></i>' +
+            '<input type="color" data-setting="theme" value="' + selectedColor + '" aria-label="Escolher outra cor para o sistema"></label></div></div>' +
+            '<div class="settings-control"><div><h3>Comportamento do menu</h3><p>Escolha como o menu lateral aparece no computador.</p></div>' +
+            '<div class="menu-mode-options"><button class="menu-mode-option' + (!hoverMenu ? ' is-selected' : '') +
+            '" type="button" data-action="select-menu-mode" data-mode="click" aria-pressed="' + String(!hoverMenu) + '">' +
+            '<i class="bi bi-layout-sidebar" aria-hidden="true"></i><span><strong>Abrir e fechar</strong><small>Como está atualmente, pelo botão do menu.</small></span></button>' +
+            '<button class="menu-mode-option' + (hoverMenu ? ' is-selected' : '') +
+            '" type="button" data-action="select-menu-mode" data-mode="hover" aria-pressed="' + String(hoverMenu) + '">' +
+            '<i class="bi bi-cursor" aria-hidden="true"></i><span><strong>Abrir ao passar o mouse</strong><small>Menu compacto que se expande ao passar o mouse ou usar o teclado.</small></span></button></div></div>' +
+            '<div class="settings-control"><div><h3>Densidade da interface</h3><p>Controle o espaçamento entre cartões e controles.</p></div>' +
+            '<div class="density-options"><button class="density-option' + (density === 'comfortable' ? ' is-selected' : '') +
+            '" type="button" data-action="select-density" data-density="comfortable" aria-pressed="' + String(density === 'comfortable') + '"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span><strong>Confortável</strong><small>Mais espaço para leitura.</small></span></button>' +
+            '<button class="density-option' + (density === 'compact' ? ' is-selected' : '') +
+            '" type="button" data-action="select-density" data-density="compact" aria-pressed="' + String(density === 'compact') + '"><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i><span><strong>Compacta</strong><small>Mais conteúdo na tela.</small></span></button></div></div>' +
+            '<div class="settings-control"><div><h3>Ponteiro do mouse</h3><p>Escolha o ponteiro usado em todo o Owltime.</p></div>' +
+            '<div class="menu-mode-options"><button class="menu-mode-option cursor-mode-option' + (cursorMode === 'owl' ? ' is-selected' : '') +
+            '" type="button" data-action="select-cursor-mode" data-mode="owl" aria-pressed="' + String(cursorMode === 'owl') + '">' +
+            '<img src="assets/img/coruja-cursor.png" alt=""><span><strong>Owlly</strong><small>Use a corujinha como ponteiro em todas as telas.</small></span></button>' +
+            '<button class="menu-mode-option cursor-mode-option' + (cursorMode === 'classic' ? ' is-selected' : '') +
+            '" type="button" data-action="select-cursor-mode" data-mode="classic" aria-pressed="' + String(cursorMode === 'classic') + '">' +
+            '<i class="bi bi-cursor" aria-hidden="true"></i><span><strong>Clássico</strong><small>Use o ponteiro padrão do dispositivo.</small></span></button></div></div>' +
+            '<div class="settings-defaults"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="restore-default-settings"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restaurar padrões</button>' +
+            '<span>Roxo Owltime · menu por mouse · densidade confortável · ponteiro Owlly</span></div></section>' +
+            '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-archive" aria-hidden="true"></i></span>' +
+            '<div><h2>Repositório de planilhas</h2><p>Baixe planilhas preenchidas para consulta/edição ou modelos para importar cadastros.</p></div></div>' +
+            '<div class="repository-grid">' + renderRepository() + '</div>' +
+            '<p class="settings-note"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Modelos CSV e XLSX para importação estão disponíveis em cursos, professores, disciplinas e turmas. PDFs e XLSX preenchidos são exportações para consulta e arquivo.</p></section>' +
+            '<section class="settings-section"><div class="settings-section-heading"><span class="settings-section-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span>' +
+            '<div><h2>Glossário dos módulos</h2><p>Um resumo rápido do que você encontra em cada área.</p></div></div>' +
+            '<div class="glossary-grid">' + renderGlossary() + '</div></section>';
+    }
+
+    function fieldOptions(field) {
+        if (field.options) return field.options;
+        const key = KEYS[field.optionsFrom];
+        if (!key) return [];
+        return readRecords(key).filter(function (record) {
+            if (field.optionsFrom === 'grupos' && !semesterMatches(record, getSemester())) return false;
+            return !(field.name === 'horario_id' && field.optionsFrom === 'horarios' &&
+                String(record.tipo || 'Aula').toLowerCase() !== 'aula');
+        }).map(function (record) {
+            let label = record.nome || record.dia_semana || ('Registro ' + record.id);
+            if (field.optionsFrom === 'horarios') label = record.dia_semana + ' · ' + record.hora_inicio + '–' + record.hora_fim + ' · ' + (record.tipo || 'Aula');
+            if (field.optionsFrom === 'grupos') {
+                const turmaNames = (Array.isArray(record.turma_ids) ? record.turma_ids : [])
+                    .map(function (id) { return nameById(KEYS.turmas, id, ''); })
+                    .filter(Boolean);
+                label += ' · ' + (turmaNames.length ? turmaNames.join(', ') : 'sem turmas');
+            }
+            if (field.includeIngress) {
+                const ingress = teacherIngressName(record);
+                if (ingress) label += ' · Ingresso: ' + ingress;
+            }
+            return [String(record.id), label];
+        });
+    }
+
+    function getSortSubgroups(sort) {
+        if (Array.isArray(sort && sort.subgrupos)) return sort.subgrupos;
+        const legacyTurmaIds = Array.isArray(sort && sort.turma_ids) ? sort.turma_ids : [];
+        return legacyTurmaIds.length ? [{ nome: 'Subgrupo 1', turma_ids: legacyTurmaIds }] : [];
+    }
+
+    function normalizeSortSubgroups(groups) {
+        if (!Array.isArray(groups) || !groups.length) {
+            throw new Error('Crie ao menos um subgrupo para este sort.');
+        }
+        const classes = new Map(readRecords(KEYS.turmas).map(function (turma) {
+            return [String(turma.id), turma];
+        }));
+        const usedClassIds = new Set();
+        const usedNames = new Set();
+        return groups.map(function (group, index) {
+            const name = String(group && group.nome || '').trim();
+            const normalizedName = normalizeCatalogValue(name);
+            if (!name) throw new Error('Informe o nome do subgrupo ' + (index + 1) + '.');
+            if (usedNames.has(normalizedName)) throw new Error('Os nomes dos subgrupos de um sort devem ser únicos.');
+            usedNames.add(normalizedName);
+            const turmaIds = Array.isArray(group.turma_ids)
+                ? Array.from(new Set(group.turma_ids.map(Number)))
+                : [];
+            if (!turmaIds.length) throw new Error('Selecione ao menos uma turma no subgrupo "' + name + '".');
+            turmaIds.forEach(function (id) {
+                if (!Number.isSafeInteger(id) || id < 1 || !classes.has(String(id))) {
+                    throw new Error('O subgrupo "' + name + '" contém uma turma inválida ou removida.');
+                }
+                if (usedClassIds.has(String(id))) {
+                    throw new Error('Cada turma só pode pertencer a um subgrupo do mesmo sort.');
+                }
+                usedClassIds.add(String(id));
+            });
+            return { nome: name, turma_ids: turmaIds };
+        });
+    }
+
+    function renderSortSubgroupRow(group, index) {
+        const selectedIds = new Set((Array.isArray(group.turma_ids) ? group.turma_ids : []).map(String));
+        const classes = fieldOptions({ optionsFrom: 'turmas' }).slice().sort(function (a, b) {
+            return String(a[1]).localeCompare(String(b[1]), 'pt-BR', { sensitivity: 'base', numeric: true });
+        });
+        const classOptions = classes.length
+            ? classes.map(function (turma) {
+                return '<label class="form-check"><input class="form-check-input" type="checkbox" name="sort-subgroup-turmas" value="' +
+                    h(turma[0]) + '"' + (selectedIds.has(String(turma[0])) ? ' checked' : '') + '><span class="form-check-label">' +
+                    h(turma[1]) + '</span></label>';
+            }).join('')
+            : '<div class="form-text">Cadastre turmas antes de criar subgrupos.</div>';
+        return '<section class="sort-subgroup-card" data-sort-subgroup><div class="d-flex justify-content-between align-items-center gap-2 mb-3">' +
+            '<strong>Subgrupo ' + (index + 1) + '</strong><button class="btn btn-sm btn-outline-danger" type="button" data-action="remove-sort-subgroup">' +
+            '<i class="bi bi-trash me-1" aria-hidden="true"></i>Remover</button></div><div class="row g-3">' +
+            '<div class="col-md-4"><label class="form-label">Nome do subgrupo</label><input class="form-control" type="text" data-sort-subgroup-name required value="' +
+            h(group.nome || '') + '" placeholder="Ex.: 1º ano"></div><div class="col-md-8"><div class="form-label">Turmas deste subgrupo</div>' +
+            '<div class="multi-check-list" role="group" aria-label="Turmas do subgrupo">' + classOptions + '</div></div></div></section>';
+    }
+
+    function renderSortSubgroupsEditor(groups) {
+        const items = Array.isArray(groups) && groups.length
+            ? groups
+            : [{ nome: 'Subgrupo 1', turma_ids: [] }];
+        return '<div class="sort-subgroups-editor" id="field-subgrupos" aria-labelledby="field-subgrupos-label"><div class="sort-subgroup-list">' +
+            items.map(renderSortSubgroupRow).join('') + '</div><button class="btn btn-sm btn-outline-primary mt-2" type="button" data-action="add-sort-subgroup">' +
+            '<i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Adicionar subgrupo</button></div>';
+    }
+
+    function renderField(field, value, idPrefix, columnClass) {
+        const id = (idPrefix || '') + 'field-' + field.name;
+        const current = value == null ? (field.defaultValue == null ? '' : field.defaultValue) : value;
+        const required = field.required ? ' required' : '';
+        const min = field.min == null ? '' : ' min="' + h(field.min) + '"';
+        const placeholder = field.placeholder ? ' placeholder="' + h(field.placeholder) + '"' : '';
+        let control;
+        if (field.type === 'sort-groups') {
+            control = renderSortSubgroupsEditor(current);
+        } else if (field.type === 'multi-check') {
+            const selectedValues = (Array.isArray(current) ? current : []).map(String);
+            const options = fieldOptions(field).slice().sort(function (a, b) {
+                return String(a[1]).localeCompare(String(b[1]), 'pt-BR', { sensitivity: 'base', numeric: true });
+            });
+            control = options.length
+                ? '<div class="multi-check-list" role="group" aria-labelledby="' + id + '">' + options.map(function (option) {
+                    return '<label class="form-check"><input class="form-check-input" type="checkbox" name="' + h(field.name) +
+                        '" value="' + h(option[0]) + '"' + (selectedValues.includes(String(option[0])) ? ' checked' : '') +
+                        '><span class="form-check-label">' + h(option[1]) + '</span></label>';
+                }).join('') + '</div>'
+                : '<div class="form-text">Cadastre primeiro as opções disponíveis para este campo.</div>';
+        } else if (field.type === 'select') {
+            const options = fieldOptions(field);
+            control = '<select class="form-select" id="' + id + '" name="' + h(field.name) + '"' + required + '>' +
+                (field.optional ? '<option value="">Não informado</option>' : '') +
+                options.map(function (option) {
+                    const selected = String(current) === String(option[0]) ? ' selected' : '';
+                    const schedule = field.name === 'horario_id' && field.optionsFrom === 'horarios'
+                        ? findById(KEYS.horarios, option[0])
+                        : null;
+                    const dayData = schedule ? ' data-day="' + h(schedule.dia_semana) + '"' : '';
+                    return '<option value="' + h(option[0]) + '"' + dayData + selected + '>' + h(option[1]) + '</option>';
+                }).join('') + '</select>';
+        } else if (field.type === 'textarea') {
+            control = '<textarea class="form-control" id="' + id + '" name="' + h(field.name) + '" rows="' + h(field.rows || 3) + '"' + required + placeholder + '>' + h(current) + '</textarea>';
+        } else {
+            control = '<input class="form-control" id="' + id + '" name="' + h(field.name) + '" type="' + h(field.type || 'text') + '"' +
+                (field.type === 'number' ? ' step="1"' : '') + min + placeholder + required + ' value="' + h(current) + '">';
+        }
+        const label = field.type === 'multi-check' || field.type === 'sort-groups'
+            ? '<div class="form-label" id="' + (field.type === 'sort-groups' ? id + '-label' : id) + '">' +
+            h(field.label) + (field.required ? ' *' : '') + '</div>'
+            : '<label class="form-label" for="' + id + '">' + h(field.label) + (field.required ? ' *' : '') + '</label>';
+        return '<div class="' + (field.type === 'sort-groups' ? 'col-12' : columnClass || 'col-md-6') + '">' + label + control +
+            (field.help ? '<div class="form-text">' + h(field.help) + '</div>' : '') + '</div>';
+    }
+
+    function ensureInputPlaceholders() {
+        view.querySelectorAll('input:not([placeholder])').forEach(function (input) {
+            if (!['text', 'search', 'email', 'tel', 'number', 'url'].includes(input.type)) return;
+            const label = input.labels && input.labels.length
+                ? input.labels[0].textContent.trim().replace(/\s*\*$/, '')
+                : input.getAttribute('aria-label') || input.name || '';
+            input.placeholder = input.type === 'search'
+                ? 'Digite para filtrar'
+                : label ? 'Informe ' + label.toLocaleLowerCase('pt-BR') : 'Digite aqui';
+        });
+    }
+
+    function sortSelectOptions(root) {
+        root.querySelectorAll('select').forEach(function (select) {
+            const options = Array.from(select.options);
+            const placeholders = options.filter(function (option) { return option.value === ''; });
+            const choices = options.filter(function (option) { return option.value !== ''; }).sort(function (a, b) {
+                return a.textContent.trim().localeCompare(b.textContent.trim(), 'pt-BR', { sensitivity: 'base', numeric: true });
+            });
+            placeholders.concat(choices).forEach(function (option) {
+                select.appendChild(option);
+            });
+        });
+    }
+
+    function normalizeCatalogValue(value) {
+        return String(value == null ? '' : value).trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+    }
+
+    function parseDelimitedCsv(text, delimiter) {
+        const rows = [];
+        let row = [];
+        let field = '';
+        let quoted = false;
+        const source = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+        for (let index = 0; index < source.length; index += 1) {
+            const character = source[index];
+            if (quoted) {
+                if (character === '"' && source[index + 1] === '"') {
+                    field += '"';
+                    index += 1;
+                } else if (character === '"') {
+                    quoted = false;
+                } else {
+                    field += character;
+                }
+            } else if (character === '"' && !field) {
+                quoted = true;
+            } else if (character === delimiter) {
+                row.push(field);
+                field = '';
+            } else if (character === '\n') {
+                row.push(field);
+                rows.push(row);
+                row = [];
+                field = '';
+            } else {
+                field += character;
+            }
+        }
+        if (quoted) throw new Error('O CSV tem um campo entre aspas que não foi fechado.');
+        if (field || row.length) {
+            row.push(field);
+            rows.push(row);
+        }
+        return rows;
+    }
+
+    function catalogGridRows(rows, schema) {
+        if (!rows.length) throw new Error('O arquivo está vazio.');
+
+        const headerPositions = {};
+        const unknownHeaders = [];
+        rows[0].forEach(function (header, index) {
+            const normalized = normalizeCatalogValue(header).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+            const fieldName = Object.keys(schema.aliases).find(function (key) {
+                return schema.aliases[key].some(function (alias) { return normalized === alias; });
+            });
+            if (!fieldName) {
+                if (String(header).trim()) unknownHeaders.push(String(header).trim());
+                return;
+            }
+            if (headerPositions[fieldName] !== undefined) throw new Error('A coluna "' + header + '" aparece mais de uma vez.');
+            headerPositions[fieldName] = index;
+        });
+        if (headerPositions.nome === undefined) throw new Error('A planilha precisa ter uma coluna "Nome" ou "Nome da turma".');
+        if (unknownHeaders.length) throw new Error('Colunas não reconhecidas: ' + unknownHeaders.join(', ') + '. Use o modelo CSV deste cadastro.');
+
+        const dataRows = rows.slice(1).filter(function (values) {
+            return values.some(function (value) { return String(value).trim(); });
+        });
+        if (!dataRows.length) throw new Error('Nenhum registro preenchido foi encontrado abaixo do cabeçalho.');
+        if (dataRows.length > 5000) throw new Error('O arquivo excede o limite de 5.000 registros por importação.');
+        return dataRows.map(function (values, index) {
+            if (values.length !== rows[0].length) {
+                return { line: index + 2, message: 'A quantidade de colunas não corresponde ao cabeçalho. Confira separadores e campos entre aspas.' };
+            }
+            const fields = {};
+            Object.keys(headerPositions).forEach(function (fieldName) {
+                fields[fieldName] = String(values[headerPositions[fieldName]] == null ? '' : values[headerPositions[fieldName]]).trim();
+            });
+            return { line: index + 2, id: fields.id || '', fields: fields };
+        });
+    }
+
+    function catalogCsvRows(text, schema) {
+        const delimiters = [';', ',', '\t'];
+        const delimiter = delimiters.map(function (candidate) {
+            return { value: candidate, columns: parseDelimitedCsv(text, candidate)[0] || [] };
+        }).sort(function (a, b) { return b.columns.length - a.columns.length; })[0];
+        return catalogGridRows(parseDelimitedCsv(text, delimiter.value), schema);
+    }
+
+    function excelCellText(cell) {
+        const value = cell.value;
+        if (value == null) return '';
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+        if (value instanceof Date) return value.toISOString().slice(0, 10);
+        if (Array.isArray(value.richText)) {
+            return value.richText.map(function (part) { return part.text || ''; }).join('');
+        }
+        if (Object.prototype.hasOwnProperty.call(value, 'result')) return String(value.result == null ? '' : value.result);
+        return cell.text || '';
+    }
+
+    async function catalogXlsxRows(buffer, schema) {
+        if (!window.ExcelJS) throw new Error('O suporte a arquivos Excel não foi carregado. Verifique a conexão e atualize a página.');
+        const workbook = new window.ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
+        const worksheet = workbook.worksheets.find(function (sheet) { return sheet.state === 'visible'; });
+        if (!worksheet) throw new Error('O arquivo Excel não contém uma planilha visível.');
+        if (worksheet.rowCount > 5001) throw new Error('O arquivo excede o limite de 5.000 registros por importação.');
+        const rows = [];
+        worksheet.eachRow({ includeEmpty: false }, function (row) {
+            const values = [];
+            for (let column = 1; column <= row.cellCount; column += 1) {
+                values.push(excelCellText(row.getCell(column)));
+            }
+            rows.push(values);
+        });
+        return catalogGridRows(rows, schema);
+    }
+
+    function importStatus(value, active, inactive) {
+        if (!value) return active;
+        const normalized = normalizeCatalogValue(value);
+        if (normalized === normalizeCatalogValue(active)) return active;
+        if (normalized === normalizeCatalogValue(inactive)) return inactive;
+        throw new Error('Status inválido. Use "' + active + '" ou "' + inactive + '".');
+    }
+
+    function importInteger(value, label, defaultValue, min) {
+        if (!value) return defaultValue;
+        const number = Number(value.replace(',', '.'));
+        if (!Number.isInteger(number) || number < min) throw new Error(label + ' deve ser um número inteiro igual ou maior que ' + min + '.');
+        return number;
+    }
+
+    function importListValue(value, label, options) {
+        const normalized = normalizeCatalogValue(value);
+        const match = options.find(function (option) { return normalizeCatalogValue(option) === normalized; });
+        if (!match) throw new Error(label + ' inválido. Use uma das opções: ' + options.join(', ') + '.');
+        return match;
+    }
+
+    function importCatalogRecord(route, fields) {
+        const name = String(fields.nome || '').trim();
+        if (!name) throw new Error('O nome é obrigatório.');
+        if (route === 'cursos') {
+            return { nome: name, sigla: fields.sigla || '', status: importStatus(fields.status, 'Ativo', 'Inativo') };
+        }
+        if (route === 'professores') {
+            if (fields.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) throw new Error('E-mail inválido.');
+            const weeklyHours = importInteger(fields.carga_horaria_semanal, 'Carga semanal', 40, 0);
+            if (![10, 20, 30, 40].includes(weeklyHours)) throw new Error('Carga semanal deve ser 10, 20, 30 ou 40 aulas.');
+            const dailyLimit = importInteger(fields.limite_aulas_dia, 'Limite de aulas por dia', 5, 1);
+            if (dailyLimit > 12) throw new Error('Limite de aulas por dia deve estar entre 1 e 12.');
+            return {
+                nome: name, matricula: fields.matricula || '', email: fields.email || '',
+                disciplina_ingresso: String(fields.disciplina_ingresso || '').trim(),
+                telefone: fields.telefone || '',
+                titulacao: fields.titulacao ? importListValue(fields.titulacao, 'Titulação', ['Graduado(a)', 'Especializado(a)', 'Mestre', 'Doutor(a)', 'PHD']) : '',
+                carga_horaria_semanal: weeklyHours, limite_aulas_dia: dailyLimit,
+                status: importStatus(fields.status, 'Ativo', 'Inativo')
+            };
+        }
+        const courseName = String(fields.curso_nome || '').trim();
+        let course = null;
+        if (courseName) {
+            course = readRecords(KEYS.cursos).find(function (record) {
+                return normalizeCatalogValue(record.nome) === normalizeCatalogValue(courseName);
+            });
+            if (!course) throw new Error('O curso "' + courseName + '" não existe. Cadastre ou importe o curso antes.');
+        }
+        if (route === 'disciplinas') {
+            return {
+                nome: name, curso_id: course ? Number(course.id) : null,
+                curso_nome: course ? course.nome : '',
+                status: importStatus(fields.status, 'Ativa', 'Inativa')
+            };
+        }
+        const year = importInteger(fields.ano_letivo, 'Ano letivo', new Date().getFullYear(), 2000);
+        const semester = fields.semestre_letivo || getSemester();
+        if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+        return {
+            nome: name, curso_id: course ? Number(course.id) : null,
+            curso_nome: course ? course.nome : '', ano_letivo: year,
+            periodo: fields.periodo ? importListValue(fields.periodo, 'Período/turno', PERIODOS) : '',
+            semestre_letivo: semester,
+            status: importStatus(fields.status, 'Ativa', 'Inativa')
+        };
+    }
+
+    function catalogDuplicateReason(route, record, existing) {
+        const sameName = function (item) { return normalizeCatalogValue(item.nome) === normalizeCatalogValue(record.nome); };
+        if (route === 'professores') {
+            return existing.some(function (item) {
+                const sameRegistration = record.matricula && item.matricula &&
+                    normalizeCatalogValue(item.matricula) === normalizeCatalogValue(record.matricula);
+                return sameRegistration || (sameName(item) && (!record.matricula || !item.matricula));
+            }) ? 'Professor com matrícula já cadastrada ou nome equivalente sem matrícula.' : '';
+        }
+        return existing.some(function (item) {
+            if (!sameName(item)) return false;
+            if (route === 'disciplinas') return String(item.curso_id || '') === String(record.curso_id || '');
+            if (route === 'turmas') {
+                return String(item.ano_letivo || '') === String(record.ano_letivo) &&
+                    String(item.semestre_letivo || '') === String(record.semestre_letivo);
+            }
+            if (route === 'grupos') return groupIdentity(item) === groupIdentity(record);
+            return true;
+        }) ? 'Registro equivalente já cadastrado.' : '';
+    }
+
+    function prepareCatalogImport(route, filename, rows) {
+        const existing = readRecords(specs[route].key);
+        const accepted = [];
+        const seenIds = new Set();
+        const preview = rows.map(function (row) {
+            if (row.message) return { line: row.line, status: 'error', message: row.message };
+            try {
+                let oldRecord = null;
+                if (row.id) {
+                    if (!/^[1-9]\d*$/.test(row.id) || !Number.isSafeInteger(Number(row.id))) {
+                        throw new Error('ID inválido. Use o ID numérico exportado pelo sistema ou deixe a coluna vazia para criar um registro.');
+                    }
+                    if (seenIds.has(row.id)) throw new Error('ID repetido nesta planilha.');
+                    seenIds.add(row.id);
+                    oldRecord = existing.find(function (record) { return String(record.id) === row.id; }) || null;
+                    if (!oldRecord) throw new Error('O ID ' + row.id + ' não existe neste cadastro. Baixe uma nova cópia preenchida pelo sistema.');
+                }
+                const record = importCatalogRecord(route, row.fields);
+                const comparable = existing.filter(function (item) {
+                    return !oldRecord || String(item.id) !== String(oldRecord.id);
+                }).concat(accepted);
+                const duplicate = catalogDuplicateReason(route, record, comparable);
+                if (duplicate) return { line: row.line, record: record, status: 'duplicate', message: duplicate };
+                if (oldRecord) record.id = oldRecord.id;
+                accepted.push(record);
+                return {
+                    line: row.line, record: record, status: 'valid',
+                    update: Boolean(oldRecord),
+                    message: oldRecord ? 'Pronto para atualizar o registro existente.' : 'Pronto para importar.'
+                };
+            } catch (error) {
+                return { line: row.line, status: 'error', message: error.message || 'Registro inválido.' };
+            }
+        });
+        catalogImport = { route: route, filename: filename, rows: preview, accepted: accepted };
+        render();
+    }
+
+    function renderCatalogImport(route) {
+        if (!catalogImport || catalogImport.route !== route) return '';
+        const rows = catalogImport.rows;
+        const validCount = catalogImport.accepted.length;
+        const errors = rows.filter(function (row) { return row.status === 'error'; }).length;
+        const duplicates = rows.filter(function (row) { return row.status === 'duplicate'; }).length;
+        const detailLabels = {
+            id: 'ID',
+            sigla: 'Sigla', matricula: 'Matrícula', email: 'E-mail', telefone: 'Telefone',
+            titulacao: 'Titulação', carga_horaria_semanal: 'Carga semanal',
+            limite_aulas_dia: 'Limite diário', disciplina_ingresso: 'Disciplina de ingresso',
+            curso_nome: 'Curso', ano_letivo: 'Ano letivo',
+            periodo: 'Período', semestre_letivo: 'Semestre', status: 'Status'
+        };
+        const previewRows = errors || duplicates
+            ? rows.filter(function (row) { return row.status === 'error' || row.status === 'duplicate'; })
+            : rows.slice(0, 100);
+        const visibleRows = previewRows.map(function (row) {
+            const name = row.record ? row.record.nome : '—';
+            const details = row.record ? Object.keys(row.record).filter(function (key) {
+                return key !== 'nome';
+            }).map(function (key) {
+                const rawValue = row.record[key];
+                const value = rawValue == null || rawValue === '' ? '—' : rawValue;
+                return '<span><strong>' + h(detailLabels[key] || key) + ':</strong> ' + h(value) + '</span>';
+            }).join(' · ') : '—';
+            const label = row.status === 'valid' ? row.update ? 'Atualizar' : 'Importável' : row.status === 'duplicate' ? 'Ignorado · duplicado' : 'Erro';
+            const badge = row.status === 'valid' ? 'success' : row.status === 'duplicate' ? 'secondary' : 'danger';
+            return '<tr><td>' + row.line + '</td><td>' + h(name) + '</td><td><div class="small">' + details + '</div></td><td><span class="badge text-bg-' + badge + '">' + label + '</span></td><td>' + h(row.message) + '</td></tr>';
+        }).join('');
+        const importStatus = errors || duplicates
+            ? '<div class="alert alert-warning">Exibindo todas as linhas com erro e todos os ' + duplicates + ' registro(s) duplicado(s), inclusive após as primeiras 100 linhas; a coluna Detalhe informa o motivo da rejeição. Os ' + validCount + ' registro(s) válidos podem ser importados sem incluir essas linhas.</div>'
+            : '<div class="alert alert-success">Tudo certo: ' + validCount + ' registro(s) estão prontos para importar.</div>';
+        return '<div class="card border-primary mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Revisar importação · ' + h(catalogImport.filename) + '</strong>' +
+            '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="cancel-catalog-import">Cancelar</button></div><div class="card-body">' +
+            '<p class="mb-2"><strong>' + validCount + '</strong> para importar · <strong>' + duplicates + '</strong> duplicado(s) ignorado(s) · <strong>' + errors + '</strong> erro(s).</p>' +
+            importStatus +
+            (previewRows.length ? '<div class="table-responsive mb-3"><table class="table table-sm table-striped align-middle"><thead><tr><th>Linha</th><th>Nome</th><th>Dados</th><th>Resultado</th><th>Detalhe</th></tr></thead><tbody>' + visibleRows + '</tbody></table></div>' : '') +
+            (!errors && rows.length > 100 ? '<p class="small text-muted">Prévia das primeiras 100 de ' + rows.length + ' linhas; todas as linhas foram verificadas.</p>' : '') +
+            '<button class="btn btn-primary" type="button" data-action="confirm-catalog-import"' + (validCount ? '' : ' disabled') + '><i class="bi bi-upload me-1"></i>Importar ' + validCount + ' registro(s) válidos</button>' +
+            '<span class="small text-muted ms-2">IDs preenchidos atualizam registros existentes; sem ID, um novo registro é criado.</span></div></div>';
+    }
+
+    function downloadCatalogBlob(filename, blob) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function getSemesterOptions(semester, radius) {
+        const parts = /^(\d{4})\/([12])$/.exec(semester);
+        if (!parts) throw new Error('O semestre atual não está em um formato válido.');
+        const currentIndex = Number(parts[1]) * 2 + Number(parts[2]) - 1;
+        return Array.from({ length: radius * 2 + 1 }, function (_, index) {
+            const semesterIndex = currentIndex + index - radius;
+            return Math.floor(semesterIndex / 2) + '/' + (semesterIndex % 2 + 1);
+        });
+    }
+
+    async function downloadCatalogTemplate(route, format) {
+        const schema = catalogImportSchemas[route];
+        if (format !== 'xlsx') {
+            const csv = '\uFEFF' + schema.headers.map(function (header) {
+                return '"' + header.replace(/"/g, '""') + '"';
+            }).join(';') + '\r\n';
+            downloadCatalogBlob(schema.filename, new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            return;
+        }
+        if (!window.ExcelJS) throw new Error('O suporte a arquivos Excel não foi carregado. Verifique a conexão e atualize a página.');
+
+        const workbook = new window.ExcelJS.Workbook();
+        workbook.creator = 'Owltime';
+        workbook.subject = 'Modelo de importação de cadastro';
+        const worksheet = workbook.addWorksheet(specs[route].title);
+        const headerRow = worksheet.addRow(schema.headers);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D4E89' } };
+        worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+        worksheet.autoFilter = { from: 'A1', to: worksheet.getRow(1).getCell(schema.headers.length).address };
+        worksheet.columns = schema.headers.map(function (header) {
+            return { width: Math.max(18, Math.min(34, header.length + 4)) };
+        });
+
+        const listSheet = workbook.addWorksheet('Listas');
+        listSheet.state = 'veryHidden';
+        const validations = [];
+        if (route === 'cursos') validations.push({ column: 4, name: 'Status', values: ['Ativo', 'Inativo'] });
+        if (route === 'professores') {
+            validations.push(
+                { column: 7, name: 'Titulos', values: ['Graduado(a)', 'Especializado(a)', 'Mestre', 'Doutor(a)', 'PHD'] },
+                { column: 8, name: 'CargasSemanais', values: ['10', '20', '30', '40'] },
+                { column: 9, name: 'LimitesDiarios', values: Array.from({ length: 12 }, function (_, index) { return String(index + 1); }) },
+                { column: 10, name: 'Status', values: ['Ativo', 'Inativo'] }
+            );
+        }
+        if (route === 'disciplinas' || route === 'turmas') {
+            const courses = readRecords(KEYS.cursos).map(function (course) { return String(course.nome || '').trim(); }).filter(Boolean);
+            if (courses.length) validations.push({ column: 3, name: 'Cursos', values: courses });
+            if (route === 'turmas') {
+                const currentYear = new Date().getFullYear();
+                validations.push(
+                    { column: 4, name: 'AnosLetivos', values: [currentYear - 1, currentYear, currentYear + 1] },
+                    { column: 5, name: 'Periodos', values: PERIODOS },
+                    { column: 6, name: 'SemestresLetivos', values: getSemesterOptions(getSemester(), 2) }
+                );
+            }
+            validations.push({ column: route === 'disciplinas' ? 4 : 7, name: 'Status', values: ['Ativa', 'Inativa'] });
+        }
+
+        validations.forEach(function (validation, index) {
+            const listColumn = index + 1;
+            listSheet.getCell(1, listColumn).value = validation.name;
+            validation.values.forEach(function (value, valueIndex) {
+                listSheet.getCell(valueIndex + 2, listColumn).value = value;
+            });
+            const lastRow = Math.max(2, validation.values.length + 1);
+            const range = 'Listas!$' + listSheet.getColumn(listColumn).letter + '$2:$' +
+                listSheet.getColumn(listColumn).letter + '$' + lastRow;
+            const rangeName = validation.name;
+            workbook.definedNames.add(range, rangeName);
+            worksheet.dataValidations.add(
+                worksheet.getColumn(validation.column).letter + '2:' + worksheet.getColumn(validation.column).letter + '5001',
+                { type: 'list', allowBlank: true, formulae: ['=' + rangeName], showErrorMessage: true, errorTitle: 'Valor inválido', error: 'Selecione uma opção da lista.' }
+            );
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        downloadCatalogBlob('modelo_' + route + '.xlsx', new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }));
+    }
+
+    function spreadsheetDisplayValue(field, record) {
+        const value = record[field.name];
+        if (field.type === 'sort-groups') return JSON.stringify(getSortSubgroups(record));
+        if (field.type === 'multi-check') return (Array.isArray(value) ? value : []).join(', ');
+        if (field.name === 'prioridade') return value || 'Não';
+        if (field.type === 'select' && field.optionsFrom && value != null && value !== '') {
+            const option = fieldOptions(field).find(function (item) { return String(item[0]) === String(value); });
+            return option ? option[1] : '';
+        }
+        if (field.type === 'select' && field.optionsFrom === 'cursos' && record.curso_nome) return record.curso_nome;
+        return value == null ? '' : value;
+    }
+
+    function currentSpreadsheetOption(field, input) {
+        const normalizedInput = normalizeCatalogValue(input);
+        const options = fieldOptions(field);
+        const exactOption = options.find(function (option) {
+            return normalizeCatalogValue(option[0]) === normalizedInput ||
+                normalizeCatalogValue(option[1]) === normalizedInput;
+        });
+        if (exactOption || field.optionsFrom !== 'professores') return exactOption;
+
+        const professorName = String(input).replace(/\s*(?:·|—|-|\|)\s*ingresso\s*:.+$/i, '').trim();
+        const matches = readRecords(KEYS.professores).filter(function (professor) {
+            return normalizeCatalogValue(professor.nome) === normalizeCatalogValue(professorName);
+        });
+        if (matches.length > 1) {
+            throw new Error('O professor "' + professorName + '" aparece mais de uma vez. Use um nome exclusivo na coluna Professor.');
+        }
+        if (!matches.length) return null;
+        const professorId = String(matches[0].id);
+        return options.find(function (option) { return String(option[0]) === professorId; }) || null;
+    }
+
+    function resolveVinculoProfessors(input) {
+        const professorName = String(input).replace(/\s*(?:·|—|-|\|)\s*ingresso\s*:.+$/i, '').trim();
+        const exactOption = currentSpreadsheetOption(specs.vinculos.fields[0], input);
+        if (exactOption) return [{ id: Number(exactOption[0]) }];
+        const names = professorName.split('/').map(function (name) { return name.trim(); }).filter(Boolean);
+        if (!names.length) throw new Error('Informe um professor válido.');
+        const professors = readRecords(KEYS.professores);
+        const resolved = [];
+        names.forEach(function (name) {
+            const normalizedName = normalizeCatalogValue(name);
+            const matches = professors.filter(function (professor) {
+                const normalizedFullName = normalizeCatalogValue(professor.nome);
+                return normalizedFullName === normalizedName ||
+                    (professorName.includes('/') && normalizedFullName.startsWith(normalizedName + ' '));
+            });
+            if (matches.length > 1) {
+                throw new Error('O nome "' + name + '" corresponde a mais de um professor. Use o nome completo na planilha.');
+            }
+            if (!matches.length) {
+                throw new Error('Não foi possível localizar o professor "' + name + '" no cadastro.');
+            }
+            if (!resolved.some(function (item) { return String(item.id) === String(matches[0].id); })) {
+                resolved.push(matches[0]);
+            }
+        });
+        return resolved;
+    }
+
+    function readVinculoSpreadsheetRows(worksheet, idPosition, fieldPositions) {
+        const currentLinks = readRecords(KEYS.vinculos);
+        const currentDisciplines = readRecords(KEYS.disciplinas);
+        const pendingDisciplines = [];
+        const seenIds = new Set();
+        const seenPairs = new Set();
+        const rows = [];
+        let nextLinkIdValue = nextId(currentLinks);
+        let nextDisciplineIdValue = nextId(currentDisciplines);
+        worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+            if (rowNumber === 1) return;
+            const values = [];
+            for (let column = 1; column <= row.cellCount; column += 1) {
+                values.push(excelCellText(row.getCell(column)).trim());
+            }
+            if (!values.some(Boolean)) return;
+            try {
+                const sourceId = values[idPosition];
+                if (sourceId && seenIds.has(sourceId)) throw new Error('ID repetido nesta planilha.');
+                if (sourceId) seenIds.add(sourceId);
+                const oldRecord = sourceId
+                    ? currentLinks.find(function (record) { return String(record.id) === sourceId; })
+                    : null;
+                if (sourceId && !oldRecord) {
+                    throw new Error('O ID ' + sourceId + ' não existe neste cadastro. Baixe uma nova cópia preenchida pelo sistema.');
+                }
+                const professorInput = values[fieldPositions[0]] || '';
+                const disciplineInput = values[fieldPositions[1]] || '';
+                const semester = values[fieldPositions[2]] || getSemester();
+                const groupInput = fieldPositions[3] == null ? '' : values[fieldPositions[3]] || '';
+                const priorityInput = fieldPositions[4] == null ? '' : values[fieldPositions[4]] || '';
+                const defaultPriority = fieldPositions[4] == null && oldRecord
+                    ? oldRecord.prioridade || 'Não'
+                    : 'Não';
+                if (!professorInput) throw new Error('"Professor" é obrigatório.');
+                if (!disciplineInput) throw new Error('"Disciplina" é obrigatório.');
+                if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+                const priorityOption = priorityInput
+                    ? currentSpreadsheetOption(specs.vinculos.fields[4], priorityInput)
+                    : [defaultPriority, defaultPriority];
+                if (!priorityOption) throw new Error('"Prioridade na grade" deve ser Sim ou Não.');
+                const availableGroupIds = new Set(readRecords(KEYS.grupos).filter(function (group) {
+                    return semesterMatches(group, semester);
+                }).map(function (group) { return String(group.id); }));
+                const groupIds = groupInput
+                    ? Array.from(new Set(groupInput.split(',').map(function (id) { return id.trim(); }).filter(Boolean)))
+                    : [];
+                if (groupIds.some(function (id) { return !/^[1-9]\d*$/.test(id) || !availableGroupIds.has(id); })) {
+                    throw new Error('"Grupos de turmas" contém um ID inválido. Use os IDs dos grupos cadastrados ou deixe vazio.');
+                }
+
+                const professors = resolveVinculoProfessors(professorInput);
+                if (sourceId && professors.length > 1) {
+                    throw new Error('Uma linha com ID só pode indicar um professor. Deixe o ID vazio para importar uma atribuição compartilhada.');
+                }
+                let discipline = currentDisciplines.find(function (item) {
+                    return normalizeCatalogValue(item.nome) === normalizeCatalogValue(disciplineInput);
+                }) || pendingDisciplines.find(function (item) {
+                    return normalizeCatalogValue(item.nome) === normalizeCatalogValue(disciplineInput);
+                });
+                let newDiscipline = false;
+                let createdDiscipline = null;
+                if (!discipline) {
+                    createdDiscipline = {
+                        id: nextDisciplineIdValue,
+                        nome: disciplineInput,
+                        curso_id: null,
+                        curso_nome: '',
+                        status: 'Ativa'
+                    };
+                    discipline = createdDiscipline;
+                    newDiscipline = true;
+                } else {
+                    newDiscipline = pendingDisciplines.includes(discipline);
+                }
+
+                const rowRecords = [];
+                professors.forEach(function (professor, index) {
+                    const identity = [
+                        String(professor.id),
+                        String(discipline.id),
+                        semester
+                    ].join('|');
+                    if (seenPairs.has(identity)) {
+                        throw new Error('Este professor e disciplina aparecem mais de uma vez neste semestre na planilha.');
+                    }
+                    const existingLinks = currentLinks.filter(function (item) {
+                        return String(item.professor_id) === String(professor.id) &&
+                            String(item.disciplina_id) === String(discipline.id) &&
+                            String(item.semestre_letivo || getSemester()) === semester &&
+                            (!oldRecord || String(item.id) !== String(oldRecord.id));
+                    });
+                    if (existingLinks.length > 1) {
+                        throw new Error('Este vínculo já aparece mais de uma vez no cadastro; corrija os registros existentes antes de importar.');
+                    }
+                    const matchedLink = oldRecord || existingLinks[0] || null;
+                    rowRecords.push({
+                        record: {
+                            id: matchedLink ? matchedLink.id : nextLinkIdValue + index,
+                            professor_id: Number(professor.id),
+                            disciplina_id: Number(discipline.id),
+                            semestre_letivo: semester,
+                            grupo_ids: groupIds.map(Number),
+                            prioridade: priorityOption[0]
+                        },
+                        update: Boolean(matchedLink),
+                        newDiscipline: newDiscipline,
+                        disciplineName: discipline.nome,
+                        professorName: nameById(KEYS.professores, professor.id, 'Professor')
+                    });
+                });
+                rowRecords.forEach(function (item) {
+                    const identity = [
+                        String(item.record.professor_id),
+                        String(item.record.disciplina_id),
+                        item.record.semestre_letivo
+                    ].join('|');
+                    seenPairs.add(identity);
+                    if (!item.update) nextLinkIdValue = Math.max(nextLinkIdValue, Number(item.record.id) + 1);
+                    rows.push({
+                        line: rowNumber,
+                        record: item.record,
+                        update: item.update,
+                        newDiscipline: item.newDiscipline,
+                        disciplineName: item.disciplineName,
+                        professorName: item.professorName,
+                        error: ''
+                    });
+                });
+                if (createdDiscipline) {
+                    pendingDisciplines.push(createdDiscipline);
+                    nextDisciplineIdValue += 1;
+                }
+            } catch (error) {
+                rows.push({ line: rowNumber, record: null, update: false, error: error.message || 'Registro inválido.' });
+            }
+        });
+        if (!rows.length) throw new Error('Nenhuma linha preenchida foi encontrada abaixo do cabeçalho.');
+        return { rows: rows, newDisciplines: pendingDisciplines };
+    }
+
+    async function downloadCurrentSpreadsheet(route) {
+        if (!window.ExcelJS) throw new Error('O suporte a arquivos Excel não foi carregado. Verifique a conexão e atualize a página.');
+        const spec = specs[route];
+        if (!spec) throw new Error('Esta tela não possui registros para exportar.');
+        const workbook = new window.ExcelJS.Workbook();
+        workbook.creator = 'Owltime';
+        workbook.subject = 'Planilha editável de ' + spec.title;
+        const worksheet = workbook.addWorksheet(spec.title.slice(0, 31));
+        const headers = ['ID'].concat(spec.fields.map(function (field) { return field.label; }));
+        const header = worksheet.addRow(headers);
+        header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D4E89' } };
+        let records = readRecords(spec.key);
+        if (['grupos', 'demandas', 'vinculos'].includes(route)) {
+            records = records.filter(function (record) { return semesterMatches(record, getSemester()); });
+        } else if (route === 'disponibilidade') {
+            records = records.filter(function (record) { return semesterMatches(record, availabilitySemester); });
+        }
+        records.forEach(function (record) {
+            worksheet.addRow([record.id].concat(spec.fields.map(function (field) {
+                return spreadsheetDisplayValue(field, record);
+            })));
+        });
+        const validationEndRow = Math.max(101, records.length + 100);
+        worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+        worksheet.autoFilter = { from: 'A1', to: worksheet.getRow(1).getCell(headers.length).address };
+        worksheet.columns = headers.map(function (value, index) {
+            return { width: Math.max(14, Math.min(34, index ? value.length + 5 : 10)) };
+        });
+        const listSheet = workbook.addWorksheet('Listas');
+        listSheet.state = 'veryHidden';
+        spec.fields.forEach(function (field, index) {
+            if (field.type !== 'select') return;
+            const options = fieldOptions(field).map(function (option) { return option[1]; }).filter(Boolean);
+            if (!options.length) return;
+            const listColumn = index + 1;
+            const column = listSheet.getColumn(listColumn).letter;
+            listSheet.getCell(1, listColumn).value = field.name;
+            options.forEach(function (value, optionIndex) {
+                listSheet.getCell(optionIndex + 2, listColumn).value = value;
+            });
+            const name = 'Opcao' + (index + 1);
+            workbook.definedNames.add('Listas!$' + column + '$2:$' + column + '$' + (options.length + 1), name);
+            const worksheetColumn = worksheet.getColumn(index + 2).letter;
+            worksheet.dataValidations.add(worksheetColumn + '2:' + worksheetColumn + validationEndRow, {
+                type: 'list', allowBlank: !field.required, formulae: ['=' + name],
+                showErrorMessage: true, errorTitle: 'Valor inválido', error: 'Selecione uma opção da lista.'
+            });
+        });
+        const buffer = await workbook.xlsx.writeBuffer();
+        downloadCatalogBlob('dados_' + route + '.xlsx', new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }));
+    }
+
+    async function readCurrentSpreadsheet(buffer, route) {
+        if (!window.ExcelJS) throw new Error('O suporte a arquivos Excel não foi carregado. Verifique a conexão e atualize a página.');
+        const spec = specs[route];
+        const workbook = new window.ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
+        const worksheet = workbook.worksheets.find(function (sheet) { return sheet.state === 'visible'; });
+        if (!worksheet) throw new Error('O arquivo Excel não contém uma planilha visível.');
+        if (worksheet.rowCount > 5001) throw new Error('O arquivo excede o limite de 5.000 registros por importação.');
+        const header = [];
+        for (let column = 1; column <= worksheet.getRow(1).cellCount; column += 1) {
+            header.push(normalizeCatalogValue(excelCellText(worksheet.getRow(1).getCell(column))));
+        }
+        const positions = new Map(header.map(function (name, index) { return [name, index]; }));
+        const idPosition = positions.get('id');
+        if (idPosition === undefined) throw new Error('A planilha não contém a coluna ID. Baixe uma nova cópia preenchida pelo sistema.');
+        const fieldPositions = spec.fields.map(function (field) {
+            const position = positions.get(normalizeCatalogValue(field.label));
+            if (position === undefined && route === 'sorts' && field.name === 'subgrupos') {
+                return positions.get('turmas');
+            }
+            if (position === undefined && route === 'vinculos' && field.type === 'multi-check') return null;
+            if (position === undefined && route === 'vinculos' && field.name === 'prioridade') return null;
+            if (position === undefined && route === 'grupos' && field.name === 'semestre_letivo') return null;
+            if (position === undefined) throw new Error('A planilha está sem a coluna "' + field.label + '". Baixe uma nova cópia preenchida pelo sistema.');
+            return position;
+        });
+        if (route === 'vinculos') {
+            const imported = readVinculoSpreadsheetRows(worksheet, idPosition, fieldPositions);
+            spreadsheetImport = {
+                route: route,
+                filename: 'planilha XLSX',
+                rows: imported.rows,
+                newDisciplines: imported.newDisciplines
+            };
+            render();
+            return;
+        }
+        const currentRecords = readRecords(spec.key);
+        const seenIds = new Set();
+        const seenVinculoPairs = new Set();
+        const rows = [];
+        worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+            if (rowNumber === 1) return;
+            const values = header.map(function (_, index) { return excelCellText(row.getCell(index + 1)).trim(); });
+            if (!values.some(Boolean)) return;
+            try {
+                const id = values[idPosition];
+                if (id && seenIds.has(id)) throw new Error('ID repetido nesta planilha.');
+                if (id) seenIds.add(id);
+                let oldRecord = id ? currentRecords.find(function (record) { return String(record.id) === id; }) : null;
+                if (id && !oldRecord) throw new Error('O ID ' + id + ' não existe neste cadastro. Baixe uma nova planilha antes de editar.');
+                if (oldRecord && ['grupos', 'demandas', 'vinculos', 'disponibilidade'].includes(route)) {
+                    const selectedSemester = route === 'disponibilidade' ? availabilitySemester : getSemester();
+                    if (!semesterMatches(oldRecord, selectedSemester)) {
+                        throw new Error('O ID ' + id + ' pertence a outro semestre. Abra esse semestre antes de editar o registro.');
+                    }
+                }
+                const record = Object.assign({}, oldRecord || {});
+                spec.fields.forEach(function (field, index) {
+                    const input = values[fieldPositions[index]] || '';
+                    if (field.required && !input) throw new Error('"' + field.label + '" é obrigatório.');
+                    let value = input;
+                    if (field.type === 'number') {
+                        value = input === '' ? 0 : Number(input.replace(',', '.'));
+                        if (!Number.isFinite(value) || !Number.isInteger(value) || (field.min != null && value < field.min)) {
+                            throw new Error('"' + field.label + '" deve ser um número inteiro igual ou maior que ' + (field.min || 0) + '.');
+                        }
+                    } else if (field.type === 'sort-groups') {
+                        if (/^\s*\[/.test(input)) {
+                            try {
+                                value = JSON.parse(input);
+                            } catch (error) {
+                                throw new Error('"Subgrupos do sort" deve conter JSON válido.');
+                            }
+                        } else {
+                            value = input
+                                ? [{ nome: 'Subgrupo 1', turma_ids: input.split(',').map(function (id) { return Number(id.trim()); }) }]
+                                : [];
+                        }
+                        value = normalizeSortSubgroups(value);
+                    } else if (field.type === 'multi-check') {
+                        value = input
+                            ? Array.from(new Set(input.split(',').map(function (id) { return id.trim(); }).filter(Boolean))).map(function (id) {
+                                const option = fieldOptions(field).find(function (item) { return String(item[0]) === id; });
+                                if (!option) throw new Error('"' + field.label + '" contém uma opção inválida: ' + id + '.');
+                                return Number(option[0]);
+                            })
+                            : [];
+                    } else if (field.type === 'select') {
+                        if (!input) value = field.name.endsWith('_id') ? null : '';
+                        else {
+                            const option = currentSpreadsheetOption(field, input);
+                            if (!option) throw new Error('"' + field.label + '" contém uma opção inválida: ' + input + '.');
+                            value = field.name.endsWith('_id') ? Number(option[0]) : option[0];
+                            if (field.name === 'disponivel') value = Number(value);
+                        }
+                        if (field.optionsFrom === 'cursos') {
+                            const course = value ? findById(KEYS.cursos, value) : null;
+                            record.curso_nome = course ? course.nome : '';
+                        }
+                    }
+                    record[field.name] = value;
+                });
+                if (route === 'grupos') {
+                    record.nome = String(record.nome || '').trim();
+                    if (!record.nome) throw new Error('"Nome do grupo" é obrigatório.');
+                    record.semestre_letivo = String(record.semestre_letivo || getSemester());
+                    if (!/^\d{4}\/[12]$/.test(record.semestre_letivo)) {
+                        throw new Error('O semestre do grupo deve usar o formato AAAA/1 ou AAAA/2.');
+                    }
+                    if (!Array.isArray(record.turma_ids) || !record.turma_ids.length) {
+                        throw new Error('Selecione ao menos uma turma para o grupo.');
+                    }
+                }
+                if (route === 'sorts') {
+                    record.nome = String(record.nome || '').trim();
+                    record.descricao = String(record.descricao || '').trim();
+                    record.ocorrencias = Number(record.ocorrencias);
+                    record.consecutivas = Number(record.consecutivas) === 1 ? 1 : 0;
+                    record.subgrupos = normalizeSortSubgroups(record.subgrupos);
+                    delete record.turma_ids;
+                    if (!record.nome) throw new Error('Informe o nome do sort.');
+                    if (!Number.isInteger(record.ocorrencias) || record.ocorrencias < 1) {
+                        throw new Error('Informe uma quantidade inteira de horários maior que zero.');
+                    }
+                }
+                if (route === 'vinculos') {
+                    if (record.semestre_letivo && !/^\d{4}\/[12]$/.test(String(record.semestre_letivo))) {
+                        throw new Error('Semestre letivo inválido. Use o formato AAAA/1 ou AAAA/2.');
+                    }
+                    record.semestre_letivo = String(record.semestre_letivo || getSemester());
+                    const identity = [
+                        String(record.professor_id || ''),
+                        String(record.disciplina_id || ''),
+                        record.semestre_letivo
+                    ].join('|');
+                    if (seenVinculoPairs.has(identity)) {
+                        throw new Error('Este professor e disciplina aparecem mais de uma vez neste semestre na planilha.');
+                    }
+                    seenVinculoPairs.add(identity);
+                    if (!oldRecord) {
+                        const matches = currentRecords.filter(function (item) {
+                            return String(item.professor_id) === String(record.professor_id) &&
+                                String(item.disciplina_id) === String(record.disciplina_id) &&
+                                String(item.semestre_letivo || getSemester()) === record.semestre_letivo;
+                        });
+                        if (matches.length > 1) {
+                            throw new Error('Este vínculo já aparece mais de uma vez no cadastro; corrija os registros existentes antes de importar.');
+                        }
+                        if (matches.length === 1) oldRecord = matches[0];
+                    }
+                }
+                if (route === 'disponibilidade') {
+                    record.tipo = record.tipo || 'indisponibilidade';
+                    if (!/^\d{4}\/[12]$/.test(String(record.semestre_letivo || getSemester()))) {
+                        throw new Error('O semestre deve usar o formato AAAA/1 ou AAAA/2.');
+                    }
+                    if (record.tipo === 'prd') {
+                        record.horario_id = null;
+                        record.disponivel = 0;
+                        const grade = readSimulation(record.semestre_letivo || getSemester());
+                        const dayLessons = grade.assignments.filter(function (assignment) {
+                            return String(assignment.professor_id) === String(record.professor_id) &&
+                                String(assignment.dia_semana) === String(record.dia_semana);
+                        });
+                        if (dayLessons.length) throw new Error('O professor já tem aulas na grade de ' + record.dia_semana + '; remova ou realoque antes de registrar PRD.');
+                    }
+                }
+                if (route === 'horarios' && record.hora_fim <= record.hora_inicio) {
+                    throw new Error('O horário final precisa ser posterior ao horário inicial.');
+                }
+                if (oldRecord) record.id = oldRecord.id;
+                else {
+                    record.id = nextId(currentRecords.concat(rows.filter(function (item) { return item.record; }).map(function (item) { return item.record; })));
+                    if (route === 'notas') record.created_at = record.created_at || new Date().toISOString();
+                }
+                const comparableRecords = currentRecords.concat(rows.filter(function (item) { return item.record; }).map(function (item) { return item.record; }));
+                const semesterOf = function (item) { return String(item.semestre_letivo || getSemester()); };
+                const duplicate = comparableRecords.some(function (item) {
+                    if (String(item.id) === String(record.id)) return false;
+                    if (route === 'vinculos') {
+                        return String(item.professor_id) === String(record.professor_id) &&
+                            String(item.disciplina_id) === String(record.disciplina_id) &&
+                            semesterOf(item) === semesterOf(record);
+                    }
+                    if (route === 'demandas') {
+                        return String(item.turma_id) === String(record.turma_id) &&
+                            String(item.disciplina_id) === String(record.disciplina_id) &&
+                            semesterOf(item) === semesterOf(record);
+                    }
+                    if (route === 'grupos') {
+                        return groupIdentity(item) === groupIdentity(record) &&
+                            semesterOf(item) === semesterOf(record);
+                    }
+                    if (route === 'disponibilidade') {
+                        return String(item.professor_id) === String(record.professor_id) &&
+                            String(item.dia_semana) === String(record.dia_semana) &&
+                            String(item.tipo || 'indisponibilidade') === String(record.tipo) &&
+                            String(item.horario_id || '') === String(record.horario_id || '') &&
+                            semesterOf(item) === semesterOf(record);
+                    }
+                    if (route === 'sorts') {
+                        return normalizeCatalogValue(item.nome) === normalizeCatalogValue(record.nome);
+                    }
+                    return false;
+                });
+                if (duplicate) throw new Error('Este vínculo, demanda ou registro de disponibilidade já existe neste semestre.');
+                if (route === 'notas') record.updated_at = new Date().toISOString();
+                rows.push({ line: rowNumber, record: record, update: Boolean(oldRecord), error: '' });
+            } catch (error) {
+                rows.push({ line: rowNumber, record: null, update: false, error: error.message || 'Registro inválido.' });
+            }
+        });
+        if (!rows.length) throw new Error('Nenhuma linha preenchida foi encontrada abaixo do cabeçalho.');
+        spreadsheetImport = { route: route, filename: 'planilha XLSX', rows: rows };
+        render();
+    }
+
+    function renderSpreadsheetImport(route) {
+        if (!spreadsheetImport || spreadsheetImport.route !== route) return '';
+        const valid = spreadsheetImport.rows.filter(function (row) { return row.record; });
+        const errors = spreadsheetImport.rows.filter(function (row) { return row.error; });
+        const newDisciplineCount = (spreadsheetImport.newDisciplines || []).length;
+        const previewRows = errors.length
+            ? spreadsheetImport.rows.filter(function (row) { return row.error; })
+            : spreadsheetImport.rows.slice(0, 100);
+        const preview = previewRows.map(function (row) {
+            const label = row.record
+                ? route === 'vinculos'
+                    ? (row.professorName || nameById(KEYS.professores, row.record.professor_id, 'Professor')) + ' · ' +
+                    (row.disciplineName || nameById(KEYS.disciplinas, row.record.disciplina_id, 'Disciplina'))
+                    : row.record.nome || row.record.titulo || row.record.dia_semana || ('ID ' + row.record.id)
+                : '—';
+            const actionLabel = row.error ? 'Erro' : row.update ? 'Atualizar' : 'Novo';
+            const details = row.error
+                ? row.error
+                : row.newDiscipline
+                    ? 'A disciplina será criada sem curso; associe-a ao curso no cadastro de Disciplinas.'
+                    : 'Pronto para aplicar.';
+            return '<tr><td>' + row.line + '</td><td>' + h(label) +
+                (row.newDiscipline ? '<small class="d-block text-warning-emphasis">Nova disciplina</small>' : '') +
+                '</td><td><span class="badge text-bg-' + (row.error ? 'danger' : row.update ? 'primary' : 'success') + '">' +
+                actionLabel + '</span></td><td>' + h(details) + '</td></tr>';
+        }).join('');
+        const importInstruction = route === 'vinculos'
+            ? 'Linhas sem ID atualizam vínculos iguais de professor, disciplina e semestre; nomes compostos como Dany/Aldo geram um vínculo para cada professor reconhecido.'
+            : 'Linhas sem ID serão adicionadas; as demais atualizarão o registro correspondente.';
+        const importStatus = errors.length
+            ? '<div class="alert alert-warning">Exibindo todos os ' + errors.length + ' erro(s), inclusive os que estão após as primeiras 100 linhas. Os ' + valid.length + ' registro(s) válidos podem ser aplicados agora; linhas com erro serão ignoradas.</div>'
+            : '<div class="alert alert-success">Tudo certo: ' + valid.length + ' registro(s) estão prontos para aplicar.</div>';
+        return '<div class="card border-primary mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Revisar planilha preenchida</strong>' +
+            '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="cancel-current-spreadsheet">Cancelar</button></div><div class="card-body">' +
+            '<p><strong>' + valid.length + '</strong> registro(s) válidos · <strong>' + errors.length + '</strong> erro(s). ' + h(importInstruction) +
+            (newDisciplineCount ? ' <strong>' + newDisciplineCount + '</strong> disciplina(s) ausente(s) serão criadas sem curso e precisarão ser associadas depois.' : '') + '</p>' +
+            importStatus +
+            (previewRows.length ? '<div class="table-responsive mb-3"><table class="table table-sm table-striped align-middle"><thead><tr><th>Linha</th><th>Registro</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody>' + preview + '</tbody></table></div>' : '') +
+            '<button class="btn btn-primary" type="button" data-action="confirm-current-spreadsheet"' + (valid.length ? '' : ' disabled') + '>Importar ' + valid.length + ' registro(s) válido(s)</button>' +
+            (!errors.length && spreadsheetImport.rows.length > 100 ? '<p class="small text-muted mt-2">Prévia das primeiras 100 de ' + spreadsheetImport.rows.length + ' linhas; todas foram verificadas.</p>' : '') + '</div></div>';
+    }
+
+    function confirmCurrentSpreadsheet() {
+        if (!spreadsheetImport) return;
+        const spec = specs[spreadsheetImport.route];
+        if (spreadsheetImport.route === 'vinculos' && spreadsheetImport.newDisciplines && spreadsheetImport.newDisciplines.length) {
+            const disciplines = readRecords(KEYS.disciplinas);
+            let nextDisciplineIdValue = nextId(disciplines);
+            spreadsheetImport.newDisciplines.forEach(function (discipline) {
+                const existing = disciplines.find(function (item) {
+                    return normalizeCatalogValue(item.nome) === normalizeCatalogValue(discipline.nome);
+                });
+                if (existing) {
+                    discipline.id = existing.id;
+                } else {
+                    if (disciplines.some(function (item) { return String(item.id) === String(discipline.id); })) {
+                        discipline.id = nextDisciplineIdValue++;
+                    } else {
+                        nextDisciplineIdValue = Math.max(nextDisciplineIdValue, Number(discipline.id) + 1);
+                    }
+                    disciplines.push(discipline);
+                }
+                spreadsheetImport.rows.forEach(function (row) {
+                    if (row.record && normalizeCatalogValue(row.disciplineName) === normalizeCatalogValue(discipline.nome)) {
+                        row.record.disciplina_id = Number(discipline.id);
+                    }
+                });
+            });
+            saveRecords(KEYS.disciplinas, disciplines, specs.disciplinas.module);
+        }
+        const records = readRecords(spec.key);
+        spreadsheetImport.rows.forEach(function (row) {
+            if (!row.record) return;
+            const index = records.findIndex(function (record) { return String(record.id) === String(row.record.id); });
+            if (index >= 0) records[index] = row.record;
+            else records.push(row.record);
+        });
+        saveRecords(spec.key, records, spec.module);
+        const count = spreadsheetImport.rows.filter(function (row) { return row.record; }).length;
+        spreadsheetImport = null;
+        editing = null;
+        render();
+        notify(count + ' registro(s) atualizado(s) pela planilha.', 'success');
+    }
+
+    function confirmCatalogImport() {
+        if (!catalogImport || !catalogImport.accepted.length) throw new Error('Não há registros válidos para importar.');
+        const spec = specs[catalogImport.route];
+        const records = readRecords(spec.key);
+        let nextRecordId = nextId(records);
+        catalogImport.accepted.forEach(function (record) {
+            const index = record.id
+                ? records.findIndex(function (item) { return String(item.id) === String(record.id); })
+                : -1;
+            if (index >= 0) {
+                records[index] = Object.assign({}, records[index], record);
+            } else {
+                records.push(Object.assign({}, record, { id: nextRecordId++ }));
+            }
+        });
+        saveRecords(spec.key, records, spec.module);
+        const count = catalogImport.accepted.length;
+        catalogImport = null;
+        render();
+        notify(count + ' registro(s) aplicado(s) com sucesso.', 'success');
+    }
+
+    function getAvailabilityCourseScope(courseId, semester) {
+        const course = findById(KEYS.cursos, courseId);
+        if (!course) return { course: null, classes: [], demands: [], teachers: [], unlinkedDisciplines: [] };
+        const classes = activeRecords(KEYS.turmas, ['ativa', 'ativo']).filter(function (turma) {
+            return String(turma.curso_id || '') === String(courseId) ||
+                (!turma.curso_id && normalizeCatalogValue(turma.curso_nome) === normalizeCatalogValue(course.nome));
+        });
+        const demandsById = new Map();
+        classes.forEach(function (turma) {
+            getDemandsForClass(turma.id, semester).forEach(function (demand) {
+                if (!demandsById.has(String(demand.disciplina_id))) demandsById.set(String(demand.disciplina_id), demand);
+            });
+        });
+        const demandedIds = new Set(demandsById.keys());
+        const links = readRecords(KEYS.vinculos).filter(function (row) {
+            return semesterMatches(row, semester) && demandedIds.has(String(row.disciplina_id));
+        });
+        const teacherMap = new Map();
+        const linkedDisciplineIds = new Set();
+        links.forEach(function (link) {
+            const teacher = findById(KEYS.professores, link.professor_id);
+            if (!teacher || (teacher.status && !['ativo', 'ativa'].includes(String(teacher.status).toLowerCase()))) return;
+            const id = String(teacher.id);
+            const record = teacherMap.get(id) || { professor: teacher, disciplines: new Map() };
+            const disciplineId = String(link.disciplina_id);
+            const demand = demandsById.get(disciplineId);
+            record.disciplines.set(disciplineId, demand ? demand.disciplina_nome : nameById(KEYS.disciplinas, disciplineId, 'Disciplina'));
+            teacherMap.set(id, record);
+            linkedDisciplineIds.add(disciplineId);
+        });
+        const unlinkedDisciplines = Array.from(demandsById.entries()).filter(function (entry) {
+            return !linkedDisciplineIds.has(entry[0]);
+        }).map(function (entry) { return entry[1]; });
+        const prdRecords = readRecords(KEYS.disponibilidade).filter(function (record) {
+            return String(record.tipo || '').toLowerCase() === 'prd' && semesterMatches(record, semester);
+        });
+        const teachers = Array.from(teacherMap.values()).map(function (entry) {
+            const id = String(entry.professor.id);
+            const days = Array.from(new Set(prdRecords.filter(function (record) {
+                return String(record.professor_id) === id;
+            }).map(function (record) { return record.dia_semana; }))).sort(function (a, b) {
+                return DAYS.indexOf(a) - DAYS.indexOf(b);
+            });
+            return {
+                professor: entry.professor,
+                disciplines: Array.from(entry.disciplines.values()).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); }),
+                prdDays: days
+            };
+        }).sort(function (a, b) {
+            return String(a.professor.nome || '').localeCompare(String(b.professor.nome || ''), 'pt-BR');
+        });
+        return {
+            course: course,
+            classes: classes,
+            demands: Array.from(demandsById.values()),
+            teachers: teachers,
+            unlinkedDisciplines: unlinkedDisciplines
+        };
+    }
+
+    function renderAvailabilityPlanning() {
+        const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
+        if (!courses.some(function (course) { return String(course.id) === String(availabilityCourseId); })) availabilityCourseId = '';
+        const courseOptions = courses.map(function (course) {
+            return '<option value="' + h(course.id) + '"' + (String(course.id) === String(availabilityCourseId) ? ' selected' : '') + '>' +
+                h(course.nome || 'Curso') + '</option>';
+        }).join('');
+        const scope = getAvailabilityCourseScope(availabilityCourseId, availabilitySemester);
+        const teacherOptions = scope.teachers.map(function (entry) {
+            return '<option value="' + h(entry.professor.id) + '">' + h(entry.professor.nome || 'Professor') + '</option>';
+        }).join('');
+        const teacherRows = scope.teachers.map(function (entry) {
+            const prdLabels = entry.prdDays.length
+                ? entry.prdDays.map(function (day) { return '<span class="availability-day-chip availability-day-chip-prd">' + h(day) + '</span>'; }).join('')
+                : '<span class="badge text-bg-warning">PRD não atribuído</span>';
+            return '<article class="prd-teacher-row"><div class="prd-teacher-main"><strong>' + h(entry.professor.nome || 'Professor') +
+                '</strong><div class="small text-muted">' + entry.disciplines.map(h).join(' · ') + '</div></div><div class="prd-teacher-days">' +
+                prdLabels + '</div><span class="badge text-bg-' + (entry.prdDays.length ? 'success' : 'warning') + '">' +
+                (entry.prdDays.length ? 'Atribuído' : 'Pendente') + '</span></article>';
+        }).join('');
+        const missingDisciplines = scope.unlinkedDisciplines.length
+            ? '<div class="alert alert-warning py-2 mb-3"><strong>Disciplinas sem professor vinculado:</strong> ' +
+            scope.unlinkedDisciplines.map(function (demand) { return h(demand.disciplina_nome); }).join(', ') +
+            '. Vincule professores para incluí-los no acompanhamento de PRD.</div>'
+            : '';
+        const summary = !availabilityCourseId
+            ? '<div class="empty-state py-3"><i class="bi bi-funnel"></i>Selecione um curso para ver professores vinculados às disciplinas demandadas.</div>'
+            : !scope.demands.length
+                ? '<div class="alert alert-warning mb-0">Este curso não tem demandas de disciplinas no semestre selecionado. Confira as turmas e demandas cadastradas.</div>'
+                : !scope.teachers.length
+                    ? '<div class="empty-state py-3"><i class="bi bi-person-exclamation"></i>Nenhum professor está vinculado às disciplinas demandadas deste curso no semestre.</div>'
+                    : '';
+        const assignmentForm = availabilityCourseId && scope.teachers.length
+            ? '<form id="prd-form" class="prd-assignment-form"><div><label class="form-label" for="prd-professor">Professor vinculado</label><select class="form-select" id="prd-professor" name="professor_id" required><option value="">Selecione</option>' +
+            teacherOptions + '</select></div><div><label class="form-label" for="prd-day">Dia de PRD</label><select class="form-select" id="prd-day" name="dia_semana" required>' +
+            DAYS.map(function (day) { return '<option value="' + h(day) + '">' + h(day) + '</option>'; }).join('') +
+            '</select></div><button type="submit" class="btn btn-primary align-self-end"><i class="bi bi-calendar-plus me-1"></i>Atribuir PRD</button></form>'
+            : '';
+        return '<section class="card mb-4 prd-planning"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><div><strong>Plano de Trabalho Docente (PRD)</strong>' +
+            '<div class="small text-muted fw-normal">Registre atividades de ensino, pesquisa e extensão em dias sem aulas; cada PRD bloqueia o dia inteiro na geração da grade.</div></div>' +
+            '<span class="badge text-bg-primary">Prioridade</span></div><div class="card-body">' +
+            '<div class="row g-3 align-items-end mb-3"><div class="col-sm-4"><label class="form-label" for="availability-semester">Semestre</label>' +
+            '<input class="form-control" id="availability-semester" value="' + h(availabilitySemester) + '" pattern="\\d{4}/[12]" placeholder="AAAA/1"></div>' +
+            '<div class="col-sm-5"><label class="form-label" for="availability-course">Curso</label><select class="form-select" id="availability-course"><option value="">Selecione um curso</option>' +
+            courseOptions + '</select></div><div class="col-sm-3"><button type="button" class="btn btn-outline-primary w-100" data-action="availability-apply">Consultar</button></div></div>' +
+            (availabilityCourseId && scope.course ? '<p class="small text-muted">Curso: <strong>' + h(scope.course.nome) + '</strong> · ' + scope.classes.length +
+                ' turma(s) · ' + scope.demands.length + ' disciplina(s) demandada(s) · ' + scope.teachers.filter(function (entry) { return entry.prdDays.length; }).length +
+                ' de ' + scope.teachers.length + ' professor(es) com PRD atribuído</p>' : '') +
+            missingDisciplines + assignmentForm + summary +
+            (availabilityCourseId && scope.teachers.length
+                ? '<div class="d-flex justify-content-between align-items-center gap-2 mt-3 mb-2"><h2 class="h6 mb-0">Acompanhamento dos professores (' +
+                scope.teachers.length + ')</h2>' + renderDataSectionToggle('availability-teachers', 'Mostrar professores', 'Recolher professores') + '</div>' +
+                renderDataSectionContent('availability-teachers', '<div class="prd-teacher-list">' + teacherRows + '</div>')
+                : '') +
+            '</div></section>';
+    }
+
+    function syncAvailabilityForm(form) {
+        if (!form) return;
+        const type = form.elements.namedItem('tipo');
+        const slot = form.elements.namedItem('horario_id');
+        const available = form.elements.namedItem('disponivel');
+        const day = form.elements.namedItem('dia_semana');
+        const isPrd = type && type.value === 'prd';
+        if (slot && day) {
+            Array.from(slot.options).forEach(function (option) {
+                if (!option.value || !option.dataset.day) return;
+                option.hidden = option.dataset.day !== day.value;
+            });
+        }
+        [slot, available].forEach(function (control) {
+            if (!control) return;
+            const wrapper = control.closest('.col-md-6');
+            if (wrapper) wrapper.hidden = isPrd;
+        });
+        if (isPrd) {
+            if (slot) slot.value = '';
+            if (available) available.value = '0';
+        }
+    }
+
+    function submitPrd(form) {
+        const professorId = String(form.elements.namedItem('professor_id').value || '');
+        const day = String(form.elements.namedItem('dia_semana').value || '');
+        const semester = availabilitySemester;
+        const scope = getAvailabilityCourseScope(availabilityCourseId, semester);
+        const teacher = scope.teachers.find(function (entry) { return String(entry.professor.id) === professorId; });
+        if (!teacher) throw new Error('Selecione um professor vinculado às disciplinas demandadas do curso.');
+        if (!DAYS.includes(day)) throw new Error('Selecione um dia válido para o PRD.');
+        const records = readRecords(KEYS.disponibilidade);
+        const duplicate = records.some(function (record) {
+            return String(record.professor_id) === professorId &&
+                String(record.tipo || '').toLowerCase() === 'prd' &&
+                String(record.dia_semana) === day && semesterMatches(record, semester);
+        });
+        if (duplicate) throw new Error('Este professor já tem PRD atribuído nesse dia e semestre.');
+        const grade = readSimulation(semester);
+        const dayLessons = grade.assignments.filter(function (assignment) {
+            return String(assignment.professor_id) === professorId && String(assignment.dia_semana) === day;
+        });
+        if (dayLessons.length) throw new Error('Este professor já tem ' + dayLessons.length + ' aula(s) na grade de ' + day +
+            '. Realoque ou remova essas aulas antes de registrar o PRD.');
+        records.push({
+            id: nextId(records),
+            professor_id: Number(professorId),
+            dia_semana: day,
+            horario_id: null,
+            disponivel: 0,
+            tipo: 'prd',
+            semestre_letivo: semester
+        });
+        saveRecords(KEYS.disponibilidade, records, 'ProfessorDisponibilidade');
+        render();
+        notify('PRD de ' + teacher.professor.nome + ' registrado para ' + day + ' no semestre ' + semester + '.', 'success');
+    }
+
+    function renderSchedulePlanning(records) {
+        const sorted = records.slice().sort(function (a, b) {
+            return DAYS.indexOf(a.dia_semana) - DAYS.indexOf(b.dia_semana) ||
+                String(a.hora_inicio || '').localeCompare(String(b.hora_inicio || ''));
+        });
+        const conflicts = new Set();
+        sorted.forEach(function (slot, index) {
+            sorted.slice(index + 1).forEach(function (other) {
+                if (slot.dia_semana === other.dia_semana &&
+                    String(slot.hora_inicio || '') < String(other.hora_fim || '') &&
+                    String(slot.hora_fim || '') > String(other.hora_inicio || '')) {
+                    conflicts.add(String(slot.id));
+                    conflicts.add(String(other.id));
+                }
+            });
+        });
+        const lessons = sorted.filter(function (slot) { return String(slot.tipo || 'Aula').toLowerCase() === 'aula'; }).length;
+        const breaks = sorted.length - lessons;
+        const configuredDays = new Set(sorted.map(function (slot) { return slot.dia_semana; })).size;
+        const days = WEEKDAYS.concat(DAYS.slice(5).filter(function (day) {
+            return sorted.some(function (slot) { return slot.dia_semana === day; });
+        }));
+        const stats = [
+            ['Períodos de aula', lessons, 'bi-easel2', 'schedule-stat-class'],
+            ['Intervalos', breaks, 'bi-cup-hot', 'schedule-stat-break'],
+            ['Dias configurados', configuredDays, 'bi-calendar-week', 'schedule-stat-days'],
+            ['Períodos em conflito', conflicts.size, 'bi-exclamation-triangle', conflicts.size ? 'schedule-stat-conflict' : 'schedule-stat-ok']
+        ].map(function (item) {
+            return '<div class="col-6 col-xl-3"><div class="schedule-stat ' + item[3] + '"><span><i class="bi ' + item[2] + '"></i>' +
+                h(item[0]) + '</span><strong>' + h(item[1]) + '</strong></div></div>';
+        }).join('');
+        const dayCards = days.map(function (day) {
+            const daySlots = sorted.filter(function (slot) { return slot.dia_semana === day; });
+            const items = daySlots.length ? daySlots.map(function (slot) {
+                const minutes = Math.max(0, (Number(String(slot.hora_fim || '').slice(0, 2)) * 60 +
+                    Number(String(slot.hora_fim || '').slice(3, 5))) -
+                    (Number(String(slot.hora_inicio || '').slice(0, 2)) * 60 +
+                        Number(String(slot.hora_inicio || '').slice(3, 5))));
+                const conflict = conflicts.has(String(slot.id));
+                return '<div class="schedule-period' + (conflict ? ' has-conflict' : '') + '"><div class="schedule-period-time">' +
+                    '<strong>' + h(slot.hora_inicio || '—') + '–' + h(slot.hora_fim || '—') + '</strong>' +
+                    '<small>' + h(minutes) + ' min</small></div><div class="schedule-period-detail">' + scheduleTypeBadge(slot.tipo) +
+                    (conflict ? '<span class="schedule-conflict-label"><i class="bi bi-exclamation-triangle-fill"></i>Sobreposição</span>' : '') +
+                    '</div><button type="button" class="btn btn-sm btn-outline-primary" data-action="edit" data-id="' + h(slot.id) +
+                    '" aria-label="Editar período de ' + h(day) + ' ' + h(slot.hora_inicio) + '"><i class="bi bi-pencil"></i></button></div>';
+            }).join('') : '<div class="schedule-day-empty">Sem períodos configurados</div>';
+            return '<section class="schedule-day-card"><header><h2>' + h(day) + '</h2><span>' + daySlots.length +
+                ' período(s)</span></header><div class="schedule-period-list">' + items + '</div></section>';
+        }).join('');
+        return '<section class="schedule-planner card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
+            '<div><strong>Visão semanal dos horários</strong><div class="small text-muted fw-normal">Confira períodos, intervalos e possíveis sobreposições por dia.</div></div>' +
+            '<div class="d-flex flex-wrap align-items-center gap-2"><span class="schedule-type-badge schedule-type-class">Aula</span><span class="schedule-type-badge schedule-type-break">Intervalo</span>' +
+            renderDataSectionToggle('schedule-planning', 'Mostrar horários', 'Recolher horários') + '</div></div>' +
+            renderDataSectionContent('schedule-planning', '<div class="card-body"><div class="row g-2 mb-3">' + stats + '</div>' +
+                (conflicts.size ? '<div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle me-1"></i>Há horários sobrepostos no mesmo dia. Edite os períodos destacados para evitar conflitos na grade.</div>' : '') +
+                '<div class="schedule-week-grid">' + dayCards + '</div></div>') + '</section>';
+    }
+
+    function notePriorityLabel(priority) {
+        const labels = { baixa: 'Baixa', media: 'Média', alta: 'Alta' };
+        return labels[priority] || labels.media;
+    }
+
+    function renderNotes(isPopup) {
+        const records = readRecords(KEYS.notas).slice().sort(function (a, b) {
+            return String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || ''));
+        });
+        const fields = specs.notas.fields.map(function (field) {
+            const value = editing && editing.route === 'notas' ? editing.record[field.name] : undefined;
+            return renderField(field, value, isPopup ? 'notes-popup-' : '', 'col-md-4');
+        }).join('');
+        const todayDate = new Date();
+        const today = todayDate.getFullYear() + '-' + String(todayDate.getMonth() + 1).padStart(2, '0') + '-' +
+            String(todayDate.getDate()).padStart(2, '0');
+        const overdue = records.filter(function (note) {
+            return note.status !== 'concluido' && note.prazo && note.prazo < today;
+        }).length;
+        const statusColumns = [
+            ['standby', 'A fazer', 'bi-inbox'],
+            ['andamento', 'Em andamento', 'bi-arrow-repeat'],
+            ['concluido', 'Concluído', 'bi-check2-circle']
+        ];
+        const notesBoard = statusColumns.map(function (column) {
+            const notes = records.filter(function (note) {
+                return (note.status || 'standby') === column[0];
+            });
+            const cards = notes.length ? notes.map(function (note) {
+                const color = normalizeCatalogValue(note.cor || 'azul').replace(/[^a-z0-9]+/g, '-');
+                const priority = note.prioridade || 'media';
+                const due = note.prazo
+                    ? '<span class="note-due' + (note.status !== 'concluido' && note.prazo < today ? ' is-overdue' : '') + '">' +
+                    '<i class="bi bi-calendar-event"></i>' + h(new Date(note.prazo + 'T00:00:00').toLocaleDateString('pt-BR')) +
+                    (note.status !== 'concluido' && note.prazo < today ? ' · vencida' : '') + '</span>'
+                    : '';
+                const favorite = note.favorita === true || note.favorita === 1 || note.favorita === 'true';
+                return '<article class="note-card note-color-' + h(color) + '" data-global-record-id="' + h(note.id) + '" data-note-id="' + h(note.id) +
+                    '" draggable="true" tabindex="-1" data-note-search="' +
+                    h([note.titulo, note.texto, notePriorityLabel(priority)].join(' ').toLocaleLowerCase('pt-BR')) + '">' +
+                    '<div class="note-card-top"><span class="note-priority note-priority-' + h(priority) + '">' +
+                    h(notePriorityLabel(priority)) + '</span><div class="note-card-actions">' +
+                    '<button type="button" class="note-star' + (favorite ? ' is-favorite' : '') + '" data-action="note-star" data-id="' + h(note.id) +
+                    '" aria-label="' + (favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos') + '" aria-pressed="' + String(favorite) +
+                    '"><i class="bi ' + (favorite ? 'bi-star-fill' : 'bi-star') + '" aria-hidden="true"></i></button>' +
+                    '<button type="button" class="btn btn-sm btn-light" data-action="edit" data-route="notas" data-id="' + h(note.id) + '" aria-label="Editar nota"><i class="bi bi-pencil"></i></button>' +
+                    '<button type="button" class="btn btn-sm btn-light text-danger" data-action="delete" data-route="notas" data-id="' + h(note.id) + '" aria-label="Excluir nota"><i class="bi bi-trash"></i></button></div></div>' +
+                    '<h3>' + h(note.titulo || 'Sem título') + '</h3><p>' + h(note.texto || '') + '</p><div class="note-card-meta">' + due +
+                    '<span>Atualizada ' + h(formatDate(note.updated_at || note.created_at)) + '</span></div></article>';
+            }).join('') : '<div class="notes-column-empty">Nenhuma anotação nesta etapa.</div>';
+            return '<section class="notes-column notes-column-' + h(column[0]) + '"><header><h2><i class="bi ' + column[2] +
+                '"></i>' + h(column[1]) + '</h2><span>' + notes.length + '</span></header><div class="notes-column-body" data-note-status="' +
+                h(column[0]) + '">' + cards + '</div></section>';
+        }).join('');
+        const heading = editing && editing.route === 'notas' ? 'Editar anotação' : 'Nova anotação';
+        const summaryColumn = isPopup ? 'col-6 col-sm-3' : 'col-6 col-lg-3';
+        const noteSummary = '<section class="notes-summary row g-2 mb-3"><div class="' + summaryColumn + '"><div><span>Total de notas</span><strong>' + records.length +
+            '</strong></div></div><div class="' + summaryColumn + '"><div><span>A fazer</span><strong>' + records.filter(function (note) { return !note.status || note.status === 'standby'; }).length +
+            '</strong></div></div><div class="' + summaryColumn + '"><div><span>Em andamento</span><strong>' + records.filter(function (note) { return note.status === 'andamento'; }).length +
+            '</strong></div></div><div class="' + summaryColumn + '"><div class="' + (overdue ? 'has-overdue' : '') + '"><span>Prazos vencidos</span><strong>' + overdue +
+            '</strong></div></div></section>';
+        const editor = '<section class="card mb-4 notes-editor"><div class="card-header d-flex justify-content-between align-items-center gap-2"><strong>' + heading +
+            '</strong><span class="small text-muted">As notas ficam salvas neste navegador.</span></div><div class="card-body">' +
+            '<form id="' + (isPopup ? 'notes-popup-record-form' : 'record-form') + '" data-route="notas"><div class="row g-2">' + fields + '</div><div class="d-flex gap-2 mt-2">' +
+            '<button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (editing && editing.route === 'notas' ? 'Salvar alterações' : 'Adicionar nota') + '</button>' +
+            (editing && editing.route === 'notas' ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-edit">Cancelar</button>' : '') +
+            '</div></form></div></section>';
+        const board = '<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3"><div><h2 class="h5 mb-1">Quadro de anotações</h2>' +
+            '<p class="small text-muted mb-0">Defina prioridade e prazo; arraste cada cartão para outra etapa conforme a tarefa evolui.</p></div>' +
+            '<div class="d-flex flex-wrap align-items-end gap-2"><div><label class="form-label mb-1" for="' + (isPopup ? 'notes-popup-search' : 'notes-search') +
+            '">Buscar nas anotações</label><input id="' + (isPopup ? 'notes-popup-search' : 'notes-search') +
+            '" class="form-control form-control-sm" type="search" placeholder="Título, texto ou prioridade"></div>' +
+            (isPopup ? '' : renderDataSectionToggle('notes-board', 'Mostrar anotações', 'Recolher anotações')) + '</div></div>' +
+            (isPopup ? '<div class="notes-board">' + notesBoard + '</div>' :
+                renderDataSectionContent('notes-board', '<div class="notes-board">' + notesBoard + '</div>'));
+        if (!isPopup) {
+            return pageHeader('Bloco de notas', 'bi-journal-richtext', 'Organize decisões, tarefas e lembretes em um quadro visual.') +
+                noteSummary + editor + board;
+        }
+        return '<div class="notes-dialog-header"><div><h2><i class="bi bi-journal-richtext" aria-hidden="true"></i>Bloco de notas</h2>' +
+            '<p>Crie, organize e acompanhe suas notas em qualquer tela.</p></div>' +
+            '<button type="button" class="btn-close" data-action="close-notes" aria-label="Fechar bloco de notas"></button></div>' +
+            noteSummary + editor + board;
+    }
+
+    function refreshNotesDialog() {
+        const dialog = document.getElementById('notes-dialog');
+        if (dialog && dialog.open) dialog.innerHTML = renderNotes(true);
+    }
+
+    function renderNotesAfterMutation() {
+        const dialog = document.getElementById('notes-dialog');
+        if (dialog && dialog.open) refreshNotesDialog();
+        if (!dialog || !dialog.open || window.location.hash.replace(/^#\/?/, '').split('/')[0] === 'notas') render();
+    }
+
+    function openEntitySchedule(entityType, entityId) {
+        const isProfessor = entityType === 'professor';
+        const collection = isProfessor ? KEYS.professores : entityType === 'turma' ? KEYS.turmas : '';
+        if (!collection || !findById(collection, entityId)) {
+            throw new Error('Não foi possível localizar o professor ou a turma selecionada.');
+        }
+        const assignmentKey = isProfessor ? 'professor_id' : 'turma_id';
+        const assignments = readSimulation(getSemester()).assignments || [];
+        if (!assignments.some(function (assignment) {
+            return String(assignment[assignmentKey]) === String(entityId);
+        })) {
+            throw new Error('Não há aulas atribuídas a este registro na grade do semestre atual.');
+        }
+        gradeTurmaFilter = isProfessor ? '' : String(entityId);
+        gradeCourseFilter = '';
+        gradeTeacherFilter = isProfessor ? String(entityId) : '';
+        gradeProtectionFilter = '';
+        gradeDisciplineFilter = '';
+        gradeCompletionFilter = '';
+        gradeScheduleCollapsed = false;
+        if (window.location.hash === '#/grade') render();
+        else window.location.hash = '#/grade';
+    }
+
+    function renderCrud(route) {
+        const spec = specs[route];
+        let records = readRecords(spec.key);
+        const scheduleAssignments = ['professores', 'turmas'].includes(route)
+            ? (readSimulation(getSemester()).assignments || [])
+            : [];
+        if (route === 'disponibilidade') {
+            const scopedTeacherIds = availabilityCourseId
+                ? new Set(getAvailabilityCourseScope(availabilityCourseId, availabilitySemester).teachers.map(function (entry) {
+                    return String(entry.professor.id);
+                }))
+                : null;
+            records = records.filter(function (record) {
+                if (!semesterMatches(record, availabilitySemester)) return false;
+                if (!availabilityCourseId) return true;
+                return scopedTeacherIds.has(String(record.professor_id));
+            });
+        } else if (['grupos', 'demandas', 'vinculos'].includes(route)) {
+            records = records.filter(function (record) {
+                return semesterMatches(record, getSemester());
+            });
+        }
+        records = records.slice().sort(function (a, b) {
+            if (route === 'horarios') {
+                return DAYS.indexOf(a.dia_semana) - DAYS.indexOf(b.dia_semana) ||
+                    String(a.hora_inicio || '').localeCompare(String(b.hora_inicio || ''));
+            }
+            return String(a.nome || a.titulo || a.dia_semana || '').localeCompare(String(b.nome || b.titulo || ''), 'pt-BR');
+        });
+        const isEditing = editing && editing.route === route;
+        const fields = spec.fields.map(function (field) {
+            let value = isEditing ? editing.record[field.name] : undefined;
+            if (field.name === 'semestre_letivo' && !isEditing) {
+                value = route === 'disponibilidade' ? availabilitySemester : getSemester();
+            }
+            if (isEditing && route === 'sorts' && field.name === 'subgrupos' &&
+                !Array.isArray(value) && Array.isArray(editing.record.turma_ids)) {
+                value = getSortSubgroups(editing.record);
+            }
+            if (isEditing && route === 'professores' && field.name === 'disciplina_ingresso' && !value && editing.record.disciplina_ingresso_id) {
+                value = nameById(KEYS.disciplinas, editing.record.disciplina_ingresso_id, '');
+            }
+            return renderField(field, value);
+        }).join('');
+        const rows = records.map(function (record) {
+            const cells = spec.columns.map(function (column) {
+                const value = record[column[0]];
+                return '<td>' + (column[2] ? column[2](value, record, scheduleAssignments) : h(value == null || value === '' ? '—' : value)) + '</td>';
+            }).join('');
+            const filterAttributes = getRecordFilterDefinitions(route).map(function (filter) {
+                return ' data-filter-' + h(filter.name) + '="' + h(getRecordFilterValue(route, filter.name, record)) + '"';
+            }).join('');
+            const demandLessonsAttribute = route === 'demandas'
+                ? ' data-demand-lessons="' + h(Number(record.aulas_semanais || record.aulas_previstas || 0)) + '"'
+                : '';
+            return '<tr data-global-record-id="' + h(record.id) + '" tabindex="-1"' + filterAttributes + demandLessonsAttribute + '>' + cells + '<td><div class="table-actions">' +
+                '<button type="button" class="btn btn-sm btn-outline-primary" data-action="edit" data-id="' + h(record.id) + '" aria-label="Editar"><i class="bi bi-pencil"></i></button>' +
+                '<button type="button" class="btn btn-sm btn-outline-danger" data-action="delete" data-id="' + h(record.id) + '" aria-label="Excluir"><i class="bi bi-trash"></i></button>' +
+                '</div></td></tr>';
+        }).join('');
+        const emptyCols = spec.columns.length + 1;
+        const recordFilters = renderRecordFilters(route, records);
+        const totalDemandLessons = records.reduce(function (total, record) {
+            return total + Number(record.aulas_semanais || record.aulas_previstas || 0);
+        }, 0);
+        const scheduleCopy = route === 'horarios'
+            ? '<div class="card mb-4"><div class="card-header">Duplicar horários de um dia</div><div class="card-body">' +
+            '<p class="text-muted">Copie todos os períodos, incluindo intervalos, para outros dias. Horários que coincidirem ou se sobrepuserem aos já cadastrados serão ignorados.</p>' +
+            '<form id="copy-schedule-form"><div class="row g-3 align-items-end">' +
+            '<div class="col-md-4"><label class="form-label" for="copy-schedule-source">Copiar horários de</label><select class="form-select" id="copy-schedule-source" name="source" required>' +
+            DAYS.map(function (day) { return '<option value="' + h(day) + '">' + h(day) + '</option>'; }).join('') +
+            '</select></div><fieldset class="col-md-8"><legend class="form-label">Duplicar para</legend><div class="d-flex flex-wrap gap-3">' +
+            DAYS.map(function (day) {
+                return '<label class="form-check"><input class="form-check-input" type="checkbox" name="target" value="' + h(day) + '"><span class="form-check-label">' + h(day) + '</span></label>';
+            }).join('') +
+            '</div></fieldset><div class="col-12"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-copy me-1"></i>Duplicar horários</button></div>' +
+            '</div></form></div></div>'
+            : '';
+        const schedulePlanning = route === 'horarios' ? renderSchedulePlanning(records) : '';
+        const bulkDemandForm = route === 'demandas' ? renderBulkDemandForm() : '';
+        const coverage = route === 'vinculos' ? renderVinculoCoverage() : '';
+        const availabilityPlanning = route === 'disponibilidade' ? renderAvailabilityPlanning() : '';
+        const spreadsheetTools = '<div class="card mb-4"><div class="card-header">Editar registros com planilha</div><div class="card-body">' +
+            '<p class="text-muted module-guidance">Baixe o XLSX preenchido para editar registros; preserve o ID para atualizá-los ou deixe vazio para criar novos.</p>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-current-spreadsheet"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar XLSX preenchido</button>' +
+            '<button class="btn btn-outline-secondary" type="button" data-action="pick-current-spreadsheet"><i class="bi bi-upload me-1"></i>Enviar XLSX editado</button>' +
+            '<input id="current-spreadsheet-file" class="d-none" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div></div></div>';
+        const importGuidance = route === 'disciplinas' || route === 'turmas'
+            ? (readRecords(KEYS.cursos).length
+                ? 'A lista de cursos do XLSX reflete os cursos cadastrados no momento em que o modelo é baixado.'
+                : 'Cadastre cursos antes de baixar o XLSX para incluir as opções de curso no menu suspenso.')
+            : 'No XLSX, o status também tem lista suspensa.';
+        const importTools = catalogImportSchemas[route]
+            ? '<div class="card mb-4"><div class="card-header">Importar cadastro por planilha</div><div class="card-body">' +
+            '<p class="text-muted module-guidance">Use o modelo para preencher os registros e revise a prévia antes de aplicar. IDs existentes atualizam registros; IDs vazios criam novos.</p>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-outline-primary" type="button" data-action="download-catalog-template" data-format="xlsx"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Baixar modelo XLSX com listas</button>' +
+            '<button class="btn btn-outline-secondary" type="button" data-action="download-catalog-template" data-format="csv"><i class="bi bi-download me-1"></i>Baixar modelo CSV</button>' +
+            '<button class="btn btn-primary" type="button" data-action="pick-catalog-import"><i class="bi bi-upload me-1"></i>Enviar CSV ou XLSX</button>' +
+            '<input id="catalog-import-file" class="d-none" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div>' +
+            '<div class="form-text mt-2">' + h(importGuidance) + (route === 'professores' ? ' Para professores, o XLSX também oferece listas de titulação, carga semanal e limite diário.' : '') + ' CSV não oferece menus suspensos.</div></div></div>'
+            : '';
+        const semesterTools = ['grupos', 'demandas', 'vinculos', 'disponibilidade', 'eventos'].includes(route)
+            ? renderSemesterTools()
+            : '';
+        const semesterDialog = semesterTools ? renderSemesterCopyDialog(getSemester()) : '';
+        return pageHeader(spec.title, spec.icon, descriptionFor(route), '', 'records') +
+            semesterTools +
+            availabilityPlanning +
+            importTools +
+            spreadsheetTools +
+            renderSpreadsheetImport(route) +
+            renderCatalogImport(route) +
+            coverage +
+            bulkDemandForm +
+            schedulePlanning +
+            '<div class="card mb-4"><div class="card-header">' + (isEditing ? 'Editar registro' : 'Novo registro') + '</div><div class="card-body">' +
+            '<form id="record-form" data-route="' + route + '"><div class="row g-3">' + fields + '</div>' +
+            '<div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (isEditing ? 'Salvar alterações' : 'Salvar') + '</button>' +
+            (isEditing ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-edit">Cancelar</button>' : '') + '</div></form></div></div>' +
+            scheduleCopy +
+            '<div class="card module-records-card"><div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap"><strong>Registros (<span id="table-visible-count">' + records.length + '</span>)' +
+            (route === 'demandas' ? ' · <span id="demand-visible-lessons">' + totalDemandLessons + '</span> aulas semanais previstas' : '') + '</strong>' +
+            '<div class="d-flex flex-wrap align-items-center gap-2 no-print">' +
+            '<input id="table-search" class="form-control form-control-sm" style="max-width:260px" type="search" placeholder="Filtrar registros" aria-label="Filtrar registros">' +
+            renderDataSectionToggle('records-' + route, 'Mostrar registros', 'Recolher registros') + '</div></div>' +
+            recordFilters +
+            renderDataSectionContent('records-' + route,
+                '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr>' +
+                spec.columns.map(function (column) { return '<th>' + h(column[1]) + '</th>'; }).join('') + '<th class="text-end">Ações</th></tr></thead><tbody>' +
+                (rows || '<tr><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-inbox"></i>Nenhum registro. Use o formulário acima para começar.</div></td></tr>') +
+                (rows ? '<tr id="record-filter-empty" hidden><td colspan="' + emptyCols + '"><div class="empty-state"><i class="bi bi-funnel"></i>Nenhum registro encontrado com esses filtros.</div></td></tr>' : '') +
+                '</tbody></table></div>') + '</div>' + semesterDialog;
+    }
+
+    function getRecordFilterDefinitions(route) {
+        const filters = {
+            cursos: [
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'sigla', label: 'Sigla', type: 'text' },
+                { name: 'status', label: 'Status', type: 'select' }
+            ],
+            professores: [
+                { name: 'nome', label: 'Professor', type: 'text' },
+                { name: 'disciplina_ingresso', label: 'Disciplina de ingresso', type: 'text' },
+                { name: 'matricula', label: 'Matrícula', type: 'text' },
+                { name: 'email', label: 'E-mail', type: 'text' },
+                { name: 'telefone', label: 'Telefone', type: 'text' },
+                { name: 'titulacao', label: 'Titulação', type: 'select' },
+                { name: 'carga_horaria_semanal', label: 'Carga semanal', type: 'range' },
+                { name: 'limite_aulas_dia', label: 'Limite diário', type: 'range' },
+                { name: 'status', label: 'Status', type: 'select' }
+            ],
+            disciplinas: [
+                { name: 'nome', label: 'Disciplina', type: 'text' },
+                { name: 'curso_id', label: 'Curso', type: 'select' },
+                { name: 'status', label: 'Status', type: 'select' }
+            ],
+            turmas: [
+                { name: 'nome', label: 'Turma', type: 'text' },
+                { name: 'curso_id', label: 'Curso', type: 'select' },
+                { name: 'ano_letivo', label: 'Ano letivo', type: 'select' },
+                { name: 'periodo', label: 'Período/turno', type: 'select' },
+                { name: 'semestre_letivo', label: 'Semestre', type: 'select' },
+                { name: 'status', label: 'Status', type: 'select' }
+            ],
+            horarios: [
+                { name: 'dia_semana', label: 'Dia da semana', type: 'select' },
+                { name: 'tipo', label: 'Tipo', type: 'select' },
+                { name: 'hora_inicio', label: 'A partir de', type: 'time' },
+                { name: 'hora_fim', label: 'Até', type: 'time' }
+            ],
+            vinculos: [
+                { name: 'professor_id', label: 'Professor', type: 'select' },
+                { name: 'disciplina_id', label: 'Disciplina', type: 'select' },
+                { name: 'semestre_letivo', label: 'Semestre', type: 'select' }
+            ],
+            disponibilidade: [
+                { name: 'professor_id', label: 'Professor', type: 'select' },
+                { name: 'dia_semana', label: 'Dia', type: 'select' },
+                { name: 'tipo', label: 'Registro', type: 'select' },
+                { name: 'horario_id', label: 'Horário', type: 'select' },
+                { name: 'disponivel', label: 'Situação', type: 'select' },
+                { name: 'semestre_letivo', label: 'Semestre', type: 'select' }
+            ],
+            demandas: [
+                { name: 'turma_id', label: 'Turma', type: 'select' },
+                { name: 'curso_id', label: 'Curso', type: 'select' },
+                { name: 'semestre_letivo', label: 'Semestre', type: 'select' },
+                { name: 'disciplina_id', label: 'Disciplina', type: 'select' },
+                { name: 'aulas_semanais', label: 'Aulas por semana', type: 'range' }
+            ],
+            notas: [
+                { name: 'titulo', label: 'Título', type: 'text' },
+                { name: 'texto', label: 'Texto', type: 'text' },
+                { name: 'status', label: 'Coluna', type: 'select' },
+                { name: 'cor', label: 'Cor', type: 'select' },
+                { name: 'updated_at', label: 'Atualizado a partir de', type: 'date' }
+            ]
+        };
+        return filters[route] || [];
+    }
+
+    function getRecordFilterValue(route, name, record) {
+        if (route === 'demandas' && name === 'curso_id') {
+            const turma = findById(KEYS.turmas, record.turma_id);
+            if (!turma) return '';
+            if (turma.curso_id) return String(turma.curso_id);
+            const course = readRecords(KEYS.cursos).find(function (item) {
+                return normalizeCatalogValue(item.nome) === normalizeCatalogValue(turma.curso_nome);
+            });
+            return course ? String(course.id) : '';
+        }
+        if (route === 'disponibilidade' && name === 'tipo') return String(record.tipo || 'indisponibilidade');
+        if (route === 'horarios' && name === 'tipo') return String(record.tipo || 'Aula');
+        if (route === 'disponibilidade' && name === 'disponivel') {
+            return String(record.tipo || '').toLowerCase() === 'prd'
+                ? 'prd'
+                : Number(record.disponivel) === 1 ? '1' : '0';
+        }
+        if (route === 'disponibilidade' && name === 'horario_id') return String(record.horario_id || '');
+        if (name === 'semestre_letivo') return String(record.semestre_letivo || '').trim();
+        if (route === 'professores' && name === 'disciplina_ingresso') return teacherIngressName(record);
+        return record[name] == null ? '' : String(record[name]).trim();
+    }
+
+    function getRecordFilterLabel(route, name, value) {
+        if (route === 'disponibilidade' && name === 'horario_id') {
+            if (!value) return 'Dia todo';
+            const slot = findById(KEYS.horarios, value);
+            return slot ? slot.dia_semana + ' · ' + slot.hora_inicio + '–' + slot.hora_fim : 'Horário ' + value;
+        }
+        const idLookups = {
+            curso_id: KEYS.cursos,
+            disciplina_id: KEYS.disciplinas,
+            turma_id: KEYS.turmas,
+            professor_id: KEYS.professores
+        };
+        if (idLookups[name]) return nameById(idLookups[name], value, 'Registro ' + value);
+        if (route === 'disponibilidade' && name === 'tipo') {
+            return String(value).toLowerCase() === 'prd' ? 'PRD · dia todo' : 'Indisponibilidade';
+        }
+        if (route === 'disponibilidade' && name === 'disponivel') {
+            return value === 'prd' ? 'PRD · sem aulas' : value === '1' ? 'Disponível' : 'Indisponível';
+        }
+        if (route === 'horarios' && name === 'tipo') return String(value || 'Aula');
+        if (name === 'semestre_letivo' && !value) return 'Não informado';
+        if (name === 'tipo' && route === 'notas') return value;
+        return value || 'Não informado';
+    }
+
+    function renderRecordFilters(route, records) {
+        if (!records.length) return '';
+        const definitions = getRecordFilterDefinitions(route);
+        if (!definitions.length) return '';
+        const controls = definitions.map(function (filter) {
+            const id = 'record-filter-' + filter.name;
+            if (filter.type === 'select') {
+                const values = Array.from(new Set(records.map(function (record) {
+                    return getRecordFilterValue(route, filter.name, record);
+                }))).sort(function (a, b) { return a.localeCompare(b, 'pt-BR', { numeric: true }); });
+                const options = '<option value="">Todos</option>' + values.map(function (value) {
+                    const optionValue = value || '__owltime_empty__';
+                    return '<option value="' + h(optionValue) + '">' + h(getRecordFilterLabel(route, filter.name, value)) + '</option>';
+                }).join('');
+                return '<div class="col-sm-6 col-lg-3"><label class="form-label mb-1" for="' + id + '">' + h(filter.label) +
+                    '</label><select class="form-select form-select-sm record-filter-control" id="' + id + '" data-filter-name="' +
+                    h(filter.name) + '">' + options + '</select></div>';
+            }
+            if (filter.type === 'range') {
+                return '<div class="col-sm-6 col-lg-3"><label class="form-label mb-1" for="' + id + '-min">' + h(filter.label) +
+                    '</label><div class="input-group input-group-sm"><input class="form-control record-filter-control" id="' + id +
+                    '-min" data-filter-name="' + h(filter.name) + '" data-filter-bound="min" type="number" min="0" placeholder="Mín.">' +
+                    '<input class="form-control record-filter-control" id="' + id + '-max" data-filter-name="' + h(filter.name) +
+                    '" data-filter-bound="max" type="number" min="0" placeholder="Máx."></div></div>';
+            }
+            const inputType = filter.type === 'date' || filter.type === 'time' ? filter.type : 'search';
+            return '<div class="col-sm-6 col-lg-3"><label class="form-label mb-1" for="' + id + '">' + h(filter.label) +
+                '</label><input class="form-control form-control-sm record-filter-control" id="' + id + '" data-filter-name="' +
+                h(filter.name) + '" type="' + inputType + '" placeholder="' +
+                h(filter.type === 'time' ? 'Qualquer horário' : filter.type === 'date' ? 'Qualquer data' : 'Contém...') + '"></div>';
+        }).join('');
+        return '<div class="record-filter-panel px-3 pt-3 no-print"><div class="row g-2 align-items-end">' + controls +
+            '<div class="col-sm-6 col-lg-3"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="clear-record-filters">' +
+            '<i class="bi bi-x-circle me-1"></i>Limpar filtros</button></div></div></div>';
+    }
+
+    function applyRecordFilters() {
+        const route = window.location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+        const definitions = getRecordFilterDefinitions(route);
+        const rows = Array.from(document.querySelectorAll('#view tbody tr[data-filter-' + definitions[0].name + ']'));
+        const query = String(document.getElementById('table-search').value || '').trim().toLocaleLowerCase('pt-BR');
+        let visible = 0;
+        rows.forEach(function (row) {
+            const matchesFilters = definitions.every(function (filter) {
+                const value = row.dataset['filter' + filter.name.charAt(0).toUpperCase() + filter.name.slice(1)] || '';
+                if (filter.type === 'select') {
+                    const selected = document.getElementById('record-filter-' + filter.name).value;
+                    return !selected || (selected === '__owltime_empty__' ? !value : value === selected);
+                }
+                if (filter.type === 'range') {
+                    const minimum = document.getElementById('record-filter-' + filter.name + '-min').value;
+                    const maximum = document.getElementById('record-filter-' + filter.name + '-max').value;
+                    const numericValue = Number(value);
+                    return (!minimum || numericValue >= Number(minimum)) && (!maximum || numericValue <= Number(maximum));
+                }
+                const filterValue = document.getElementById('record-filter-' + filter.name).value;
+                if (!filterValue) return true;
+                if (filter.type === 'date') return value.slice(0, 10) >= filterValue;
+                if (filter.type === 'time') {
+                    return filter.name === 'hora_inicio' ? value >= filterValue : value <= filterValue;
+                }
+                return value.toLocaleLowerCase('pt-BR').includes(filterValue.trim().toLocaleLowerCase('pt-BR'));
+            });
+            const matches = matchesFilters && (!query || row.textContent.toLocaleLowerCase('pt-BR').includes(query));
+            row.hidden = !matches;
+            if (matches) visible += 1;
+        });
+        const count = document.getElementById('table-visible-count');
+        if (count) count.textContent = String(visible);
+        if (route === 'demandas') {
+            const lessonTotal = rows.reduce(function (total, row) {
+                return total + (row.hidden ? 0 : Number(row.dataset.demandLessons || 0));
+            }, 0);
+            const lessonCount = document.getElementById('demand-visible-lessons');
+            if (lessonCount) lessonCount.textContent = String(lessonTotal);
+        }
+        const emptyState = document.getElementById('record-filter-empty');
+        if (emptyState) emptyState.hidden = visible > 0;
+    }
+
+    function renderBulkDemandForm() {
+        const classes = readRecords(KEYS.turmas).slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const classOptions = classes.length
+            ? classes.map(function (turma) {
+                return '<label class="form-check"><input class="form-check-input" type="checkbox" name="turma_ids" value="' + h(turma.id) + '">' +
+                    '<span class="form-check-label">' + h(turma.nome || ('Turma ' + turma.id)) + '</span></label>';
+            }).join('')
+            : '<p class="text-muted mb-0">Cadastre turmas antes de criar demandas em lote.</p>';
+        const disciplineOptions = fieldOptions(specs.demandas.fields.find(function (field) { return field.name === 'disciplina_id'; }));
+        return '<div class="card mb-4"><div class="card-header">Aplicar a várias turmas</div><div class="card-body">' +
+            '<p class="text-muted">Selecione as turmas que terão a mesma disciplina e quantidade de aulas semanais.</p>' +
+            '<form id="bulk-demand-form"><fieldset class="mb-3"><legend class="form-label">Turmas</legend>' +
+            '<div class="d-flex justify-content-end mb-2"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-demand-classes">Marcar/desmarcar todas</button></div>' +
+            '<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-2">' + classOptions + '</div></fieldset>' +
+            '<div class="row g-3"><div class="col-md-4"><label class="form-label" for="bulk-demand-discipline">Disciplina *</label>' +
+            '<select class="form-select" id="bulk-demand-discipline" name="disciplina_id" required><option value="">Selecione</option>' +
+            disciplineOptions.map(function (option) { return '<option value="' + h(option[0]) + '">' + h(option[1]) + '</option>'; }).join('') +
+            '</select></div><div class="col-md-4"><label class="form-label" for="bulk-demand-lessons">Aulas por semana *</label>' +
+            '<input class="form-control" id="bulk-demand-lessons" name="aulas_semanais" type="number" min="1" step="1" value="1" required></div>' +
+            '<div class="col-md-4"><label class="form-label" for="bulk-demand-semester">Semestre letivo</label>' +
+            '<input class="form-control" id="bulk-demand-semester" name="semestre_letivo" value="' + h(getSemester()) + '" placeholder="AAAA/1"></div>' +
+            '<div class="col-12"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-square me-1"></i>Gerar demandas para as turmas</button></div>' +
+            '</div></form></div></div>';
+    }
+
+    function submitBulkDemand(form) {
+        const turmaIds = Array.from(form.querySelectorAll('input[name="turma_ids"]:checked')).map(function (input) { return Number(input.value); });
+        const disciplinaId = Number(form.elements.namedItem('disciplina_id').value || 0);
+        const aulasSemanais = Number(form.elements.namedItem('aulas_semanais').value || 0);
+        const semestre = String(form.elements.namedItem('semestre_letivo').value || '').trim();
+        if (!turmaIds.length) throw new Error('Selecione pelo menos uma turma.');
+        if (!disciplinaId || !findById(KEYS.disciplinas, disciplinaId)) throw new Error('Selecione uma disciplina válida.');
+        if (!Number.isInteger(aulasSemanais) || aulasSemanais < 1) throw new Error('Informe ao menos uma aula por semana.');
+
+        const records = readRecords(KEYS.demandas);
+        const additions = [];
+        let skipped = 0;
+        turmaIds.forEach(function (turmaId) {
+            const duplicate = records.some(function (row) {
+                return String(row.turma_id) === String(turmaId) &&
+                    String(row.disciplina_id) === String(disciplinaId) &&
+                    semesterMatches(row) && String(row.semestre_letivo || '') === semestre;
+            });
+            if (duplicate) {
+                skipped += 1;
+                return;
+            }
+            additions.push({
+                id: nextId(records.concat(additions)),
+                turma_id: turmaId,
+                disciplina_id: disciplinaId,
+                aulas_semanais: aulasSemanais,
+                semestre_letivo: semestre
+            });
+        });
+        if (!additions.length) throw new Error('As turmas selecionadas já têm essa demanda neste semestre. Edite os registros existentes para alterar a quantidade.');
+        saveRecords(KEYS.demandas, records.concat(additions), specs.demandas.module);
+        render();
+        notify(additions.length + ' demanda(s) criada(s).' + (skipped ? ' ' + skipped + ' turma(s) ignorada(s) por já possuir essa demanda.' : ''), 'success');
+    }
+
+    function copySchedule(form) {
+        const sourceDay = form.elements.namedItem('source').value;
+        const targetDays = Array.from(form.querySelectorAll('input[name="target"]:checked')).map(function (input) { return input.value; });
+        if (!targetDays.length) throw new Error('Selecione pelo menos um dia de destino.');
+        if (targetDays.includes(sourceDay)) throw new Error('O dia de origem não pode ser selecionado como destino.');
+
+        const records = readRecords(KEYS.horarios);
+        const sourceSlots = records.filter(function (slot) { return slot.dia_semana === sourceDay; });
+        if (!sourceSlots.length) throw new Error('Não há horários cadastrados no dia de origem.');
+
+        let id = nextId(records);
+        let copied = 0;
+        let skipped = 0;
+        const additions = [];
+        targetDays.forEach(function (day) {
+            const existing = records.filter(function (slot) { return slot.dia_semana === day; });
+            sourceSlots.forEach(function (source) {
+                const collision = existing.some(function (slot) {
+                    return source.hora_inicio < slot.hora_fim && source.hora_fim > slot.hora_inicio;
+                });
+                if (collision) {
+                    skipped += 1;
+                    return;
+                }
+                additions.push(Object.assign({}, source, { id: id, dia_semana: day }));
+                id += 1;
+                copied += 1;
+            });
+        });
+        if (!copied) throw new Error('Nenhum horário foi copiado: todos os períodos já existem ou conflitam com os dias selecionados.');
+        saveRecords(KEYS.horarios, records.concat(additions), specs.horarios.module);
+        render();
+        notify(copied + ' horário(s) duplicado(s).' + (skipped ? ' ' + skipped + ' período(s) ignorado(s) por já existir ou conflitar.' : ''), 'success');
+    }
+
+    function descriptionFor(route) {
+        const descriptions = {
+            cursos: 'Cadastre e mantenha os cursos usados nas turmas.',
+            professores: 'Dados e limites semanais usados no planejamento da grade.',
+            disciplinas: 'Catálogo de disciplinas associado aos cursos.',
+            turmas: 'Turmas, semestre e turno que receberão as aulas.',
+            grupos: 'Agrupe turmas e restrinja vínculos professor-disciplina aos grupos selecionados.',
+            horarios: 'Defina os períodos de aula e intervalos da escola.',
+            vinculos: 'Indique quais disciplinas cada professor pode ministrar e acompanhe a cobertura do semestre selecionado.',
+            disponibilidade: 'Planeje os dias de PRD e registre indisponibilidades por horário ou dia completo.',
+            demandas: 'Defina quantas aulas semanais de cada disciplina cada turma precisa.',
+            peculiaridades: 'Cadastre tipos de proteção e marque os períodos reservados de cada turma antes de gerar a grade.',
+            eventos: 'Cadastre eventos recorrentes para aplicar em horários compatíveis da grade.',
+            sorts: 'Reserve horários para subgrupos de turmas antes de gerar a grade.',
+            notas: 'Observações, pendências e decisões salvas apenas neste navegador.'
+        };
+        return descriptions[route] || '';
+    }
+
+    function subjectColor(disciplineId) {
+        const key = String(disciplineId || '');
+        let hash = 0;
+        for (let index = 0; index < key.length; index += 1) hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
+        return SUBJECT_COLORS[hash % SUBJECT_COLORS.length];
+    }
+
+    function getScheduleTurn(slot) {
+        const hour = Number(String(slot.hora_inicio || '00:00').split(':')[0] || 0);
+        if (hour < 12) return 'manha';
+        if (hour < 18) return 'tarde';
+        return 'noite';
+    }
+
+    function slotMatchesClassPeriod(turma, slot) {
+        const period = normalizeCatalogValue(turma && turma.periodo);
+        const turn = getScheduleTurn(slot);
+        if (period === 'matutino' || period === 'manha') return turn === 'manha';
+        if (period === 'vespertino' || period === 'tarde') return turn === 'tarde';
+        if (period === 'noturno' || period === 'noite') return turn === 'noite';
+        if (period === 'integral') return turn === 'manha' || turn === 'tarde';
+        return true;
+    }
+
+    function eventAppliesToClass(event, turma) {
+        const courseIds = Array.isArray(event && event.curso_ids) ? event.curso_ids.map(String) : [];
+        if (!courseIds.length) return true;
+        if (turma && turma.curso_id != null && courseIds.includes(String(turma.curso_id))) return true;
+        if (turma && turma.curso_nome) {
+            const course = readRecords(KEYS.cursos).find(function (item) {
+                return String(item.nome || '').toLocaleLowerCase('pt-BR') ===
+                    String(turma.curso_nome || '').toLocaleLowerCase('pt-BR');
+            });
+            if (course && courseIds.includes(String(course.id))) return true;
+        }
+        return false;
+    }
+
+    function getEventTargetClasses(slot, event) {
+        return activeRecords(KEYS.turmas, ['ativa', 'ativo']).filter(function (turma) {
+            return slotMatchesClassPeriod(turma, slot) &&
+                (!event || eventAppliesToClass(event, turma));
+        });
+    }
+
+    function renderWeeklyGrid(slots, assignments, turmaId, editable, protections, allowProtection, allowInjection, injectionProtections, injectionAssignments) {
+        const slotProtections = protections || [];
+        const allSlotProtections = injectionProtections || slotProtections;
+        const allAssignments = injectionAssignments || assignments;
+        const turma = turmaId ? findById(KEYS.turmas, turmaId) : null;
+        const sorted = slots.filter(function (slot) {
+            return !turmaId || slotMatchesClassPeriod(turma, slot);
+        }).sort(function (a, b) {
+            return String(a.hora_inicio).localeCompare(String(b.hora_inicio)) || String(a.hora_fim).localeCompare(String(b.hora_fim));
+        });
+        if (turmaId && !sorted.length) {
+            return '<div class="empty-state py-4"><i class="bi bi-calendar-x"></i>Nenhum horário de aula cadastrado para o turno ' +
+                h(turma && turma.periodo || 'da turma') + '.</div>';
+        }
+        const turmaAssignments = turmaId
+            ? assignments.filter(function (item) { return String(item.turma_id) === String(turmaId); })
+            : assignments;
+        const compactSlots = turmaId && !editable && !allowProtection
+            ? sorted.filter(function (slot) {
+                return slotProtections.some(function (protection) {
+                    return String(protection.turma_id) === String(turmaId) &&
+                        String(protection.horario_id) === String(slot.id) &&
+                        String(protection.dia_semana) === String(slot.dia_semana);
+                }) || turmaAssignments.some(function (item) {
+                    if (String(item.dia_semana || '') !== String(slot.dia_semana || '')) return false;
+                    return String(item.horario_id || '') === String(slot.id) ||
+                        (String(item.hora_inicio || '') === String(slot.hora_inicio || '') &&
+                            String(item.hora_fim || '') === String(slot.hora_fim || ''));
+                });
+            })
+            : sorted;
+        if (!compactSlots.length) {
+            return '<div class="empty-state py-4"><i class="bi bi-calendar-check"></i>Nenhuma aula alocada para esta turma.</div>';
+        }
+        const days = scheduleDays(compactSlots);
+        const rowKeys = Array.from(new Set(compactSlots.map(function (slot) { return String(slot.hora_inicio) + '|' + String(slot.hora_fim); })));
+        const header = '<thead><tr><th>Período</th>' + days.map(function (day) { return '<th>' + h(day) + '</th>'; }).join('') + '</tr></thead>';
+        const body = rowKeys.map(function (range) {
+            const times = range.split('|');
+            const cells = days.map(function (day) {
+                const slot = sorted.find(function (item) {
+                    return item.dia_semana === day && String(item.hora_inicio) === times[0] && String(item.hora_fim) === times[1];
+                });
+                if (!slot) return '<td><span class="text-muted">—</span></td>';
+                const protection = slotProtections.find(function (item) {
+                    return String(item.turma_id) === String(turmaId) &&
+                        String(item.horario_id) === String(slot.id) &&
+                        String(item.dia_semana) === String(day);
+                });
+                const canDrag = Boolean(editable && turmaId && !protection);
+                const dropTarget = canDrag
+                    ? ' data-drop-class-id="' + h(turmaId) + '" data-drop-day="' + h(day) + '" data-drop-slot-id="' + h(slot.id) + '"'
+                    : '';
+                const protectionTarget = allowProtection && turmaId
+                    ? ' data-protection-class-id="' + h(turmaId) + '" data-protection-day="' + h(day) +
+                    '" data-protection-slot-id="' + h(slot.id) + '" title="' +
+                    (protection && protection.tipo_marcacao === 'sort'
+                        ? 'Horário reservado pelo sort; remova a aplicação no botão correspondente'
+                        : 'Clique com o botão direito para abrir o formulário de evento/peculiaridade') + '"'
+                    : '';
+                const atSlot = assignments.filter(function (item) {
+                    return String(item.horario_id) === String(slot.id) && String(item.dia_semana) === day &&
+                        (!turmaId || String(item.turma_id) === String(turmaId));
+                });
+                const blockedInjectionSlot = allowInjection && (
+                    allSlotProtections.some(function (item) {
+                        return String(item.turma_id) === String(turmaId) &&
+                            String(item.dia_semana) === String(day) &&
+                            String(item.horario_id) === String(slot.id);
+                    }) || allAssignments.some(function (item) {
+                        return String(item.turma_id) === String(turmaId) &&
+                            String(item.dia_semana) === String(day) &&
+                            String(item.horario_id) === String(slot.id);
+                    })
+                );
+                const injectionTarget = allowInjection && turmaId && !blockedInjectionSlot
+                    ? ' data-injection-class-id="' + h(turmaId) + '" data-injection-day="' + h(day) +
+                    '" data-injection-slot-id="' + h(slot.id) + '"'
+                    : '';
+                if (!atSlot.length) {
+                    const emptyContent = protection
+                        ? '<div class="grade-protection-entry"><strong>' +
+                        h(protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido')) +
+                        '</strong><small>' + (protection.tipo_marcacao === 'evento'
+                            ? 'Evento aplicado às turmas do mesmo turno'
+                            : protection.tipo_marcacao === 'sort'
+                                ? 'Horário reservado'
+                                : 'Horário protegido') +
+                        (allowProtection && protection.tipo_marcacao !== 'sort' ? ' · botão direito para alterar' : '') + '</small></div>'
+                        : editable && turmaId
+                            ? '<button class="grade-empty" type="button" data-action="select-slot" data-class-id="' + h(turmaId) + '" data-day="' + h(day) + '" data-slot-id="' + h(slot.id) + '" aria-label="Adicionar aula em ' + h(day) + ' às ' + h(slot.hora_inicio) + '"></button>'
+                            : allowInjection && turmaId && !blockedInjectionSlot
+                                ? '<span class="grade-empty grade-injection-hint" title="Clique para escolher uma aula e um professor">Clique para injetar aula</span>'
+                                : blockedInjectionSlot
+                                    ? '<span class="grade-protection-hint">Ocupado ou protegido fora dos filtros</span>'
+                                    : allowProtection && turmaId
+                                        ? '<span class="grade-protection-hint">Botão direito para evento/peculiaridade</span>'
+                                        : '<span class="text-muted">—</span>';
+                    return '<td' + dropTarget + protectionTarget + injectionTarget + '>' + emptyContent + '</td>';
+                }
+                const entries = atSlot.map(function (assignment) {
+                    const disciplineId = assignment.disciplina_id;
+                    const disciplineName = assignment.disciplina_nome || nameById(KEYS.disciplinas, disciplineId, 'Disciplina');
+                    const teacherName = assignment.professor_nome || nameById(KEYS.professores, assignment.professor_id, 'Professor');
+                    const className = nameById(KEYS.turmas, assignment.turma_id, 'Turma');
+                    const entry = '<strong>' + h(disciplineName) + '</strong><small>' + (turmaId ? h(teacherName) : h(className + ' · ' + teacherName)) + '</small>';
+                    return editable
+                        ? '<button class="grade-entry" type="button"' + (canDrag ? ' draggable="true" data-drag-assignment-id="' + h(assignment.id) + '"' : '') + ' data-action="edit-assignment" data-id="' + h(assignment.id) + '" style="--grade-subject-color:' + subjectColor(disciplineId) + '" title="' + (canDrag ? 'Arraste para mudar de horário ou clique para editar' : 'Editar aula') + '">' +
+                        entry + '</button>'
+                        : '<div class="grade-entry" style="--grade-subject-color:' + subjectColor(disciplineId) + '">' + entry + '</div>';
+                }).join('');
+                return '<td' + dropTarget + protectionTarget + '><div class="grade-cell-entries">' + entries + '</div></td>';
+            }).join('');
+            return '<tr><th>' + h(times[0]) + '–' + h(times[1]) + '</th>' + cells + '</tr>';
+        }).join('');
+        return '<div class="table-responsive"><table class="table table-bordered align-middle grade-table mb-0">' + header + '<tbody>' + body + '</tbody></table></div>';
+    }
+
+    function renderClassSchedules(turmas, slots, assignments, editable, teacherId, protections, allowProtection, allowInjection, injectionProtections, injectionAssignments) {
+        if (!turmas.length) return '<div class="empty-state"><i class="bi bi-people"></i>Cadastre turmas ativas para montar as grades.</div>';
+        if (!slots.length) return '<div class="empty-state"><i class="bi bi-calendar-x"></i>Cadastre os horários de aula para montar as grades.</div>';
+        const cards = turmas.map(function (turma) {
+            const turmaAssignments = assignments.filter(function (item) { return String(item.turma_id) === String(turma.id); });
+            const demand = getDemandsForClass(turma.id).reduce(function (sum, item) { return sum + item.aulas_semanais; }, 0);
+            const pending = Math.max(0, demand - turmaAssignments.length);
+            const injectionClassAssignments = (injectionAssignments || assignments).filter(function (item) {
+                return String(item.turma_id) === String(turma.id);
+            });
+            const injectionPending = Math.max(0, demand - injectionClassAssignments.length);
+            const status = teacherId ? '<span class="badge text-bg-info">Professor filtrado</span>'
+                : !demand ? '<span class="badge text-bg-secondary">Sem demanda</span>'
+                    : pending ? '<span class="badge text-bg-warning">' + pending + ' pendente(s)</span>'
+                        : turmaAssignments.length > demand ? '<span class="badge text-bg-info">Excedente</span>'
+                            : '<span class="badge text-bg-success">Completa</span>';
+            const classSummary = teacherId ? turmaAssignments.length + ' aula(s) do professor' : turmaAssignments.length + ' / ' + demand + ' aula(s)';
+            return '<section class="card grade-class-card"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">' +
+                '<strong>' + h(turma.nome) + '</strong><span class="small text-muted">' + classSummary + '</span>' + status + '</div>' +
+                '<div class="card-body">' + renderWeeklyGrid(
+                    slots, turmaAssignments, turma.id, editable, protections, allowProtection,
+                    allowInjection && injectionPending > 0, injectionProtections, injectionAssignments
+                ) + '</div></section>';
+        }).join('');
+        return '<div class="grade-class-schedules">' + cards + '</div>';
+    }
+
+    function getGradeProtections(semester) {
+        const selectedSemester = String(semester || getSemester());
+        const eventDefinitions = new Map(readRecords(KEYS.eventos).map(function (event) {
+            return [String(event.id), event];
+        }));
+        const protections = readRecords(KEYS.protecoesGrade).filter(function (protection) {
+            return String(protection.semestre_letivo || '') === selectedSemester;
+        });
+        const events = readRecords(KEYS.eventosGrade).filter(function (event) {
+            return String(event.semestre_letivo || '') === selectedSemester;
+        }).filter(function (event) {
+            const definition = eventDefinitions.get(String(event.evento_id));
+            if (!definition) return true;
+            const turma = findById(KEYS.turmas, event.turma_id);
+            return !turma || eventAppliesToClass(definition, turma);
+        }).map(function (event) {
+            const definition = eventDefinitions.get(String(event.evento_id));
+            return Object.assign({}, event, {
+                tipo_marcacao: 'evento',
+                peculiaridade_nome: definition ? definition.nome : (event.evento_nome || 'Evento')
+            });
+        });
+        return protections.concat(events);
+    }
+
+    function gradeProtectionType(protection) {
+        if (protection.tipo_marcacao === 'evento') return 'evento';
+        if (protection.tipo_marcacao === 'sort') return 'sort';
+        return 'peculiaridade';
+    }
+
+    function gradeProtectionTypeLabel(protection) {
+        const labels = { evento: 'Evento', sort: 'Sort', peculiaridade: 'Peculiaridade' };
+        return labels[gradeProtectionType(protection)];
+    }
+
+    function renderPreGenerationInjectionDialog() {
+        return '<dialog class="assignment-dialog assignment-editor-dialog" id="pre-generation-injection-dialog" aria-labelledby="pre-generation-injection-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="pre-generation-injection-title">Injetar aula na grade</h2>' +
+            '<p class="mb-0 text-muted" id="pre-generation-injection-context"></p></div>' +
+            '<button type="button" class="btn-close" data-action="close-pre-generation-injection" aria-label="Fechar"></button></div>' +
+            '<p class="small text-muted">Escolha uma disciplina com aulas pendentes; serão listados os professores vinculados e aptos para este horário.</p>' +
+            '<form id="pre-generation-injection-form"><input type="hidden" name="turma_id"><input type="hidden" name="dia_semana"><input type="hidden" name="horario_id">' +
+            '<div class="mb-3"><label class="form-label" for="injection-discipline">Aulas necessárias da turma</label>' +
+            '<select class="form-select" id="injection-discipline" name="disciplina_id" required><option value="">Selecione</option></select>' +
+            '<div class="form-text" id="injection-demand-summary"></div></div>' +
+            '<div class="mb-3"><label class="form-label" for="injection-teacher">Professor vinculado</label>' +
+            '<select class="form-select" id="injection-teacher" name="professor_id" required disabled><option value="">Selecione primeiro a disciplina</option></select>' +
+            '<div class="form-text" id="injection-teacher-guidance"></div></div>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit" disabled><i class="bi bi-check2 me-1"></i>Aplicar aula</button>' +
+            '<button class="btn btn-outline-secondary" type="button" data-action="close-pre-generation-injection">Cancelar</button></div></form></dialog>';
+    }
+
+    function isPreGenerationInjection(assignment) {
+        return assignment && assignment.origem === PRE_GENERATION_INJECTION_ORIGIN;
+    }
+
+    function hasNonInjectionAssignments(assignments) {
+        return assignments.some(function (assignment) { return !isPreGenerationInjection(assignment); });
+    }
+
+    function renderSortApplyDialog(sortDefinitions, semester, hasAssignments) {
+        const activeClassIds = new Set(activeRecords(KEYS.turmas, ['ativa', 'ativo']).map(function (turma) {
+            return String(turma.id);
+        }));
+        const availableSorts = sortDefinitions.filter(function (sort) {
+            return getSortSubgroups(sort).some(function (group) {
+                return (Array.isArray(group.turma_ids) ? group.turma_ids : []).some(function (id) {
+                    return activeClassIds.has(String(id));
+                });
+            });
+        });
+        const options = availableSorts.map(function (sort) {
+            const subgroups = getSortSubgroups(sort);
+            const classCount = subgroups.reduce(function (count, group) {
+                return count + (Array.isArray(group.turma_ids) ? group.turma_ids : []).filter(function (id) {
+                    return activeClassIds.has(String(id));
+                }).length;
+            }, 0);
+            return '<option value="' + h(sort.id) + '">' + h(sort.nome || 'Sort') + ' · ' + h(sort.ocorrencias || 0) +
+                ' horário(s) por turma · ' + classCount + ' turma(s) em ' + subgroups.length + ' subgrupo(s)' +
+                (Number(sort.consecutivas) === 1 ? ' · consecutivos' : '') + '</option>';
+        }).join('');
+        const applicationsById = new Map();
+        getGradeProtections(semester).filter(function (protection) {
+            return protection.tipo_marcacao === 'sort' && protection.sort_aplicacao_id;
+        }).forEach(function (protection) {
+            const key = String(protection.sort_aplicacao_id);
+            const application = applicationsById.get(key) || {
+                nome: protection.sort_nome || 'Sort',
+                slots: 0,
+                classes: new Set()
+            };
+            application.slots += 1;
+            application.classes.add(String(protection.turma_id));
+            applicationsById.set(key, application);
+        });
+        const currentApplications = Array.from(applicationsById.entries()).map(function (entry) {
+            return '<li class="list-group-item d-flex justify-content-between align-items-center gap-2">' +
+                '<span><strong>' + h(entry[1].nome) + '</strong> · ' + entry[1].classes.size + ' turma(s), ' +
+                entry[1].slots + ' horário(s)</span><button class="btn btn-sm btn-outline-danger" type="button" data-action="remove-applied-sort" data-sort-application-id="' +
+                h(entry[0]) + '">Remover</button></li>';
+        }).join('');
+        return '<dialog class="assignment-dialog" id="sort-apply-dialog" aria-labelledby="sort-apply-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="sort-apply-title">Aplicar sort</h2>' +
+            '<p class="mb-0 text-muted">Os horários são sorteados por turma e ficam protegidos durante a próxima geração.</p></div>' +
+            '<button type="button" class="btn-close" data-action="close-sort-dialog" aria-label="Fechar"></button></div>' +
+            (hasAssignments ? '<div class="alert alert-warning">A grade já contém aulas geradas ou aplicadas. Limpe a grade antes de aplicar um sort; as injeções manuais da preparação podem permanecer.</div>' : '') +
+            (availableSorts.length
+                ? '<form id="sort-apply-form"><div class="mb-3"><label class="form-label" for="sort-apply-select">Sort</label><select class="form-select" id="sort-apply-select" name="sort_id" required><option value="">Selecione</option>' +
+                options + '</select></div><button class="btn btn-primary" type="submit"' + (hasAssignments ? ' disabled' : '') + '>Sortear horários</button></form>'
+                : '<div class="alert alert-info mb-0">Cadastre um sort com turmas ativas antes de aplicá-lo.</div>') +
+            (currentApplications ? '<hr><h3 class="h6">Reservas aplicadas neste semestre</h3><ul class="list-group">' + currentApplications + '</ul>' : '') +
+            '<div class="d-flex justify-content-end mt-3"><button class="btn btn-outline-secondary" type="button" data-action="close-sort-dialog">Fechar</button></div></dialog>';
+    }
+
+    function shuffleSortItems(items) {
+        const shuffled = items.slice();
+        for (let index = shuffled.length - 1; index > 0; index -= 1) {
+            const randomIndex = Math.floor(Math.random() * (index + 1));
+            const current = shuffled[index];
+            shuffled[index] = shuffled[randomIndex];
+            shuffled[randomIndex] = current;
+        }
+        return shuffled;
+    }
+
+    function getSortSlotPool(turma, scheduleSlots, occurrences, consecutive, existingProtections, groupSlots) {
+        const slotsByDay = new Map();
+        DAYS.forEach(function (day) {
+            const daySlots = scheduleSlots.filter(function (slot) {
+                return slot.dia_semana === day && slotMatchesClassPeriod(turma, slot);
+            }).sort(function (a, b) {
+                return String(a.hora_inicio || '').localeCompare(String(b.hora_inicio || '')) ||
+                    String(a.hora_fim || '').localeCompare(String(b.hora_fim || ''));
+            });
+            slotsByDay.set(day, daySlots);
+        });
+        const isAvailable = function (day, slot) {
+            return !existingProtections.some(function (protection) {
+                return String(protection.turma_id) === String(turma.id) &&
+                    String(protection.dia_semana) === day &&
+                    String(protection.horario_id) === String(slot.id);
+            }) && !groupSlots.has(day + '|' + String(slot.id));
+        };
+        if (consecutive) {
+            const windows = [];
+            slotsByDay.forEach(function (daySlots, day) {
+                for (let index = 0; index <= daySlots.length - occurrences; index += 1) {
+                    const window = daySlots.slice(index, index + occurrences);
+                    const staysInTurn = window.every(function (slot, slotIndex) {
+                        return slotIndex === 0 ||
+                            getScheduleTurn(slot) === getScheduleTurn(window[slotIndex - 1]);
+                    });
+                    if (staysInTurn && window.every(function (slot) { return isAvailable(day, slot); })) windows.push(window);
+                }
+            });
+            return windows;
+        }
+        const independentCandidates = [];
+        slotsByDay.forEach(function (daySlots, day) {
+            let run = [];
+            const addIndependentRun = function () {
+                const firstIndex = run.length % 2 === 0 && Math.random() < 0.5 ? 1 : 0;
+                for (let index = firstIndex; index < run.length; index += 2) {
+                    independentCandidates.push(run[index]);
+                }
+                run = [];
+            };
+            daySlots.forEach(function (slot) {
+                if (isAvailable(day, slot)) run.push(slot);
+                else addIndependentRun();
+            });
+            addIndependentRun();
+        });
+        return independentCandidates;
+    }
+
+    function selectSortGroupSchedules(groupClasses, scheduleSlots, occurrences, consecutive, existingProtections) {
+        const classOptions = groupClasses.map(function (turma) {
+            return {
+                turma: turma,
+                flexibility: getSortSlotPool(turma, scheduleSlots, occurrences, consecutive, existingProtections, new Set()).length
+            };
+        });
+        if (classOptions.some(function (item) { return item.flexibility < occurrences; })) return null;
+        const attempts = Math.max(20, groupClasses.length * 8);
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+            const orderedClasses = shuffleSortItems(classOptions).sort(function (a, b) {
+                return a.flexibility - b.flexibility;
+            });
+            const groupSlots = new Set();
+            const selections = new Map();
+            let failed = false;
+            orderedClasses.some(function (item) {
+                const pool = getSortSlotPool(item.turma, scheduleSlots, occurrences, consecutive, existingProtections, groupSlots);
+                if (pool.length < occurrences) {
+                    failed = true;
+                    return true;
+                }
+                const selectedSlots = consecutive
+                    ? pool[Math.floor(Math.random() * pool.length)]
+                    : shuffleSortItems(pool).slice(0, occurrences);
+                selections.set(String(item.turma.id), selectedSlots);
+                selectedSlots.forEach(function (slot) {
+                    groupSlots.add(slot.dia_semana + '|' + String(slot.id));
+                });
+                return false;
+            });
+            if (!failed) return selections;
+        }
+        return null;
+    }
+
+    function applySortFromForm(form) {
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        if (hasNonInjectionAssignments(state.assignments)) {
+            throw new Error('Limpe as aulas geradas ou aplicadas à Grade oficial antes de aplicar um sort.');
+        }
+        const sortId = String(new FormData(form).get('sort_id') || '');
+        const sort = readRecords(KEYS.sorts).find(function (item) { return String(item.id) === sortId; });
+        if (!sort) throw new Error('Selecione um sort válido.');
+        const subgroups = normalizeSortSubgroups(getSortSubgroups(sort));
+        const targetIds = subgroups.reduce(function (ids, group) {
+            return ids.concat(group.turma_ids.map(String));
+        }, []);
+        const activeClasses = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
+        const activeClassMap = new Map(activeClasses.map(function (turma) {
+            return [String(turma.id), turma];
+        }));
+        const targetClasses = targetIds.map(function (id) {
+            return activeClassMap.get(id);
+        });
+        const missingClasses = targetIds.filter(function (id) { return !activeClassMap.has(id); });
+        if (missingClasses.length) {
+            throw new Error('O sort contém turma(s) inativa(s) ou removida(s). Edite o cadastro do sort antes de aplicá-lo.');
+        }
+        if (!targetClasses.length) throw new Error('O sort não tem turmas ativas nos subgrupos.');
+        const occurrences = Number(sort.ocorrencias);
+        if (!Number.isInteger(occurrences) || occurrences < 1) throw new Error('A quantidade de horários do sort é inválida.');
+        const consecutive = Number(sort.consecutivas) === 1;
+        const scheduleSlots = readRecords(KEYS.horarios).filter(function (slot) {
+            return String(slot.tipo || 'Aula').toLowerCase() === 'aula';
+        });
+        const existingProtections = getGradeProtections(semester).concat(
+            state.assignments.filter(isPreGenerationInjection).map(function (assignment) {
+                return {
+                    turma_id: assignment.turma_id,
+                    dia_semana: assignment.dia_semana,
+                    horario_id: assignment.horario_id
+                };
+            })
+        );
+        const plannedProtections = [];
+        const failures = [];
+        subgroups.forEach(function (group) {
+            const groupClasses = group.turma_ids.map(function (id) { return activeClassMap.get(String(id)); });
+            const groupSelections = selectSortGroupSchedules(
+                groupClasses, scheduleSlots, occurrences, consecutive, existingProtections
+            );
+            if (!groupSelections) {
+                failures.push(group.nome + ' (' + groupClasses.map(function (turma) {
+                    return turma.nome || 'Turma ' + turma.id;
+                }).join(', ') + ')');
+                return;
+            }
+            groupSelections.forEach(function (selectedSlots, turmaId) {
+                selectedSlots.forEach(function (slot) {
+                    plannedProtections.push({
+                        id: null,
+                        sort_aplicacao_id: '',
+                        tipo_marcacao: 'sort',
+                        semestre_letivo: semester,
+                        turma_id: Number(turmaId),
+                        dia_semana: slot.dia_semana,
+                        horario_id: Number(slot.id),
+                        sort_id: Number(sort.id),
+                        sort_nome: sort.nome || 'Sort',
+                        sort_subgrupo_nome: group.nome,
+                        peculiaridade_nome: sort.nome || 'Sort',
+                        sort_descricao: sort.descricao || ''
+                    });
+                });
+            });
+        });
+        if (failures.length) {
+            throw new Error('Sort cancelado sem alterar turmas: não foi possível encontrar horários ' +
+                (consecutive ? 'consecutivos' : 'não consecutivos') + ' distintos para todas as turmas em ' +
+                failures.join('; ') + '.');
+        }
+        const protections = readRecords(KEYS.protecoesGrade);
+        let nextProtectionId = nextId(protections);
+        const applicationId = 'sort_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        plannedProtections.forEach(function (protection) {
+            protection.id = nextProtectionId;
+            protection.sort_aplicacao_id = applicationId;
+            nextProtectionId += 1;
+        });
+        saveRecords(KEYS.protecoesGrade, protections.concat(plannedProtections), 'ProtecoesGrade');
+        const dialog = document.getElementById('sort-apply-dialog');
+        if (dialog && dialog.open) dialog.close();
+        render();
+        notify('Sort "' + (sort.nome || 'Sort') + '" aplicado aleatoriamente em ' + targetClasses.length + ' turma(s).', 'success');
+    }
+
+    function removeAppliedSort(applicationId) {
+        const id = String(applicationId || '');
+        if (!id) throw new Error('Não foi possível identificar a aplicação do sort.');
+        const protections = readRecords(KEYS.protecoesGrade);
+        const selected = protections.filter(function (protection) {
+            return protection.tipo_marcacao === 'sort' && String(protection.sort_aplicacao_id) === id;
+        });
+        if (!selected.length) throw new Error('A aplicação do sort não foi encontrada.');
+        const sortName = selected[0].sort_nome || 'Sort';
+        if (!window.confirm('Remover todas as reservas de "' + sortName + '" deste semestre?')) return;
+        saveRecords(KEYS.protecoesGrade, protections.filter(function (protection) {
+            return !(protection.tipo_marcacao === 'sort' && String(protection.sort_aplicacao_id) === id);
+        }), 'ProtecoesGrade');
+        const dialog = document.getElementById('sort-apply-dialog');
+        if (dialog && dialog.open) dialog.close();
+        render();
+        notify('Reservas do sort removidas.', 'success');
+    }
+
+    function renderSlotProtectionDialog() {
+        const peculiarities = readRecords(KEYS.peculiaridades).slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const events = readRecords(KEYS.eventos).slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const options = '<option value="">Sem marcação · liberar horário</option>' +
+            (peculiarities.length ? '<optgroup label="Peculiaridades · somente esta turma">' + peculiarities.map(function (item) {
+                return '<option value="peculiaridade:' + h(item.id) + '">' + h(item.nome || 'Proteção') + ' - Peculiaridade</option>';
+            }).join('') + '</optgroup>' : '') +
+            (events.length ? '<optgroup label="Eventos · turmas compatíveis do mesmo turno">' + events.map(function (item) {
+                return '<option value="evento:' + h(item.id) + '">' + h(item.nome || 'Evento') + ' - Evento</option>';
+            }).join('') + '</optgroup>' : '');
+        return '<dialog class="assignment-dialog" id="slot-protection-dialog" aria-labelledby="slot-protection-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="slot-protection-title">Marcar horário</h2>' +
+            '<p class="mb-0 text-muted" id="slot-protection-context"></p></div>' +
+            '<button type="button" class="btn-close" data-action="close-slot-protection" aria-label="Fechar"></button></div>' +
+            (!peculiarities.length && !events.length ? '<div class="alert alert-warning">Cadastre primeiro uma peculiaridade ou um evento nos módulos correspondentes.</div>' : '') +
+            '<form id="slot-protection-form"><input type="hidden" name="turma_id"><input type="hidden" name="dia_semana"><input type="hidden" name="horario_id">' +
+            '<div class="mb-3"><label class="form-label" for="slot-protection-type">Marcação</label><select class="form-select" id="slot-protection-type" name="marcacao"' +
+            (peculiarities.length || events.length ? '' : ' disabled') + '>' + options + '</select>' +
+            '<div class="form-text">Peculiaridades protegem somente esta turma. Eventos são aplicados nas turmas compatíveis com o mesmo dia, horário, turno e cursos selecionados no cadastro.</div></div>' +
+            '<div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit"' + (peculiarities.length || events.length ? '' : ' disabled') +
+            '>Salvar marcação</button><button class="btn btn-outline-secondary" type="button" data-action="close-slot-protection">Cancelar</button></div></form></dialog>';
+    }
+
+    function openSlotProtectionDialog(cell) {
+        const turmaId = String(cell.dataset.protectionClassId || '');
+        const day = String(cell.dataset.protectionDay || '');
+        const slotId = String(cell.dataset.protectionSlotId || '');
+        const semester = getSemester();
+        const slot = findById(KEYS.horarios, slotId);
+        const turma = findById(KEYS.turmas, turmaId);
+        if (!slot || !turma || slot.dia_semana !== day) throw new Error('Não foi possível identificar a turma e o período selecionados.');
+        const state = readSimulation(semester);
+        const alreadyProtected = getGradeProtections(semester).find(function (item) {
+            return String(item.turma_id) === turmaId &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        if (alreadyProtected && alreadyProtected.tipo_marcacao === 'sort') {
+            throw new Error('Este horário foi reservado por um sort. Remova a aplicação no botão Aplicar sort.');
+        }
+        const occupied = state.assignments.some(function (assignment) {
+            return String(assignment.turma_id) === turmaId &&
+                String(assignment.dia_semana) === day &&
+                String(assignment.horario_id) === slotId;
+        });
+        if (occupied && !alreadyProtected) {
+            throw new Error('Este horário já tem uma aula. Remova ou realoque a aula antes de protegê-lo.');
+        }
+        const dialog = document.getElementById('slot-protection-dialog');
+        const form = document.getElementById('slot-protection-form');
+        if (!dialog || !form) throw new Error('O formulário de proteção não está disponível nesta tela.');
+        form.elements.namedItem('turma_id').value = turmaId;
+        form.elements.namedItem('dia_semana').value = day;
+        form.elements.namedItem('horario_id').value = slotId;
+        form.elements.namedItem('marcacao').value = alreadyProtected
+            ? (alreadyProtected.tipo_marcacao === 'evento'
+                ? 'evento:' + String(alreadyProtected.evento_id)
+                : 'peculiaridade:' + String(alreadyProtected.peculiaridade_id))
+            : '';
+        const marcacaoSelect = form.elements.namedItem('marcacao');
+        Array.from(marcacaoSelect.options).forEach(function (option) {
+            const match = /^evento:(.+)$/.exec(option.value);
+            if (!match) return;
+            const event = findById(KEYS.eventos, match[1]);
+            option.hidden = !event || !eventAppliesToClass(event, turma);
+            option.disabled = option.hidden;
+        });
+        document.getElementById('slot-protection-context').textContent =
+            turma.nome + ' · ' + day + ' · ' + slot.hora_inicio + '–' + slot.hora_fim;
+        if (!dialog.open) dialog.showModal();
+    }
+
+    function saveSlotProtection(form) {
+        const data = new FormData(form);
+        const semester = getSemester();
+        const turmaId = String(data.get('turma_id') || '');
+        const day = String(data.get('dia_semana') || '');
+        const slotId = String(data.get('horario_id') || '');
+        const selection = String(data.get('marcacao') || '');
+        const selectionParts = /^([^:]+):(.+)$/.exec(selection);
+        const selectionType = selectionParts ? selectionParts[1] : '';
+        const selectionId = selectionParts ? selectionParts[2] : '';
+        const slot = findById(KEYS.horarios, slotId);
+        const turma = findById(KEYS.turmas, turmaId);
+        if (!slot || !turma || slot.dia_semana !== day ||
+            String(slot.tipo || 'Aula').toLocaleLowerCase('pt-BR') !== 'aula') {
+            throw new Error('Selecione uma turma e um período de aula válidos.');
+        }
+        const protections = readRecords(KEYS.protecoesGrade);
+        const eventPlacements = readRecords(KEYS.eventosGrade);
+        const existing = getGradeProtections(semester).find(function (item) {
+            return String(item.turma_id) === turmaId &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        const existingProtection = protections.find(function (item) {
+            return String(item.semestre_letivo || '') === semester &&
+                String(item.turma_id) === turmaId &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        const removeExistingEventGroup = function (records) {
+            if (!existing || existing.tipo_marcacao !== 'evento') return records;
+            return records.filter(function (item) {
+                return String(item.evento_grade_id) !== String(existing.evento_grade_id);
+            });
+        };
+        if (!selection) {
+            if (!existing) throw new Error('Selecione uma marcação para salvar ou um horário marcado para liberar.');
+            if (existing.tipo_marcacao === 'evento') {
+                saveRecords(KEYS.eventosGrade, removeExistingEventGroup(eventPlacements), 'EventosGrade');
+            } else {
+                saveRecords(KEYS.protecoesGrade, protections.filter(function (item) {
+                    return String(item.id) !== String(existing.id);
+                }), 'ProtecoesGrade');
+            }
+            document.getElementById('slot-protection-dialog').close();
+            render();
+            notify(existing.tipo_marcacao === 'evento'
+                ? 'Evento removido de todas as turmas deste horário.'
+                : 'Peculiaridade removida. O horário está liberado para aulas.', 'success');
+            return;
+        }
+        if (selectionType !== 'peculiaridade' && selectionType !== 'evento') {
+            throw new Error('Selecione uma peculiaridade ou evento válido.');
+        }
+        const grade = readSimulation(semester);
+        const occupied = grade.assignments.some(function (assignment) {
+            return String(assignment.turma_id) === turmaId &&
+                String(assignment.dia_semana) === day &&
+                String(assignment.horario_id) === slotId;
+        });
+        if (selectionType === 'peculiaridade') {
+            const peculiarity = findById(KEYS.peculiaridades, selectionId);
+            if (!peculiarity) throw new Error('A peculiaridade selecionada não foi encontrada. Atualize a página e tente novamente.');
+            if (occupied) throw new Error('Este horário já tem uma aula. Remova ou realoque a aula antes de protegê-lo.');
+            const protection = {
+                id: existingProtection ? existingProtection.id : nextId(protections),
+                semestre_letivo: semester,
+                turma_id: Number(turmaId),
+                dia_semana: day,
+                horario_id: Number(slotId),
+                peculiaridade_id: Number(selectionId),
+                peculiaridade_nome: peculiarity.nome || 'Proteção'
+            };
+            const nextProtections = protections.filter(function (item) {
+                return String(item.id) !== String(existingProtection && existingProtection.id);
+            }).concat(protection);
+            saveRecords(KEYS.protecoesGrade, nextProtections, 'ProtecoesGrade');
+            if (existing && existing.tipo_marcacao === 'evento') {
+                saveRecords(KEYS.eventosGrade, removeExistingEventGroup(eventPlacements), 'EventosGrade');
+            }
+            document.getElementById('slot-protection-dialog').close();
+            render();
+            notify('Peculiaridade aplicada somente à turma ' + turma.nome + '.', 'success');
+            return;
+        }
+
+        const eventDefinition = findById(KEYS.eventos, selectionId);
+        if (!eventDefinition) throw new Error('O evento selecionado não foi encontrado. Atualize a página e tente novamente.');
+        const targetClasses = getEventTargetClasses(slot, eventDefinition);
+        if (!targetClasses.some(function (item) { return String(item.id) === turmaId; })) {
+            throw new Error('A turma selecionada não está entre as turmas compatíveis com este horário.');
+        }
+        const targetClassIds = new Set(targetClasses.map(function (item) { return String(item.id); }));
+        const occupiedClasses = targetClasses.filter(function (item) {
+            return grade.assignments.some(function (assignment) {
+                return String(assignment.turma_id) === String(item.id) &&
+                    String(assignment.dia_semana) === day &&
+                    String(assignment.horario_id) === slotId;
+            });
+        });
+        if (occupiedClasses.length) {
+            const names = occupiedClasses.slice(0, 5).map(function (item) { return item.nome; }).join(', ');
+            const more = occupiedClasses.length > 5 ? ' e mais ' + (occupiedClasses.length - 5) + ' turma(s)' : '';
+            throw new Error('O evento não foi aplicado porque há aulas neste horário em: ' + names + more +
+                '. Realoque ou remova essas aulas primeiro.');
+        }
+        const conflictingProtection = protections.find(function (item) {
+            return String(item.semestre_letivo || '') === semester &&
+                targetClassIds.has(String(item.turma_id)) &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId;
+        });
+        if (conflictingProtection) {
+            const conflictingClass = targetClasses.find(function (item) { return String(item.id) === String(conflictingProtection.turma_id); });
+            throw new Error('Remova primeiro a peculiaridade existente em ' + (conflictingClass ? conflictingClass.nome : 'uma turma') +
+                ' antes de aplicar o evento a todas.');
+        }
+        const nextIdValue = nextId(eventPlacements);
+        const groupId = 'evento_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        const newPlacements = targetClasses.map(function (item, index) {
+            return {
+                id: nextIdValue + index,
+                evento_grade_id: groupId,
+                semestre_letivo: semester,
+                turma_id: Number(item.id),
+                dia_semana: day,
+                horario_id: Number(slotId),
+                evento_id: Number(selectionId),
+                evento_nome: eventDefinition.nome || 'Evento'
+            };
+        });
+        const otherPlacements = eventPlacements.filter(function (item) {
+            return !(String(item.semestre_letivo || '') === semester &&
+                String(item.dia_semana) === day &&
+                String(item.horario_id) === slotId);
+        });
+        saveRecords(KEYS.eventosGrade, otherPlacements.concat(newPlacements), 'EventosGrade');
+        document.getElementById('slot-protection-dialog').close();
+        render();
+        notify('Evento "' + eventDefinition.nome + '" aplicado em ' + targetClasses.length +
+            (targetClasses.length === 1 ? ' turma.' : ' turmas.') + '.', 'success');
+    }
+
+    function renderDisciplineTeacherSchedules(slots, assignments, disciplineId, turmaId, teachers, editable, protections) {
+        const filtered = assignments.filter(function (item) {
+            return String(item.disciplina_id) === String(disciplineId) &&
+                (!turmaId || String(item.turma_id) === String(turmaId));
+        });
+        if (!filtered.length) return '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula desta disciplina está na grade.</div>';
+        const teacherIds = Array.from(new Set(filtered.map(function (item) { return String(item.professor_id || ''); })));
+        const cards = teacherIds.map(function (teacherId) {
+            const teacher = teachers.find(function (item) { return String(item.id) === teacherId; });
+            const teacherAssignments = filtered.filter(function (item) { return String(item.professor_id || '') === teacherId; });
+            const name = teacher ? teacher.nome : (teacherAssignments[0].professor_nome || 'Sem professor');
+            return '<section class="card grade-teacher-card"><div class="card-header d-flex justify-content-between align-items-center gap-2"><strong>' + h(name) + '</strong><span class="badge text-bg-primary">' + teacherAssignments.length + ' aula(s)</span></div>' +
+                '<div class="card-body">' + renderWeeklyGrid(slots, teacherAssignments, turmaId || null, editable, protections) + '</div></section>';
+        }).join('');
+        return '<div class="grade-teacher-schedules">' + cards + '</div>';
+    }
+
+    function renderTeacherWorkload(professores, assignments) {
+        const sortedTeachers = professores.slice().sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' });
+        });
+        const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
+        const classes = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
+        const disciplines = activeRecords(KEYS.disciplinas, ['ativo', 'ativa']);
+        if (workloadCourseFilter && !courses.some(function (course) { return String(course.id) === workloadCourseFilter; })) {
+            workloadCourseFilter = '';
+        }
+        const selectedCourse = courses.find(function (course) { return String(course.id) === workloadCourseFilter; });
+        const classesInCourse = workloadCourseFilter
+            ? classes.filter(function (turma) {
+                return String(turma.curso_id || '') === workloadCourseFilter ||
+                    (!turma.curso_id && normalizeCatalogValue(turma.curso_nome) === normalizeCatalogValue(selectedCourse && selectedCourse.nome));
+            })
+            : classes;
+        if (workloadTurmaFilter && !classesInCourse.some(function (turma) { return String(turma.id) === workloadTurmaFilter; })) {
+            workloadTurmaFilter = '';
+        }
+        if (workloadDisciplineFilter && !disciplines.some(function (discipline) {
+            return String(discipline.id) === workloadDisciplineFilter;
+        })) workloadDisciplineFilter = '';
+        if (!['', 'above-weekly', 'above-daily', 'below-declared'].includes(workloadStatusFilter)) workloadStatusFilter = '';
+        if (workloadTeacherFilter && !sortedTeachers.some(function (teacher) {
+            return String(teacher.id) === workloadTeacherFilter;
+        })) workloadTeacherFilter = '';
+        const courseClassIds = new Set(classesInCourse.map(function (turma) { return String(turma.id); }));
+        const scopedAssignments = assignments.filter(function (item) {
+            return (!workloadCourseFilter || courseClassIds.has(String(item.turma_id))) &&
+                (!workloadTurmaFilter || String(item.turma_id) === workloadTurmaFilter) &&
+                (!workloadDisciplineFilter || String(item.disciplina_id) === workloadDisciplineFilter);
+        });
+        const scopedTeacherIds = new Set(scopedAssignments.map(function (item) { return String(item.professor_id); }));
+        const hasScopeFilter = Boolean(workloadCourseFilter || workloadTurmaFilter || workloadDisciplineFilter);
+        const teacherMetrics = new Map(sortedTeachers.map(function (professor) {
+            const teacherAssignments = assignments.filter(function (item) { return String(item.professor_id) === String(professor.id); });
+            const weeklyLimit = Number(professor.carga_horaria_semanal == null ? 40 : professor.carga_horaria_semanal);
+            const dailyLimit = Number(professor.limite_aulas_dia == null ? 5 : professor.limite_aulas_dia);
+            const dailyCounts = DAYS.map(function (day) {
+                return teacherAssignments.filter(function (item) { return item.dia_semana === day; }).length;
+            });
+            return [String(professor.id), {
+                assignments: teacherAssignments,
+                weeklyLimit: weeklyLimit,
+                dailyLimit: dailyLimit,
+                dailyMax: Math.max.apply(null, dailyCounts.concat([0]))
+            }];
+        }));
+        const visibleTeachers = sortedTeachers.filter(function (teacher) {
+            if (workloadTeacherFilter && String(teacher.id) !== workloadTeacherFilter) return false;
+            if (hasScopeFilter && !scopedTeacherIds.has(String(teacher.id))) return false;
+            const metrics = teacherMetrics.get(String(teacher.id));
+            if (workloadStatusFilter === 'above-weekly' && metrics.assignments.length <= metrics.weeklyLimit) return false;
+            if (workloadStatusFilter === 'above-daily' && metrics.dailyMax <= metrics.dailyLimit) return false;
+            if (workloadStatusFilter === 'below-declared' && metrics.assignments.length >= metrics.weeklyLimit) return false;
+            return true;
+        });
+        const teacherOptions = '<option value="">Todos os professores</option>' + sortedTeachers.map(function (teacher) {
+            return '<option value="' + h(teacher.id) + '"' +
+                (String(teacher.id) === workloadTeacherFilter ? ' selected' : '') + '>' + h(teacher.nome || 'Professor') + '</option>';
+        }).join('');
+        const courseOptions = '<option value="">Todos os cursos</option>' + courses.map(function (course) {
+            return '<option value="' + h(course.id) + '"' + (String(course.id) === workloadCourseFilter ? ' selected' : '') + '>' +
+                h(course.nome || 'Curso') + '</option>';
+        }).join('');
+        const classOptions = '<option value="">Todas as turmas</option>' + classesInCourse.map(function (turma) {
+            return '<option value="' + h(turma.id) + '"' + (String(turma.id) === workloadTurmaFilter ? ' selected' : '') + '>' +
+                h(turma.nome || 'Turma') + '</option>';
+        }).join('');
+        const disciplineOptions = '<option value="">Todas as disciplinas</option>' + disciplines.map(function (discipline) {
+            return '<option value="' + h(discipline.id) + '"' + (String(discipline.id) === workloadDisciplineFilter ? ' selected' : '') + '>' +
+                h(discipline.nome || 'Disciplina') + '</option>';
+        }).join('');
+        const statusOptions = '<option value="">Todas as situações</option>' +
+            '<option value="above-weekly"' + (workloadStatusFilter === 'above-weekly' ? ' selected' : '') + '>Acima do limite semanal</option>' +
+            '<option value="above-daily"' + (workloadStatusFilter === 'above-daily' ? ' selected' : '') + '>Acima do limite diário</option>' +
+            '<option value="below-declared"' + (workloadStatusFilter === 'below-declared' ? ' selected' : '') + '>Abaixo da carga declarada</option>';
+        const rows = visibleTeachers.map(function (professor) {
+            const metrics = teacherMetrics.get(String(professor.id));
+            const teacherAssignments = metrics.assignments;
+            const weeklyLimit = metrics.weeklyLimit;
+            const dailyLimit = metrics.dailyLimit;
+            const dailyMax = metrics.dailyMax;
+            const percent = weeklyLimit > 0 ? Math.min(100, Math.round(teacherAssignments.length / weeklyLimit * 100)) : (teacherAssignments.length ? 100 : 0);
+            const status = teacherAssignments.length > weeklyLimit
+                ? '<span class="badge text-bg-danger">Acima do limite</span>'
+                : teacherAssignments.length === weeklyLimit
+                    ? '<span class="badge text-bg-warning">No limite</span>'
+                    : '<span class="badge text-bg-success">Dentro do limite</span>';
+            const dailyStatus = dailyMax > dailyLimit
+                ? '<span class="text-danger fw-semibold">' + dailyMax + ' / ' + dailyLimit + ' (acima)</span>'
+                : dailyMax + ' / ' + dailyLimit;
+            const inactive = professor.status && !['ativo', 'ativa'].includes(String(professor.status).toLowerCase());
+            return '<tr><th>' + h(professor.nome || 'Professor') + (inactive ? ' <span class="badge text-bg-secondary">Inativo</span>' : '') + '</th><td><div class="d-flex justify-content-between gap-2"><span>' + teacherAssignments.length + ' / ' + weeklyLimit + '</span>' + status + '</div>' +
+                '<div class="meter mt-2"><span class="' + (teacherAssignments.length > weeklyLimit ? 'meter-over' : '') + '" style="width:' + percent + '%"></span></div></td><td>' + dailyStatus + '</td></tr>';
+        }).join('');
+        return '<div class="card mb-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"><div><strong>Carga dos professores</strong><span class="small text-muted ms-2">Aulas atribuídas / limite semanal e maior carga em um dia / limite diário</span></div>' +
+            '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-teacher-workload" aria-controls="teacher-workload-content" aria-expanded="' +
+            String(!workloadPanelCollapsed) + '"><i class="bi ' + (workloadPanelCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
+            ' me-1" aria-hidden="true"></i>' + (workloadPanelCollapsed ? 'Mostrar carga dos professores' : 'Recolher carga dos professores') +
+            '</button></div><div id="teacher-workload-content" class="data-section-content"' + (workloadPanelCollapsed ? ' hidden' : '') + '><div class="card-body pb-2"><div class="row g-2 align-items-end">' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-teacher-filter">Professor</label><select class="form-select form-select-sm" id="workload-teacher-filter">' + teacherOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-course-filter">Curso</label><select class="form-select form-select-sm" id="workload-course-filter">' + courseOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-class-filter">Turma</label><select class="form-select form-select-sm" id="workload-class-filter">' + classOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-discipline-filter">Disciplina</label><select class="form-select form-select-sm" id="workload-discipline-filter">' + disciplineOptions + '</select></div>' +
+            '<div class="col-12 col-sm-6 col-xl"><label class="form-label mb-1" for="workload-status-filter">Situação da carga</label><select class="form-select form-select-sm" id="workload-status-filter">' + statusOptions + '</select></div>' +
+            '<div class="col-12"><small class="text-muted">Filtros por curso, turma e disciplina selecionam docentes vinculados; a carga exibida considera todas as aulas de cada docente.</small></div></div></div>' +
+            '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Professor</th><th>Carga semanal</th><th>Máximo diário</th></tr></thead><tbody>' +
+            (rows || '<tr><td colspan="3" class="text-center text-muted py-4">' +
+                (sortedTeachers.length ? 'Nenhum professor corresponde ao filtro.' : 'Cadastre professores para acompanhar a carga.') + '</td></tr>') +
+            '</tbody></table></div></div></div>';
+    }
+
+    function renderVinculoCoverage() {
+        const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
+        if (!courses.some(function (course) { return String(course.id) === String(coverageCourseId); })) coverageCourseId = '';
+        const courseOptions = courses.map(function (course) {
+            return '<option value="' + h(course.id) + '"' + (String(course.id) === String(coverageCourseId) ? ' selected' : '') + '>' + h(course.nome) + '</option>';
+        }).join('');
+        const courseSelector = '<div class="mb-3"><label class="form-label" for="coverage-course">Curso</label><select class="form-select" id="coverage-course"><option value="">Selecione um curso</option>' +
+            courseOptions + '</select></div>';
+        if (!courses.length) {
+            return '<div class="card mb-4"><div class="card-header"><strong>Cobertura dos vínculos</strong></div><div class="card-body">' +
+                courseSelector + '<p class="text-muted mb-0">Cadastre um curso e associe turmas a ele para acompanhar os vínculos por curso.</p></div></div>';
+        }
+        if (!coverageCourseId) {
+            return '<div class="card mb-4"><div class="card-header"><strong>Cobertura dos vínculos</strong></div><div class="card-body">' +
+                courseSelector + '<p class="text-muted mb-0">Selecione um curso para ver as disciplinas demandadas e a cobertura dos professores no semestre ' + h(getSemester()) + '.</p></div></div>';
+        }
+
+        const course = findById(KEYS.cursos, coverageCourseId);
+        const classes = activeRecords(KEYS.turmas, ['ativa', 'ativo']).filter(function (turma) {
+            return String(turma.curso_id || '') === String(coverageCourseId) ||
+                (!turma.curso_id && normalizeCatalogValue(turma.curso_nome) === normalizeCatalogValue(course && course.nome));
+        });
+        const demandedById = new Map();
+        classes.forEach(function (turma) {
+            getDemandsForClass(turma.id).forEach(function (demand) {
+                if (demand.aulas_semanais > 0) demandedById.set(String(demand.disciplina_id), demand);
+            });
+        });
+        const demandedIds = new Set(demandedById.keys());
+        const links = readRecords(KEYS.vinculos).filter(semesterMatches);
+        const teachers = activeRecords(KEYS.professores, ['ativo']);
+        const activeTeacherIds = new Set(teachers.map(function (teacher) { return String(teacher.id); }));
+        const courseLinks = links.filter(function (row) {
+            return demandedIds.has(String(row.disciplina_id)) && activeTeacherIds.has(String(row.professor_id));
+        });
+        const linkedTeacherIds = new Set(courseLinks.map(function (row) { return String(row.professor_id); }));
+        const linkedDisciplineIds = new Set(courseLinks.map(function (row) { return String(row.disciplina_id); }));
+        const disciplines = Array.from(demandedById.values()).map(function (demand) {
+            return findById(KEYS.disciplinas, demand.disciplina_id) || {
+                id: demand.disciplina_id,
+                nome: demand.disciplina_nome
+            };
+        });
+        const teachersWithoutDiscipline = teachers.filter(function (teacher) {
+            return !linkedTeacherIds.has(String(teacher.id));
+        });
+        const disciplinesWithoutTeacher = disciplines.filter(function (discipline) {
+            return !linkedDisciplineIds.has(String(discipline.id));
+        });
+        const missingTeachers = teachersWithoutDiscipline.length
+            ? '<ul class="mb-0">' + teachersWithoutDiscipline.map(function (teacher) {
+                return '<li>' + h(teacher.nome || 'Professor') + '</li>';
+            }).join('') + '</ul>'
+            : '<p class="text-success mb-0">Todos os professores ativos estão vinculados a uma disciplina demandada deste curso.</p>';
+        const missingDisciplines = disciplinesWithoutTeacher.length
+            ? '<ul class="mb-0">' + disciplinesWithoutTeacher.map(function (discipline) {
+                return '<li>' + h(discipline.nome || 'Disciplina') + '</li>';
+            }).join('') + '</ul>'
+            : '<p class="text-success mb-0">Todas as disciplinas demandadas têm ao menos um professor vinculado.</p>';
+        const emptyDemand = !demandedIds.size
+            ? '<div class="alert alert-warning">Não há demandas de disciplinas para as turmas deste curso no semestre selecionado. Confira as demandas e o semestre.</div>'
+            : '';
+        return '<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Cobertura dos vínculos</strong><div class="d-flex align-items-center gap-2"><span class="badge text-bg-primary">Semestre ' + h(getSemester()) + '</span>' +
+            renderDataSectionToggle('vinculo-coverage', 'Mostrar detalhes', 'Recolher detalhes') + '</div></div>' +
+            '<div class="card-body">' + courseSelector + '<p class="small text-muted">Curso: ' + h(course ? course.nome : '') + ' · ' + classes.length + ' turma(s) ativa(s) · ' + demandedIds.size + ' disciplina(s) demandada(s)</p>' + emptyDemand +
+            renderDataSectionContent('vinculo-coverage', '<div class="row g-4"><div class="col-md-6"><h2 class="h6">Professores sem vínculo com as disciplinas do curso (' + (demandedIds.size ? teachersWithoutDiscipline.length : '—') + ')</h2>' + (demandedIds.size ? missingTeachers : '') + '</div>' +
+                '<div class="col-md-6"><h2 class="h6">Disciplinas demandadas sem professor (' + disciplinesWithoutTeacher.length + ')</h2>' + missingDisciplines + '</div></div>') + '</div></div>';
+    }
+
+    function getQdpConfig() {
+        const periods = readRecords(KEYS.horarios).filter(function (item) { return String(item.tipo || 'Aula').toLowerCase() === 'aula'; });
+        const sortedTimes = Array.from(new Set(periods.map(function (item) { return String(item.hora_inicio); }))).sort();
+        const horarios = periods.map(function (item) {
+            return Object.assign({}, item, { id: Number(item.id), ordem_aula: sortedTimes.indexOf(String(item.hora_inicio)) + 1 });
+        });
+        const professores = activeRecords(KEYS.professores, ['ativo']).map(function (item) {
+            return {
+                id: Number(item.id), nome: String(item.nome || ''),
+                carga_horaria_semanal: Number(item.carga_horaria_semanal || 40),
+                limite_aulas_dia: Number(item.limite_aulas_dia || 5), carga_atual: 0
+            };
+        });
+        const turmas = activeRecords(KEYS.turmas, ['ativa', 'ativo']).map(function (item) {
+            return {
+                id: Number(item.id), nome: String(item.nome || ''),
+                periodo: String(item.periodo || ''), curso_nome: String(item.curso_nome || nameById(KEYS.cursos, item.curso_id, '')),
+                ano_letivo: Number(item.ano_letivo || 0)
+            };
+        });
+        const disciplinas = readRecords(KEYS.disciplinas).map(function (item) {
+            return { id: Number(item.id), nome: String(item.nome || ''), carga_horaria: Number(item.carga_horaria || 0), restricoes: item.restricoes || {} };
+        });
+        const vínculosRaw = readRecords(KEYS.vinculos).filter(semesterMatches);
+        const vínculos = {};
+        vínculosRaw.forEach(function (row) {
+            const professor = professores.find(function (item) { return item.id === Number(row.professor_id); });
+            const disciplineId = String(Number(row.disciplina_id));
+            if (!professor) return;
+            if (!vínculos[disciplineId]) vínculos[disciplineId] = [];
+            vínculos[disciplineId].push({
+                id: professor.id, nome: professor.nome,
+                carga_horaria_semanal: professor.carga_horaria_semanal,
+                limite_aulas_dia: professor.limite_aulas_dia,
+                grupo_ids: Array.isArray(row.grupo_ids) ? row.grupo_ids.map(Number) : [],
+                prioridade: row.prioridade || 'Não'
+            });
+        });
+        const demandaPorTurma = {};
+        turmas.forEach(function (turma) {
+            demandaPorTurma[turma.id] = getDemandsForClass(turma.id).map(function (row) {
+                return {
+                    disciplina_id: Number(row.disciplina_id),
+                    disciplina_nome: row.disciplina_nome,
+                    aulas_previstas: Number(row.aulas_semanais)
+                };
+            });
+        });
+        const availabilityRecords = readRecords(KEYS.disponibilidade).filter(semesterMatches);
+        const disponibilidades = {};
+        availabilityRecords.forEach(function (row) {
+            const professorId = Number(row.professor_id);
+            if (!professorId || !professores.some(function (item) { return item.id === professorId; })) return;
+            if (!disponibilidades[professorId]) disponibilidades[professorId] = { dias_semana: [], restricoes: [] };
+            const isPrd = String(row.tipo || '').toLowerCase() === 'prd';
+            const available = !isPrd && (row.disponivel === true || Number(row.disponivel) === 1 || String(row.disponivel).toLowerCase() === 'sim');
+            const slotId = Number(row.horario_id || 0);
+            if (available && !slotId && !disponibilidades[professorId].dias_semana.includes(row.dia_semana)) {
+                disponibilidades[professorId].dias_semana.push(row.dia_semana);
+            } else if (!available && slotId) {
+                disponibilidades[professorId].restricoes.push({ dia_semana: row.dia_semana, horario_id: slotId, tipo: 'indisponivel' });
+            } else if (!available && !slotId) {
+                horarios.filter(function (slot) { return slot.dia_semana === row.dia_semana; }).forEach(function (slot) {
+                    disponibilidades[professorId].restricoes.push({ dia_semana: row.dia_semana, horario_id: Number(slot.id), tipo: 'indisponivel' });
+                });
+            }
+        });
+        return {
+            dias: DAYS,
+            horarios: horarios,
+            turmas: turmas,
+            professores: professores,
+            disciplinas: disciplinas,
+            vinculos: vínculos,
+            grupos: readRecords(KEYS.grupos).filter(function (group) {
+                return semesterMatches(group, getSemester());
+            }).map(function (group) {
+                return {
+                    id: Number(group.id),
+                    turma_ids: Array.isArray(group.turma_ids) ? group.turma_ids.map(Number) : []
+                };
+            }),
+            demandaPorTurma: demandaPorTurma,
+            disponibilidades: disponibilidades,
+            protecoes: getGradeProtections(getSemester()),
+            maxAulasDia: Math.max(1, Math.max.apply(null, DAYS.map(function (day) {
+                return horarios.filter(function (slot) { return slot.dia_semana === day; }).length;
+            })))
+        };
+    }
+
+    function showGenerationSummary(report) {
+        window.clearTimeout(generationSummaryTimer);
+        const previous = document.getElementById('generation-summary');
+        if (previous) previous.remove();
+        const pending = Array.isArray(report.falhas) ? report.falhas : [];
+        const locations = pending.slice(0, 5).map(function (item) {
+            return '<li><strong>' + h(item.turma_nome || 'Turma') + '</strong> · ' +
+                h(item.disciplina_nome || 'Disciplina') + ': faltaram ' + h(item.pendentes || 0) + '</li>';
+        }).join('');
+        const extra = pending.length > 5
+            ? '<li class="text-muted">e mais ' + (pending.length - 5) + ' pendência(s)</li>'
+            : '';
+        const complete = Number(report.totalPendentes || 0) === 0;
+        const summary = document.createElement('section');
+        summary.id = 'generation-summary';
+        summary.className = 'generation-summary' + (complete ? ' is-complete' : ' has-pending');
+        summary.setAttribute('role', 'status');
+        summary.setAttribute('aria-live', 'polite');
+        summary.innerHTML = '<div class="d-flex align-items-start gap-2"><i class="bi ' +
+            (complete ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill') +
+            ' generation-summary-icon" aria-hidden="true"></i><div class="flex-grow-1"><strong>' +
+            (complete ? 'Geração completa' : 'Resumo da geração') + '</strong><div class="generation-summary-metrics">' +
+            '<span><b>' + h(report.totalPrevistas || 0) + '</b> previstas</span><span><b>' +
+            h(report.totalAtendidas || 0) + '</b> preenchidas</span><span><b>' +
+            h(report.totalPendentes || 0) + '</b> faltantes</span></div>' +
+            (locations ? '<div class="generation-summary-label">Pendências por turma e disciplina</div><ul>' + locations + extra + '</ul>' :
+                '<div class="generation-summary-label">Todas as aulas previstas foram alocadas.</div>') +
+            '</div></div>';
+        document.body.appendChild(summary);
+        generationSummaryTimer = window.setTimeout(function () {
+            summary.classList.add('is-leaving');
+            generationSummaryTimer = window.setTimeout(function () { summary.remove(); }, 300);
+        }, 6700);
+    }
+
+    function showQdpProcessing() {
+        const previous = document.getElementById('qdp-processing');
+        if (previous) previous.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'qdp-processing';
+        overlay.className = 'qdp-processing';
+        overlay.setAttribute('role', 'status');
+        overlay.setAttribute('aria-live', 'polite');
+        overlay.setAttribute('aria-label', 'Gerando grade escolar');
+        overlay.innerHTML = '<div class="qdp-processing-card"><div class="qdp-loader" aria-hidden="true">' +
+            '<span class="qdp-loader-orbit"></span><i class="bi bi-calendar2-week-fill"></i></div>' +
+            '<h2>Gerando grade com o QDP</h2><p>Estamos organizando as aulas e conferindo as disponibilidades.</p>' +
+            '<strong class="qdp-processing-elapsed">Tempo decorrido: 0 s</strong>' +
+            '<small>Esse processo pode levar alguns instantes para muitas turmas ou aulas. Aguarde.</small></div>';
+        document.body.appendChild(overlay);
+        const button = document.querySelector('[data-action="generate-grade"]');
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+        }
+        view.setAttribute('aria-busy', 'true');
+        const startedAt = Date.now();
+        qdpProcessingTimer = window.setInterval(function () {
+            const elapsed = document.querySelector('.qdp-processing-elapsed');
+            if (elapsed) elapsed.textContent = 'Tempo decorrido: ' + Math.floor((Date.now() - startedAt) / 1000) + ' s';
+        }, 1000);
+    }
+
+    function hideQdpProcessing() {
+        window.clearInterval(qdpProcessingTimer);
+        qdpProcessingTimer = 0;
+        const overlay = document.getElementById('qdp-processing');
+        if (overlay) overlay.remove();
+        const button = document.querySelector('[data-action="generate-grade"]');
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+        }
+        view.removeAttribute('aria-busy');
+    }
+
+    function runQdpInWorker(config) {
+        let worker;
+        try {
+            worker = new Worker('assets/js/qdp-worker.js');
+        } catch (error) {
+            console.warn('Web Worker indisponível; executando o QDP na página:', error);
+            return Promise.resolve().then(function () {
+                return new QDPEngine(config).gerarGradeCompleta();
+            });
+        }
+        return new Promise(function (resolve, reject) {
+            worker.onmessage = function (event) {
+                worker.terminate();
+                if (event.data && event.data.error) {
+                    const error = new Error(event.data.error);
+                    if (event.data.stack) error.stack = event.data.stack;
+                    reject(error);
+                    return;
+                }
+                resolve(event.data && event.data.result);
+            };
+            worker.onerror = function (event) {
+                worker.terminate();
+                reject(new Error(event.message || 'O processo QDP em segundo plano falhou.'));
+            };
+            try {
+                worker.postMessage(config);
+            } catch (error) {
+                worker.terminate();
+                reject(error);
+            }
+        });
+    }
+
+    async function generateGrade() {
+        if (qdpGenerationInProgress) return;
+        if (typeof QDPEngine !== 'function') throw new Error('O mecanismo QDP não foi carregado. Atualize a página e tente novamente.');
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        const manualInjections = state.assignments.filter(isPreGenerationInjection);
+        const config = getQdpConfig();
+        const injectionCounts = new Map();
+        manualInjections.forEach(function (assignment) {
+            const key = String(assignment.turma_id) + '|' + String(assignment.disciplina_id);
+            injectionCounts.set(key, (injectionCounts.get(key) || 0) + 1);
+        });
+        injectionCounts.forEach(function (count, key) {
+            const parts = key.split('|');
+            const demand = (config.demandaPorTurma[parts[0]] || []).find(function (row) {
+                return String(row.disciplina_id) === parts[1];
+            });
+            if (!demand || Number(demand.aulas_previstas) < count) {
+                throw new Error('Uma ou mais injeções manuais excedem a demanda atual. Revise as aulas da turma antes de gerar.');
+            }
+            demand.aulas_previstas = Number(demand.aulas_previstas) - count;
+        });
+        manualInjections.forEach(function (assignment) {
+            config.protecoes.push({
+                turma_id: Number(assignment.turma_id),
+                dia_semana: assignment.dia_semana,
+                horario_id: Number(assignment.horario_id)
+            });
+            const teacherId = String(assignment.professor_id);
+            const availability = config.disponibilidades[teacherId] ||
+                (config.disponibilidades[teacherId] = { dias_semana: [], restricoes: [] });
+            availability.restricoes.push({
+                dia_semana: assignment.dia_semana,
+                horario_id: Number(assignment.horario_id),
+                tipo: 'indisponivel'
+            });
+        });
+        const demandCount = Object.values(config.demandaPorTurma).reduce(function (sum, rows) {
+            return sum + rows.reduce(function (part, row) { return part + row.aulas_previstas; }, 0);
+        }, 0);
+        if (!config.turmas.length || !config.professores.length || !config.horarios.length ||
+            (!demandCount && !manualInjections.length)) {
+            throw new Error('Antes de gerar, cadastre turmas, professores, horários e demandas semanais.');
+        }
+        if (!Object.keys(config.vinculos).length) throw new Error('Vincule professores às disciplinas antes de gerar a grade.');
+        qdpGenerationInProgress = true;
+        try {
+            showQdpProcessing();
+            await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
+            const result = demandCount
+                ? await runQdpInWorker(config)
+                : {
+                    assignments: [],
+                    relatorio: {},
+                    tempo: '0s',
+                    completo: true,
+                    logs: ['Todas as aulas previstas foram cobertas pelas injeções manuais.']
+                };
+            if (!result || !Array.isArray(result.assignments)) throw new Error('O QDP não retornou uma grade válida.');
+            const report = result.relatorio || {};
+            const generatedAssignments = result.assignments.map(function (assignment, index) {
+                return Object.assign({}, assignment, { id: nextId(manualInjections) + index });
+            });
+            state.assignments = manualInjections.concat(generatedAssignments);
+            const injectionTeacherIds = new Set(manualInjections.map(function (assignment) {
+                return String(assignment.professor_id);
+            }));
+            injectionTeacherIds.forEach(function (teacherId) {
+                const teacher = findById(KEYS.professores, teacherId);
+                if (!teacher) return;
+                const teacherAssignments = state.assignments.filter(function (assignment) {
+                    return String(assignment.professor_id) === teacherId;
+                });
+                const weeklyLimit = Number(teacher.carga_horaria_semanal == null ? 40 : teacher.carga_horaria_semanal);
+                const dailyLimit = Number(teacher.limite_aulas_dia == null ? 5 : teacher.limite_aulas_dia);
+                if (teacherAssignments.length > weeklyLimit) {
+                    throw new Error('A geração excederia o limite semanal de ' + teacher.nome +
+                        ', escolhido em uma injeção manual. Ajuste essa escolha ou a carga do professor e tente novamente.');
+                }
+                const overloadedDay = DAYS.find(function (day) {
+                    return teacherAssignments.filter(function (assignment) {
+                        return assignment.dia_semana === day;
+                    }).length > dailyLimit;
+                });
+                if (overloadedDay) {
+                    throw new Error('A geração excederia o limite diário de ' + teacher.nome + ' em ' +
+                        overloadedDay + ', por causa de uma injeção manual. Ajuste essa escolha e tente novamente.');
+                }
+            });
+            state.activeTurmaId = state.activeTurmaId || (config.turmas[0] && config.turmas[0].id);
+            state.lastGenerationReport = {
+                geradoEm: new Date().toISOString(),
+                totalPrevistas: Number(report.totalPrevistas || 0),
+                totalAtendidas: Number(report.totalAtendidas || 0),
+                totalPendentes: Number(report.totalPendentes || 0),
+                percentual: Number(report.totalPrevistas ? (report.totalAtendidas / report.totalPrevistas * 100).toFixed(2) : 0),
+                completo: Boolean(result.completo),
+                turmas: report.turmas || [],
+                professores: report.professores || [],
+                falhas: report.falhas || [],
+                logs: result.logs || []
+            };
+            updateGenerationReportAfterLaboratory(state, semester);
+            state.qdpInfo = {
+                geradoEm: new Date().toISOString(),
+                tempo: result.tempo,
+                completo: Boolean(state.lastGenerationReport.completo)
+            };
+            state.metodo = 'QDP';
+            saveSimulation(semester, state);
+        } catch (error) {
+            console.error('Falha ao gerar grade com QDP:', error);
+            notify(error.message || 'Não foi possível gerar a grade.', 'danger');
+            return;
+        } finally {
+            hideQdpProcessing();
+            qdpGenerationInProgress = false;
+        }
+        render();
+        showGenerationSummary(state.lastGenerationReport);
+    }
+
+    function renderGrade(manualAdjustments) {
+        const semester = getSemester();
+        const state = readEditableSimulation(semester);
+        const editable = Boolean(manualAdjustments);
+        const turmas = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
+        const slots = readRecords(KEYS.horarios).filter(function (slot) { return String(slot.tipo || 'Aula').toLowerCase() === 'aula'; });
+        const baseAssignments = state.assignments || [];
+        const assignments = editable ? baseAssignments : getCurrentGradeAssignments(baseAssignments, semester);
+        const protections = getGradeProtections(semester);
+        const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
+        const disciplines = readRecords(KEYS.disciplinas);
+        const teachers = activeRecords(KEYS.professores, ['ativo']);
+        if (!['', 'complete', 'pending'].includes(gradeCompletionFilter)) gradeCompletionFilter = '';
+        const effectiveCompletionFilter = gradeCompletionFilter;
+        if (gradeCourseFilter && !courses.some(function (course) { return String(course.id) === String(gradeCourseFilter); })) gradeCourseFilter = '';
+        if (!['', 'evento', 'sort', 'peculiaridade'].includes(gradeProtectionFilter)) gradeProtectionFilter = '';
+        const matchingProtections = gradeProtectionFilter
+            ? protections.filter(function (protection) { return gradeProtectionType(protection) === gradeProtectionFilter; })
+            : protections;
+        const protectionClassIds = new Set(matchingProtections.map(function (protection) { return String(protection.turma_id); }));
+        const selectedCourse = courses.find(function (course) { return String(course.id) === String(gradeCourseFilter); });
+        const courseTurmas = gradeCourseFilter
+            ? turmas.filter(function (turma) {
+                return String(turma.curso_id || '') === gradeCourseFilter ||
+                    (!turma.curso_id && normalizeCatalogValue(turma.curso_nome) === normalizeCatalogValue(selectedCourse && selectedCourse.nome));
+            })
+            : turmas;
+        if (gradeTurmaFilter && !courseTurmas.some(function (turma) { return String(turma.id) === String(gradeTurmaFilter); })) gradeTurmaFilter = '';
+        if (gradeDisciplineFilter && !disciplines.some(function (discipline) { return String(discipline.id) === String(gradeDisciplineFilter); })) gradeDisciplineFilter = '';
+        if (gradeTeacherFilter && !teachers.some(function (teacher) { return String(teacher.id) === String(gradeTeacherFilter); })) gradeTeacherFilter = '';
+        const selectedTurma = courseTurmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); }) ||
+            courseTurmas.find(function (turma) { return String(turma.id) === String(state.activeTurmaId); }) || courseTurmas[0];
+        const pdfRecords = pdfExportType === 'turma'
+            ? activeRecords(KEYS.turmas, ['ativa', 'ativo'])
+            : activeRecords(KEYS.professores, ['ativo']);
+        if (pdfExportId && pdfExportId !== 'todas' && !pdfRecords.some(function (item) { return String(item.id) === String(pdfExportId); })) pdfExportId = '';
+        if (!pdfExportId && pdfRecords.length) pdfExportId = String(pdfRecords[0].id);
+        const pdfExportControls = !editable
+            ? '<div class="d-flex flex-wrap align-items-end gap-2 no-print"><div><label class="form-label mb-1" for="pdf-export-type">Exportar por</label><select class="form-select form-select-sm" id="pdf-export-type"><option value="turma"' + (pdfExportType === 'turma' ? ' selected' : '') + '>Turma</option><option value="professor"' + (pdfExportType === 'professor' ? ' selected' : '') + '>Professor</option></select></div>' +
+            '<div><label class="form-label mb-1" for="pdf-export-entity">' + (pdfExportType === 'turma' ? 'Turma' : 'Professor') + '</label><select class="form-select form-select-sm" id="pdf-export-entity">' +
+            (pdfExportType === 'turma' ? '<option value="todas"' + (pdfExportId === 'todas' ? ' selected' : '') + '>Todas as turmas</option>' : '') +
+            (pdfRecords.length ? pdfRecords.map(function (item) {
+                return '<option value="' + h(item.id) + '"' + (String(item.id) === pdfExportId ? ' selected' : '') + '>' + h(item.nome) + '</option>';
+            }).join('') : '<option value="">Nenhum registro cadastrado</option>') + '</select></div>' +
+            '<button class="btn btn-sm btn-danger" type="button" data-action="print-schedule-pdf"' + (pdfRecords.length ? '' : ' disabled') + '><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="export-individual-schedule-csv"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-filetype-csv me-1"></i>Baixar CSV individual</button>' +
+            '<button class="btn btn-sm btn-danger" type="button" data-action="download-individual-schedule-pdf"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-file-earmark-pdf me-1"></i>Baixar PDF individual</button>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="share-individual-schedule-pdf"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-share me-1"></i>Compartilhar PDF</button>' +
+            (pdfExportType === 'turma' && pdfExportId === 'todas'
+                ? '<button class="btn btn-sm btn-outline-primary" type="button" data-action="share-complete-schedule-pdf"' +
+                (pdfRecords.length ? '' : ' disabled') + '><i class="bi bi-collection me-1"></i>Compartilhar grade completa</button>'
+                : '') +
+            '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="share-individual-schedule"' +
+            (pdfRecords.length && pdfExportId !== 'todas' ? '' : ' disabled') + '><i class="bi bi-share me-1"></i>Compartilhar resumo</button></div>' +
+            '<p class="form-text no-print mb-0">PDFs individuais ou a grade de todas as turmas podem ser enviados como arquivo pelo menu de compartilhamento do dispositivo. O Owltime mantém os dados localmente; publicação por link requer um serviço externo.</p>'
+            : '';
+        const courseFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-course-filter">Filtrar curso</label><select class="form-select" id="grade-course-filter">' +
+            '<option value="">Todos os cursos</option>' +
+            courses.map(function (course) {
+                return '<option value="' + h(course.id) + '"' + (String(gradeCourseFilter) === String(course.id) ? ' selected' : '') + '>' + h(course.nome) + '</option>';
+            }).join('') + '</select></div>';
+        const turmaFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-turma-filter">Filtrar turma</label><select class="form-select" id="grade-turma-filter">' +
+            '<option value="">Todas as turmas</option>' +
+            courseTurmas.map(function (turma) {
+                return '<option value="' + h(turma.id) + '"' + (String(gradeTurmaFilter) === String(turma.id) ? ' selected' : '') + '>' + h(turma.nome) + '</option>';
+            }).join('') + '</select></div>';
+        const disciplineFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-discipline-filter">Filtrar disciplina</label><select class="form-select" id="grade-discipline-filter">' +
+            '<option value="">Todas as disciplinas · visão por turma</option>' +
+            disciplines.map(function (discipline) {
+                return '<option value="' + h(discipline.id) + '"' + (String(gradeDisciplineFilter) === String(discipline.id) ? ' selected' : '') + '>' + h(discipline.nome) + '</option>';
+            }).join('') + '</select></div>';
+        const teacherFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-teacher-filter">Filtrar professor</label><select class="form-select" id="grade-teacher-filter">' +
+            '<option value="">Todos os professores</option>' +
+            teachers.map(function (teacher) {
+                return '<option value="' + h(teacher.id) + '"' + (String(gradeTeacherFilter) === String(teacher.id) ? ' selected' : '') + '>' + h(teacher.nome) + '</option>';
+            }).join('') + '</select></div>';
+        const protectionFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-protection-filter">Filtrar marcação</label><select class="form-select" id="grade-protection-filter">' +
+            '<option value=""' + (!gradeProtectionFilter ? ' selected' : '') + '>Todas as marcações</option>' +
+            '<option value="evento"' + (gradeProtectionFilter === 'evento' ? ' selected' : '') + '>Eventos — aplicados às turmas do turno</option>' +
+            '<option value="sort"' + (gradeProtectionFilter === 'sort' ? ' selected' : '') + '>Sorts — horários sorteados e reservados</option>' +
+            '<option value="peculiaridade"' + (gradeProtectionFilter === 'peculiaridade' ? ' selected' : '') + '>Peculiaridades — horários protegidos por turma</option>' +
+            '</select></div>';
+        const completionFilter = '<div class="grade-filter"><label class="form-label mb-1" for="grade-completion-filter">Situação da grade</label><select class="form-select" id="grade-completion-filter">' +
+            '<option value=""' + (!effectiveCompletionFilter ? ' selected' : '') + '>Todas as grades</option>' +
+            '<option value="complete"' + (effectiveCompletionFilter === 'complete' ? ' selected' : '') + '>Grades completas</option>' +
+            '<option value="pending"' + (effectiveCompletionFilter === 'pending' ? ' selected' : '') + '>Com pendências</option>' +
+            '</select></div>';
+        const legendContent = '<div class="grade-discipline-legend">' + disciplines.map(function (discipline) {
+            return '<span class="grade-discipline-chip"><i style="--grade-subject-color:' + subjectColor(discipline.id) + '"></i>' + h(discipline.nome) + '</span>';
+        }).join('') + '</div>';
+        const legendCollapsed = editable ? manualLegendCollapsed : gradeLegendCollapsed;
+        const legend = '<div class="grade-legend-panel"><button class="btn btn-sm btn-outline-secondary" type="button" data-action="toggle-grade-legend" aria-controls="grade-discipline-legend-content" aria-expanded="' +
+            String(!legendCollapsed) + '"><i class="bi ' + (legendCollapsed ? 'bi-palette' : 'bi-chevron-up') +
+            ' me-1" aria-hidden="true"></i>' + (legendCollapsed ? 'Mostrar disciplinas e cores' : 'Recolher disciplinas e cores') +
+            '</button><div id="grade-discipline-legend-content" class="mt-2"' + (legendCollapsed ? ' hidden' : '') + '>' +
+            legendContent + '</div></div>';
+        const selectedFilterTurma = courseTurmas.find(function (turma) { return String(turma.id) === String(gradeTurmaFilter); });
+        const completionClassIds = new Set(turmas.filter(function (turma) {
+            const demandedLessons = getDemandsForClass(turma.id, semester).reduce(function (total, demand) {
+                return total + demand.aulas_semanais;
+            }, 0);
+            const allocatedLessons = assignments.filter(function (assignment) {
+                return String(assignment.turma_id) === String(turma.id);
+            }).length;
+            return demandedLessons > 0 && (effectiveCompletionFilter === 'complete'
+                ? allocatedLessons >= demandedLessons
+                : allocatedLessons < demandedLessons);
+        }).map(function (turma) { return String(turma.id); }));
+        const courseClassIds = new Set(courseTurmas.map(function (turma) { return String(turma.id); }));
+        const filteredAssignments = assignments.filter(function (assignment) {
+            return (!gradeCourseFilter || courseClassIds.has(String(assignment.turma_id))) &&
+                (!gradeProtectionFilter || protectionClassIds.has(String(assignment.turma_id))) &&
+                (!gradeTurmaFilter || String(assignment.turma_id) === String(gradeTurmaFilter)) &&
+                (!effectiveCompletionFilter || completionClassIds.has(String(assignment.turma_id))) &&
+                (!gradeDisciplineFilter || String(assignment.disciplina_id) === String(gradeDisciplineFilter)) &&
+                (!gradeTeacherFilter || String(assignment.professor_id) === String(gradeTeacherFilter));
+        });
+        const visibleTurmas = turmas.filter(function (turma) {
+            return (!gradeCourseFilter || courseClassIds.has(String(turma.id))) &&
+                (!gradeProtectionFilter || protectionClassIds.has(String(turma.id))) &&
+                (!gradeTurmaFilter || String(turma.id) === String(gradeTurmaFilter)) &&
+                (!effectiveCompletionFilter || completionClassIds.has(String(turma.id))) &&
+                (!gradeTeacherFilter || filteredAssignments.some(function (assignment) {
+                    return String(assignment.turma_id) === String(turma.id);
+                }));
+        });
+        const canInjectManual = !editable && !state.qdpInfo && !state.lastGenerationReport &&
+            !hasNonInjectionAssignments(assignments);
+        const scheduleDescription = editable
+            ? 'Arraste aulas para horários vazios, clique em uma aula para editar ou em um horário vazio para adicionar.'
+            : canInjectManual
+                ? 'Clique com o botão esquerdo em um horário vazio para injetar aula; use o botão direito para evento ou peculiaridade.'
+                : 'Use o botão direito em um horário para abrir o formulário de evento/peculiaridade.';
+        function collapsibleSchedule(title, description, content) {
+            return '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><div><strong>' +
+                h(title) + '</strong><span class="text-muted small ms-2">' + description + '</span></div>' +
+                '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-grade-schedule" aria-controls="grade-schedule-content" aria-expanded="' +
+                String(!gradeScheduleCollapsed) + '"><i class="bi ' + (gradeScheduleCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
+                ' me-1" aria-hidden="true"></i>' + (gradeScheduleCollapsed ? 'Expandir grade' : 'Recolher grade') +
+                '</button></div><div id="grade-schedule-content" class="card-body p-2 data-section-content"' + (gradeScheduleCollapsed ? ' hidden' : '') + '>' +
+                content + '</div></section>';
+        }
+        const scheduleView = gradeDisciplineFilter
+            ? collapsibleSchedule('Disciplina por professor',
+                h(nameById(KEYS.disciplinas, gradeDisciplineFilter, 'Disciplina')) +
+                (selectedCourse ? ' · ' + h(selectedCourse.nome) : '') +
+                (selectedFilterTurma ? ' · ' + h(selectedFilterTurma.nome) : ' · todas as turmas') +
+                (gradeTeacherFilter ? ' · ' + h(nameById(KEYS.professores, gradeTeacherFilter, 'Professor')) : '') +
+                (editable ? ' · clique em uma aula para editar' : ''),
+                renderDisciplineTeacherSchedules(slots, filteredAssignments, gradeDisciplineFilter, gradeTurmaFilter, teachers, editable, matchingProtections))
+            : !selectedFilterTurma
+                ? collapsibleSchedule(selectedCourse ? 'Grade do curso ' + (selectedCourse.nome || '') : 'Grade de todas as turmas', scheduleDescription,
+                    (gradeCourseFilter || gradeProtectionFilter || gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
+                        ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
+                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, matchingProtections, !editable, canInjectManual, protections, assignments))
+                : collapsibleSchedule('Grade da turma ' + (selectedFilterTurma.nome || ''),
+                    scheduleDescription,
+                    (gradeCourseFilter || gradeProtectionFilter || gradeTeacherFilter || effectiveCompletionFilter) && !visibleTurmas.length
+                        ? '<div class="empty-state"><i class="bi bi-funnel"></i>Nenhuma aula corresponde aos filtros selecionados.</div>'
+                        : renderClassSchedules(visibleTurmas, slots, filteredAssignments, editable, gradeTeacherFilter, matchingProtections, !editable, canInjectManual, protections, assignments));
+        const gradeEditing = state.assignments.find(function (item) { return String(item.id) === String(gradeEditingId); }) || null;
+        const manual = editable ? renderManualAssignment(selectedTurma, slots, gradeEditing, gradeFocusDay, gradeFocusSlotId) : '';
+        const workload = editable ? '' : renderTeacherWorkload(readRecords(KEYS.professores), assignments);
+        const declarationControls = editable ? '' : renderDeclarationControls(semester, assignments);
+        const substitutionPanel = editable ? '' : renderTeacherSubstitutionPanel(semester, baseAssignments, turmas);
+        const sortDefinitions = readRecords(KEYS.sorts);
+        const appliedSorts = getGradeProtections(semester).some(function (protection) {
+            return protection.tipo_marcacao === 'sort';
+        });
+        const activeClassIds = new Set(activeRecords(KEYS.turmas, ['ativa', 'ativo']).map(function (turma) {
+            return String(turma.id);
+        }));
+        const hasAvailableSort = sortDefinitions.some(function (sort) {
+            return getSortSubgroups(sort).some(function (group) {
+                return (Array.isArray(group.turma_ids) ? group.turma_ids : []).some(function (id) {
+                    return activeClassIds.has(String(id));
+                });
+            });
+        });
+        const title = editable ? 'Laboratório' : 'Grade oficial';
+        const description = editable
+            ? 'Ambiente de teste isolado da Grade oficial. Experimente mover, editar, adicionar ou remover aulas; nada é aplicado antes da confirmação.'
+            : 'Prepare a grade com eventos, peculiaridades e aulas injetadas manualmente; depois aplique os sorts e gere o restante com o QDP.';
+        const laboratoryGuide = editable
+            ? '<section class="laboratory-guide card mb-3" aria-labelledby="laboratory-guide-title"><div class="card-body">' +
+            '<h2 id="laboratory-guide-title" class="h6 mb-2"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Como usar o Laboratório</h2>' +
+            '<ul class="mb-0">' +
+            '<li><strong>Aulas:</strong> clique em uma aula para editar disciplina, professor, dia ou horário; use os controles da grade para adicionar ou remover aulas.</li>' +
+            '<li><strong>Disciplinas e demandas:</strong> ajuste o catálogo em <a href="#/disciplinas">Disciplinas</a>, as aulas semanais em <a href="#/demandas">Demandas das turmas</a> e os professores habilitados em <a href="#/vinculos">Vínculos</a>. Essas informações orientam a geração; alterações na demanda não mudam automaticamente as aulas já existentes.</li>' +
+            '<li><strong>Eventos e peculiaridades:</strong> cadastre as definições em <a href="#/eventos">Eventos</a> ou <a href="#/peculiaridades">Peculiaridades</a>. Na Grade oficial, clique com o botão direito no período para abrir diretamente o formulário de marcação. O evento reserva o horário para as turmas do mesmo turno; a peculiaridade protege somente a turma escolhida. Faça essas marcações antes de gerar a grade.</li>' +
+            '<li><strong>Sort:</strong> configure turmas, quantidade e consecutividade em <a href="#/sorts">Sort</a>; na Grade oficial, use <strong>Aplicar sort</strong> para sortear e reservar horários antes da geração. Para aplicar um sort, a grade oficial precisa estar sem aulas.</li>' +
+            '</ul><p class="small text-muted mt-2 mb-0">Este Laboratório altera apenas uma cópia local da grade. Use <strong>Aplicar à Grade oficial</strong> para confirmar ou <strong>Cancelar e descartar</strong> para abandonar o rascunho.</p>' +
+            '</div></section>'
+            : '';
+        const navigation = editable
+            ? ''
+            : '<a class="btn btn-outline-primary" href="#/laboratorio"><i class="bi bi-sliders me-1"></i>Abrir Laboratório</a>';
+        const generationButton = editable ? '' :
+            '<button class="btn btn-primary" type="button" data-action="generate-grade"><i class="bi bi-magic me-1"></i>Gerar grade</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-action="open-sort-dialog"' +
+            (hasAvailableSort || appliedSorts ? '' : ' disabled') + '><i class="bi bi-shuffle me-1"></i>Aplicar sort</button>';
+        const laboratorySession = editable ? loadLaboratory(semester) : null;
+        const semesterControls = '<div class="small text-muted">' +
+            (editable ? 'Rascunho isolado do semestre ' : 'Semestre ativo ') +
+            '<strong>' + h(semester) + '</strong></div>';
+        const primaryGradeActions = '<div class="grade-primary-actions">' + generationButton + navigation +
+            (editable
+                ? '<button class="btn btn-danger" type="button" data-action="cancel-laboratory"><i class="bi bi-x-circle me-1"></i>Cancelar e descartar</button>' +
+                '<button class="btn btn-success" type="button" data-action="apply-laboratory"><i class="bi bi-check2-circle me-1"></i>Aplicar à Grade oficial</button>'
+                : '<button class="btn btn-outline-danger" type="button" data-action="clear-grade">Limpar grade</button>') + '</div>';
+        return pageHeader(title, 'bi-calendar3', description) + laboratoryGuide +
+            '<div class="card mb-3 grade-controls"><div class="card-body grade-controls-body">' +
+            primaryGradeActions +
+            '<div class="grade-secondary-controls d-flex flex-wrap justify-content-between align-items-end gap-3">' +
+            semesterControls + pdfExportControls + '</div></div></div>' +
+            '<div class="card mb-3"><div class="card-body grade-filter-grid">' + courseFilter + turmaFilter + disciplineFilter + teacherFilter + protectionFilter + completionFilter + legend + '</div></div>' +
+            scheduleView + (!editable ? renderPreGenerationInjectionDialog() + renderSlotProtectionDialog() +
+                renderSortApplyDialog(sortDefinitions, semester, hasNonInjectionAssignments(assignments)) +
+                renderSemesterCopyDialog() : '') +
+            (editable ? renderLaboratoryPendingPanel(laboratorySession) : '') +
+            declarationControls + substitutionPanel + workload + manual +
+            '<p class="small text-muted mt-3"><i class="bi bi-info-circle me-1"></i>' + (editable
+                ? 'As mudanças ficam apenas neste rascunho local. A Grade oficial e os relatórios só mudam ao aplicar; cancelar descarta o teste.'
+                : 'Use o Laboratório para testar mudanças antes de aplicá-las à Grade oficial.') + '</p>';
+    }
+
+    function renderDeclarationControls(semester, assignments) {
+        const institutionName = localStorage.getItem(DECLARATION_INSTITUTION_KEY) || '';
+        return '<section class="card mb-3 no-print"><div class="card-header"><strong>Declaração de carga horária docente</strong></div><div class="card-body">' +
+            '<div class="row g-3 align-items-end"><div class="col-md-8"><label class="form-label" for="declaration-institution">Nome da instituição</label>' +
+            '<input class="form-control" id="declaration-institution" type="text" maxlength="160" value="' + h(institutionName) + '" placeholder="Informe o nome da instituição" required></div>' +
+            '<div class="col-md-4"><button class="btn btn-primary w-100" type="button" data-action="generate-teacher-declaration"' +
+            (assignments.length ? '' : ' disabled') + '><i class="bi bi-file-earmark-pdf me-1"></i>Gerar Declaração</button></div></div>' +
+            '<p class="form-text mb-0 mt-2">O PDF considera a grade completa, independente dos filtros de visualização, compara as aulas semanais com a carga declarada de cada professor e aplica as substituições vigentes em ' +
+            h(semester) + ' na data de emissão.</p></div></section>';
+    }
+
+    function renderTeacherSubstitutionPanel(semester, assignments, turmas) {
+        const substitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || '') === semester;
+        }).sort(function (a, b) {
+            return String(a.data_inicio || '').localeCompare(String(b.data_inicio || '')) ||
+                String(a.id).localeCompare(String(b.id), 'pt-BR', { numeric: true });
+        });
+        const editingSubstitution = substitutions.find(function (record) {
+            return String(record.id) === teacherSubstitutionEditingId;
+        }) || null;
+        const selectedScope = editingSubstitution && editingSubstitution.abrangencia === 'todas-aulas-professor'
+            ? 'todas-aulas-professor'
+            : 'turmas-selecionadas';
+        const selectedClassIds = editingSubstitution && selectedScope !== 'todas-aulas-professor'
+            ? [String(editingSubstitution.turma_id)]
+            : [];
+        const selectedDisciplineId = editingSubstitution ? String(editingSubstitution.disciplina_id) : '';
+        const substitutionOptions = getTeacherSubstitutionOptions(
+            selectedClassIds, selectedDisciplineId,
+            editingSubstitution ? editingSubstitution.data_inicio : declarationDateValue(new Date()),
+            assignments, semester, substitutions, editingSubstitution, selectedScope
+        );
+        const classOptions = turmas.map(function (turma) {
+            return '<option value="' + h(turma.id) + '"' +
+                (selectedClassIds.includes(String(turma.id)) ? ' selected' : '') + '>' + h(turma.nome || 'Turma') + '</option>';
+        }).join('');
+        const disciplineOptions = renderSubstitutionSelectOptions(
+            substitutionOptions.disciplines, 'Selecione a disciplina', selectedDisciplineId
+        );
+        const originalTeacherOptions = renderSubstitutionSelectOptions(
+            substitutionOptions.originalTeachers, 'Selecione o professor substituído',
+            editingSubstitution ? editingSubstitution.professor_original_id : ''
+        );
+        const replacementTeacherOptions = renderSubstitutionSelectOptions(
+            substitutionOptions.allTeachers, 'Selecione o professor substituto',
+            editingSubstitution ? editingSubstitution.professor_substituto_id : ''
+        );
+        const rows = substitutions.map(function (record) {
+            const matchingAssignments = getSubstitutionAffectedAssignments(assignments, semester, substitutions, record).length;
+            const blockedAssignments = Array.isArray(record.aulas_bloqueadas) ? record.aulas_bloqueadas : [];
+            const isCampusExit = record.abrangencia === 'todas-aulas-professor';
+            const blockedRows = blockedAssignments.map(function (item) {
+                const slot = findById(KEYS.horarios, item.horario_id);
+                const period = slot ? slot.hora_inicio + '–' + slot.hora_fim : 'horário removido';
+                return '<li><strong>' + h(nameById(KEYS.turmas, item.turma_id, 'Turma')) + '</strong> · ' +
+                    h(nameById(KEYS.disciplinas, item.disciplina_id, 'Disciplina')) + ' · ' +
+                    h(item.dia_semana || 'Dia não informado') + ' · ' + h(period) + ': ' +
+                    h((item.motivos || []).join('; ')) + '</li>';
+            }).join('');
+            const transferStatus = matchingAssignments + ' aula(s) transferida(s)' +
+                (blockedAssignments.length ? ' · ' + blockedAssignments.length + ' bloqueada(s)' : '');
+            return '<tr><td>' + h(isCampusExit ? 'Todas as turmas' : nameById(KEYS.turmas, record.turma_id, record.turma_nome || 'Turma removida')) + '</td><td>' +
+                h(isCampusExit ? 'Todas as disciplinas' : nameById(KEYS.disciplinas, record.disciplina_id, record.disciplina_nome || 'Disciplina removida')) + '</td><td>' +
+                h(nameById(KEYS.professores, record.professor_original_id, record.professor_original_nome || 'Professor removido')) + ' → ' +
+                h(nameById(KEYS.professores, record.professor_substituto_id, record.professor_substituto_nome || 'Professor removido')) +
+                (record.motivo ? '<div class="small text-muted">' + h(record.motivo) + '</div>' : '') + '</td><td>' +
+                h(formatSubstitutionDate(record.data_inicio)) + ' – ' +
+                h(record.data_fim ? formatSubstitutionDate(record.data_fim) : 'sem data final') + '</td><td>' +
+                (matchingAssignments || blockedAssignments.length
+                    ? '<span class="' + (blockedAssignments.length ? 'text-warning' : 'text-success') + '">' + h(transferStatus) + '</span>'
+                    : '<span class="text-warning">Sem correspondência na grade atual</span>') +
+                '</td><td class="text-end"><div class="table-actions"><button class="btn btn-sm btn-outline-primary" type="button" data-action="edit-teacher-substitution" data-id="' +
+                h(record.id) + '" aria-label="Editar substituição"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" type="button" data-action="delete-teacher-substitution" data-id="' +
+                h(record.id) + '" aria-label="Excluir substituição"><i class="bi bi-trash"></i></button></div></td></tr>' +
+                (blockedRows ? '<tr class="substitution-impact-row"><td colspan="6"><div class="alert alert-warning py-2 mb-2"><strong>Impactos bloqueados:</strong><ul class="mb-0 mt-1">' +
+                    blockedRows + '</ul></div></td></tr>' : '');
+        }).join('');
+        return '<section class="card mb-3 no-print teacher-substitution-panel"><div class="card-header d-flex align-items-center gap-2"><strong>Vigências e substituições</strong></div><div class="card-body">' +
+            '<p class="small text-muted">Substitua aulas em turmas escolhidas ou registre a saída de um professor do campus. Nesse modo, todas as aulas dele são avaliadas, as compatíveis passam ao substituto e o cadastro do docente é desativado para futuras grades; os impactos ficam listados.</p>' +
+            '<form id="teacher-substitution-form" class="row g-3 align-items-end" data-edit-id="' + h(editingSubstitution ? editingSubstitution.id : '') + '">' +
+            '<div class="col-md-4"><label class="form-label" for="substitution-scope">Tipo de movimentação</label><select class="form-select" id="substitution-scope" name="abrangencia">' +
+            '<option value="turmas-selecionadas"' + (selectedScope === 'turmas-selecionadas' ? ' selected' : '') + '>Substituir em turma(s) selecionada(s)</option>' +
+            '<option value="todas-aulas-professor"' + (selectedScope === 'todas-aulas-professor' ? ' selected' : '') + '>Saída do campus · transferir aulas e desativar cadastro</option>' +
+            '</select></div>' +
+            '<div class="col-md-4" id="substitution-class-field"' + (selectedScope === 'todas-aulas-professor' ? ' hidden' : '') + '><label class="form-label" for="substitution-class">Turma(s)</label><select class="form-select substitution-class-select" id="substitution-class" name="turma_ids" multiple size="4"' +
+            (selectedScope === 'todas-aulas-professor' ? ' disabled' : ' required') + '>' +
+            classOptions + '</select><div class="form-text">Use Ctrl (Windows) ou Command (Mac) para selecionar várias turmas.</div></div>' +
+            '<div class="col-md-4" id="substitution-discipline-field"' + (selectedScope === 'todas-aulas-professor' ? ' hidden' : '') + '><label class="form-label" for="substitution-discipline">Disciplina</label><select class="form-select" id="substitution-discipline" name="disciplina_id" required' +
+            (selectedClassIds.length ? '' : ' disabled') + '>' + disciplineOptions +
+            '</select></div><div class="col-md-3"><label class="form-label" for="substitution-original-teacher">Professor substituído</label><select class="form-select" id="substitution-original-teacher" name="professor_original_id" required' +
+            (selectedScope === 'todas-aulas-professor' || (selectedClassIds.length && selectedDisciplineId) ? '' : ' disabled') + '>' + originalTeacherOptions +
+            '</select></div><div class="col-md-3"><label class="form-label" for="substitution-new-teacher">Professor substituto</label><select class="form-select" id="substitution-new-teacher" name="professor_substituto_id" required' +
+            (selectedScope === 'todas-aulas-professor' || (selectedClassIds.length && selectedDisciplineId) ? '' : ' disabled') + '>' + replacementTeacherOptions +
+            '</select></div><div class="col-md-4"><label class="form-label" for="substitution-start">Início da vigência</label><input class="form-control" id="substitution-start" name="data_inicio" type="date" value="' +
+            h(editingSubstitution ? editingSubstitution.data_inicio : declarationDateValue(new Date())) + '" required></div>' +
+            '<div class="col-md-4"><label class="form-label" for="substitution-end">Fim da vigência (opcional)</label><input class="form-control" id="substitution-end" name="data_fim" type="date" value="' +
+            h(editingSubstitution ? editingSubstitution.data_fim : '') + '"></div>' +
+            '<div class="col-md-4 d-flex gap-2"><button class="btn btn-outline-primary flex-grow-1" type="submit"' + (assignments.length ? '' : ' disabled') +
+            '><i class="bi bi-arrow-left-right me-1"></i><span id="substitution-submit-label">' +
+            (selectedScope === 'todas-aulas-professor'
+                ? (editingSubstitution ? 'Atualizar saída do campus' : 'Registrar saída do campus')
+                : (editingSubstitution ? 'Atualizar substituição' : 'Atualizar grade com substituição')) + '</span></button>' +
+            (editingSubstitution ? '<button class="btn btn-outline-secondary" type="button" data-action="cancel-teacher-substitution-edit">Cancelar</button>' : '') + '</div>' +
+            '<div class="col-12 small text-muted" id="substitution-scope-summary" hidden></div></form>' +
+            '<div class="d-flex justify-content-between align-items-center gap-2 mt-4 mb-2"><strong>Substituições registradas (' + substitutions.length + ')</strong>' +
+            renderDataSectionToggle('teacher-substitutions', 'Mostrar substituições', 'Recolher substituições') + '</div>' +
+            renderDataSectionContent('teacher-substitutions', '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Substituição</th><th>Vigência</th><th>Aulas afetadas</th><th></th></tr></thead><tbody>' +
+                (rows || '<tr><td colspan="6" class="text-center text-muted py-3">Nenhuma substituição registrada para ' + h(semester) + '.</td></tr>') +
+                '</tbody></table></div>') + '</div></section>';
+    }
+
+    function renderSubstitutionSelectOptions(records, placeholder, selectedId) {
+        return '<option value="">' + h(placeholder) + '</option>' + records.map(function (record) {
+            return '<option value="' + h(record.id) + '"' +
+                (String(record.id) === String(selectedId || '') ? ' selected' : '') + '>' +
+                h(record.nome || 'Registro') + '</option>';
+        }).join('');
+    }
+
+    function getTeacherSubstitutionOptions(classIds, disciplineId, startDate, assignments, semester, substitutions, editingSubstitution, scope) {
+        const selectedClassIds = (Array.isArray(classIds) ? classIds : classIds ? [classIds] : []).map(String);
+        const selectedClassIdSet = new Set(selectedClassIds);
+        const disciplineIds = new Set();
+        selectedClassIds.forEach(function (classId) {
+            getDemandsForClass(classId, semester).forEach(function (demand) {
+                disciplineIds.add(String(demand.disciplina_id));
+            });
+            assignments.forEach(function (assignment) {
+                if (String(assignment.turma_id) === classId && assignment.disciplina_id) {
+                    disciplineIds.add(String(assignment.disciplina_id));
+                }
+            });
+        });
+        if (editingSubstitution && selectedClassIdSet.has(String(editingSubstitution.turma_id))) {
+            disciplineIds.add(String(editingSubstitution.disciplina_id));
+        }
+        const disciplines = readRecords(KEYS.disciplinas).filter(function (discipline) {
+            return disciplineIds.has(String(discipline.id));
+        }).sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const teachersById = new Map(activeRecords(KEYS.professores, ['ativo']).map(function (teacher) {
+            return [String(teacher.id), teacher];
+        }));
+        assignments.forEach(function (assignment) {
+            const teacherId = String(assignment.professor_id || '');
+            const teacher = teacherId ? findById(KEYS.professores, teacherId) : null;
+            if (teacher && !teachersById.has(teacherId)) teachersById.set(teacherId, teacher);
+        });
+        if (editingSubstitution) {
+            [editingSubstitution.professor_original_id, editingSubstitution.professor_substituto_id].forEach(function (teacherId) {
+                const teacher = findById(KEYS.professores, teacherId);
+                if (teacher && !teachersById.has(String(teacherId))) teachersById.set(String(teacherId), teacher);
+            });
+        }
+        const allTeachers = Array.from(teachersById.values()).sort(function (a, b) {
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+        });
+        const priorSubstitutions = substitutions.filter(function (record) {
+            return !editingSubstitution || String(record.id) !== String(editingSubstitution.id);
+        });
+        const effectiveAssignments = getDeclarationAssignments(
+            assignments, semester, priorSubstitutions, startDate || declarationDateValue(new Date())
+        );
+        const originalTeacherIds = new Set();
+        if (scope === 'todas-aulas-professor') {
+            effectiveAssignments.forEach(function (assignment) {
+                if (assignment.professor_id) originalTeacherIds.add(String(assignment.professor_id));
+            });
+        } else if (selectedClassIds.length && disciplineId) {
+            effectiveAssignments.forEach(function (assignment) {
+                if (selectedClassIdSet.has(String(assignment.turma_id)) &&
+                    String(assignment.disciplina_id) === String(disciplineId) &&
+                    assignment.professor_id) {
+                    originalTeacherIds.add(String(assignment.professor_id));
+                }
+            });
+        }
+        if (editingSubstitution && (scope === 'todas-aulas-professor' ||
+            (selectedClassIds.includes(String(editingSubstitution.turma_id)) &&
+                (!disciplineId || String(editingSubstitution.disciplina_id) === String(disciplineId))))) {
+            originalTeacherIds.add(String(editingSubstitution.professor_original_id));
+        }
+        const originalTeachers = allTeachers.filter(function (teacher) {
+            return originalTeacherIds.has(String(teacher.id));
+        });
+        return {
+            disciplines: disciplines,
+            originalTeachers: originalTeachers,
+            allTeachers: allTeachers
+        };
+    }
+
+    function updateTeacherSubstitutionFields(form) {
+        const scopeField = form.elements.namedItem('abrangencia');
+        const classField = form.elements.namedItem('turma_ids');
+        const disciplineField = form.elements.namedItem('disciplina_id');
+        const originalTeacherField = form.elements.namedItem('professor_original_id');
+        const replacementTeacherField = form.elements.namedItem('professor_substituto_id');
+        const startDateField = form.elements.namedItem('data_inicio');
+        const scope = scopeField.value;
+        const isCampusExit = scope === 'todas-aulas-professor';
+        const previousDisciplineId = disciplineField.value;
+        const previousOriginalTeacherId = originalTeacherField.value;
+        const previousReplacementTeacherId = replacementTeacherField.value;
+        const semester = getSemester();
+        const assignments = readSimulation(semester).assignments || [];
+        const substitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || '') === semester;
+        });
+        const editingSubstitution = readRecords(KEYS.substituicoes).find(function (record) {
+            return String(record.id) === String(form.dataset.editId || '');
+        }) || null;
+        const selectedClassIds = isCampusExit ? [] :
+            Array.from(classField.selectedOptions).map(function (option) { return option.value; });
+        document.getElementById('substitution-class-field').hidden = isCampusExit;
+        document.getElementById('substitution-discipline-field').hidden = isCampusExit;
+        classField.disabled = isCampusExit;
+        classField.required = !isCampusExit;
+        const options = getTeacherSubstitutionOptions(
+            selectedClassIds, previousDisciplineId, startDateField.value, assignments,
+            semester, substitutions, editingSubstitution, scope
+        );
+        const validDiscipline = options.disciplines.some(function (discipline) {
+            return String(discipline.id) === previousDisciplineId;
+        });
+        disciplineField.innerHTML = renderSubstitutionSelectOptions(
+            options.disciplines, 'Selecione a disciplina', validDiscipline ? previousDisciplineId : ''
+        );
+        disciplineField.disabled = isCampusExit || !selectedClassIds.length;
+        disciplineField.required = !isCampusExit;
+        const selectedDisciplineId = isCampusExit ? '' : disciplineField.value;
+        const selectedOptions = getTeacherSubstitutionOptions(
+            selectedClassIds, selectedDisciplineId, startDateField.value, assignments,
+            semester, substitutions, editingSubstitution, scope
+        );
+        const validOriginalTeacher = selectedOptions.originalTeachers.some(function (teacher) {
+            return String(teacher.id) === previousOriginalTeacherId;
+        });
+        originalTeacherField.innerHTML = renderSubstitutionSelectOptions(
+            selectedOptions.originalTeachers, 'Selecione o professor substituído',
+            validOriginalTeacher ? previousOriginalTeacherId : ''
+        );
+        originalTeacherField.disabled = !isCampusExit && (!selectedClassIds.length || !selectedDisciplineId);
+        const validReplacementTeacher = selectedOptions.allTeachers.some(function (teacher) {
+            return String(teacher.id) === previousReplacementTeacherId;
+        });
+        replacementTeacherField.innerHTML = renderSubstitutionSelectOptions(
+            selectedOptions.allTeachers, 'Selecione o professor substituto',
+            validReplacementTeacher ? previousReplacementTeacherId : ''
+        );
+        replacementTeacherField.disabled = !originalTeacherField.value ||
+            (!isCampusExit && (!selectedClassIds.length || !selectedDisciplineId));
+        const submitLabel = document.getElementById('substitution-submit-label');
+        if (submitLabel) {
+            submitLabel.textContent = isCampusExit
+                ? (editingSubstitution ? 'Atualizar saída do campus' : 'Registrar saída do campus')
+                : (editingSubstitution ? 'Atualizar substituição' : 'Atualizar grade com substituição');
+        }
+        const summary = document.getElementById('substitution-scope-summary');
+        if (summary) {
+            summary.hidden = !isCampusExit;
+            if (isCampusExit && originalTeacherField.value) {
+                const priorSubstitutions = substitutions.filter(function (record) {
+                    return !editingSubstitution || String(record.id) !== String(editingSubstitution.id);
+                });
+                const effectiveAssignments = getDeclarationAssignments(
+                    assignments, semester, priorSubstitutions, startDateField.value || declarationDateValue(new Date())
+                );
+                const teacherAssignments = effectiveAssignments.filter(function (assignment) {
+                    return String(assignment.professor_id) === String(originalTeacherField.value);
+                });
+                const classCount = new Set(teacherAssignments.map(function (assignment) {
+                    return String(assignment.turma_id);
+                })).size;
+                const disciplineCount = new Set(teacherAssignments.map(function (assignment) {
+                    return String(assignment.disciplina_id);
+                })).size;
+                summary.textContent = teacherAssignments.length
+                    ? teacherAssignments.length + ' aula(s) em ' + classCount + ' turma(s) e ' +
+                    disciplineCount + ' disciplina(s) serão avaliadas. O cadastro será desativado para futuras grades; somente aulas compatíveis serão transferidas e os demais impactos serão listados.'
+                    : 'Este professor não tem aulas atribuídas na grade para a data de início selecionada.';
+            } else if (isCampusExit) {
+                summary.textContent = 'Selecione o professor cuja saída do campus será registrada.';
+            }
+        }
+    }
+
+    function formatSubstitutionDate(value) {
+        if (!value) return '—';
+        const date = new Date(value + 'T00:00:00');
+        return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString('pt-BR');
+    }
+
+    function getSubstitutionAffectedAssignments(assignments, semester, substitutions, substitution) {
+        const earlierMappings = substitutions.filter(function (record) { return record !== substitution; });
+        return getDeclarationAssignments(assignments, semester, earlierMappings, substitution.data_inicio).filter(function (assignment) {
+            return substitutionIncludesAssignment(substitution, assignment);
+        });
+    }
+
+    function substitutionIncludesAssignment(substitution, assignment) {
+        if (String(assignment.professor_id) !== String(substitution.professor_original_id)) return false;
+        if (substitution.abrangencia !== 'todas-aulas-professor' &&
+            (String(assignment.turma_id) !== String(substitution.turma_id) ||
+                String(assignment.disciplina_id) !== String(substitution.disciplina_id))) return false;
+        return !Array.isArray(substitution.aula_ids) ||
+            substitution.aula_ids.some(function (id) { return String(id) === String(assignment.id); });
+    }
+
+    function saveTeacherSubstitution(form) {
+        const data = new FormData(form);
+        const semester = getSemester();
+        const scope = String(data.get('abrangencia') || 'turmas-selecionadas');
+        const isCampusExit = scope === 'todas-aulas-professor';
+        const turmaIds = Array.from(new Set(data.getAll('turma_ids').map(String).filter(Boolean)));
+        const disciplineId = String(data.get('disciplina_id') || '');
+        const originalTeacherId = String(data.get('professor_original_id') || '');
+        const replacementTeacherId = String(data.get('professor_substituto_id') || '');
+        const startDate = String(data.get('data_inicio') || '');
+        const endDate = String(data.get('data_fim') || '');
+        const editingId = String(form.dataset.editId || '');
+        const existingRecord = editingId
+            ? readRecords(KEYS.substituicoes).find(function (record) { return String(record.id) === editingId; })
+            : null;
+        if (editingId && !existingRecord) throw new Error('A substituição que está sendo editada não foi encontrada.');
+        if ((!isCampusExit && (!turmaIds.length || !disciplineId)) ||
+            !originalTeacherId || !replacementTeacherId || !startDate) {
+            throw new Error(isCampusExit
+                ? 'Selecione os professores e a data inicial da saída do campus.'
+                : 'Preencha ao menos uma turma, disciplina, professores e data inicial da vigência.');
+        }
+        if (originalTeacherId === replacementTeacherId) throw new Error('O professor substituto deve ser diferente do professor substituído.');
+        if (endDate && endDate < startDate) throw new Error('A data final da vigência não pode ser anterior à data inicial.');
+        const originalTeacher = findById(KEYS.professores, originalTeacherId);
+        if (!originalTeacher) throw new Error('O professor substituído não foi encontrado.');
+        if (!isCampusExit) {
+            turmaIds.forEach(function (turmaId) {
+                if (!findById(KEYS.turmas, turmaId)) throw new Error('Uma das turmas selecionadas não foi encontrada.');
+            });
+        }
+        const grade = readSimulation(semester);
+        const semesterSubstitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || '') === semester;
+        });
+        const priorSubstitutions = semesterSubstitutions.filter(function (record) {
+            return String(record.id) !== editingId;
+        });
+        const effectiveAssignmentsAtStart = getDeclarationAssignments(
+            grade.assignments, semester, priorSubstitutions, startDate
+        );
+        const replacement = findById(KEYS.professores, replacementTeacherId);
+        if (!replacement) throw new Error('O professor substituto não foi encontrado.');
+        if (replacement.status && !['ativo', 'ativa'].includes(String(replacement.status).toLowerCase())) {
+            throw new Error('Selecione um professor substituto ativo.');
+        }
+        const affectedAssignments = effectiveAssignmentsAtStart.filter(function (assignment) {
+            return String(assignment.professor_id) === originalTeacherId &&
+                (isCampusExit || (turmaIds.includes(String(assignment.turma_id)) &&
+                    String(assignment.disciplina_id) === disciplineId));
+        });
+        if (!affectedAssignments.length) {
+            throw new Error(isCampusExit
+                ? 'O professor selecionado não tem aulas atribuídas na grade atual para a data de início.'
+                : 'O professor selecionado não tem aulas dessa disciplina nas turmas selecionadas na grade atual.');
+        }
+        const overlaps = affectedAssignments.some(function (assignment) {
+            return semesterSubstitutions.some(function (record) {
+                if (String(record.id) === editingId || !substitutionIncludesAssignment(record, assignment)) return false;
+                const existingEnd = record.data_fim || '9999-12-31';
+                const newEnd = endDate || '9999-12-31';
+                return startDate <= existingEnd && newEnd >= String(record.data_inicio || '');
+            });
+        });
+        if (overlaps) {
+            throw new Error(isCampusExit
+                ? 'Já existe uma substituição com vigência sobreposta para uma ou mais aulas deste professor.'
+                : 'Já existe uma substituição com vigência sobreposta para uma ou mais aulas selecionadas.');
+        }
+        const records = readRecords(KEYS.substituicoes);
+        const simulatedAssignments = effectiveAssignmentsAtStart.map(function (assignment) {
+            return Object.assign({}, assignment);
+        });
+        const classPlans = new Map(turmaIds.map(function (turmaId) {
+            return [turmaId, { aulaIds: [], aulasBloqueadas: [] }];
+        }));
+        const allLessonIds = [];
+        const allBlockedLessons = [];
+        affectedAssignments.forEach(function (assignment) {
+            const options = getPreGenerationInjectionTeacherOptions(
+                assignment.turma_id, assignment.disciplina_id, assignment.dia_semana,
+                assignment.horario_id, simulatedAssignments
+            );
+            const replacementOption = options.find(function (option) {
+                return String(option.id) === replacementTeacherId;
+            });
+            const motivos = replacementOption
+                ? (replacementOption.available ? [] : replacementOption.reason.split('; ').filter(Boolean))
+                : ['sem vínculo ativo com a disciplina e a turma'];
+            const classPlan = isCampusExit ? null : classPlans.get(String(assignment.turma_id));
+            if (motivos.length) {
+                const blockedLesson = {
+                    aula_id: String(assignment.id),
+                    turma_id: assignment.turma_id,
+                    disciplina_id: assignment.disciplina_id,
+                    dia_semana: assignment.dia_semana,
+                    horario_id: assignment.horario_id,
+                    motivos: motivos
+                };
+                allBlockedLessons.push(blockedLesson);
+                if (classPlan) classPlan.aulasBloqueadas.push(blockedLesson);
+                return;
+            }
+            allLessonIds.push(String(assignment.id));
+            if (classPlan) classPlan.aulaIds.push(String(assignment.id));
+            const simulatedAssignment = simulatedAssignments.find(function (item) {
+                return String(item.id) === String(assignment.id);
+            });
+            if (simulatedAssignment) simulatedAssignment.professor_id = Number(replacementTeacherId);
+        });
+        const updatedRecords = records.filter(function (record) { return String(record.id) !== editingId; });
+        if (isCampusExit) {
+            updatedRecords.push({
+                id: existingRecord ? existingRecord.id : nextId(updatedRecords),
+                semestre_letivo: semester,
+                abrangencia: 'todas-aulas-professor',
+                motivo: 'Saída do campus',
+                turma_id: null,
+                disciplina_id: null,
+                professor_original_id: Number(originalTeacherId),
+                professor_substituto_id: Number(replacementTeacherId),
+                status_anterior_professor: existingRecord &&
+                    existingRecord.abrangencia === 'todas-aulas-professor' &&
+                    String(existingRecord.professor_original_id) === originalTeacherId
+                    ? (existingRecord.status_anterior_professor || 'Ativo')
+                    : (originalTeacher.status || 'Ativo'),
+                turma_nome: 'Todas as turmas',
+                disciplina_nome: 'Todas as disciplinas',
+                professor_original_nome: nameById(KEYS.professores, originalTeacherId, 'Professor'),
+                professor_substituto_nome: replacement.nome || 'Professor',
+                data_inicio: startDate,
+                data_fim: endDate,
+                aula_ids: allLessonIds,
+                aulas_bloqueadas: allBlockedLessons
+            });
+        } else {
+            let nextRecordId = nextId(updatedRecords);
+            let reusedExistingId = false;
+            turmaIds.forEach(function (turmaId) {
+                const classPlan = classPlans.get(turmaId);
+                if (!classPlan || (!classPlan.aulaIds.length && !classPlan.aulasBloqueadas.length)) return;
+                let recordId = nextRecordId++;
+                if (existingRecord && !reusedExistingId) {
+                    reusedExistingId = true;
+                    recordId = existingRecord.id;
+                }
+                updatedRecords.push({
+                    id: recordId,
+                    semestre_letivo: semester,
+                    abrangencia: 'turmas-selecionadas',
+                    motivo: 'Substituição por turma(s)',
+                    turma_id: Number(turmaId),
+                    disciplina_id: Number(disciplineId),
+                    professor_original_id: Number(originalTeacherId),
+                    professor_substituto_id: Number(replacementTeacherId),
+                    turma_nome: nameById(KEYS.turmas, turmaId, 'Turma'),
+                    disciplina_nome: nameById(KEYS.disciplinas, disciplineId, 'Disciplina'),
+                    professor_original_nome: nameById(KEYS.professores, originalTeacherId, 'Professor'),
+                    professor_substituto_nome: replacement.nome || 'Professor',
+                    data_inicio: startDate,
+                    data_fim: endDate,
+                    aula_ids: classPlan.aulaIds,
+                    aulas_bloqueadas: classPlan.aulasBloqueadas
+                });
+            });
+        }
+        const statusUpdates = new Map();
+        if (existingRecord && existingRecord.abrangencia === 'todas-aulas-professor' &&
+            (!isCampusExit || String(existingRecord.professor_original_id) !== originalTeacherId)) {
+            const previousTeacherId = String(existingRecord.professor_original_id);
+            const hasOtherCampusExit = updatedRecords.some(function (record) {
+                return record.abrangencia === 'todas-aulas-professor' &&
+                    String(record.professor_original_id) === previousTeacherId;
+            });
+            const previousTeacher = findById(KEYS.professores, previousTeacherId);
+            if (!hasOtherCampusExit && previousTeacher &&
+                String(previousTeacher.status || '').toLowerCase() === 'inativo') {
+                statusUpdates.set(previousTeacherId, existingRecord.status_anterior_professor || 'Ativo');
+            }
+        }
+        if (isCampusExit) statusUpdates.set(originalTeacherId, 'Inativo');
+        const transferredCount = allLessonIds.length;
+        const blockedCount = allBlockedLessons.length;
+        const affectedClassCount = new Set(affectedAssignments.map(function (assignment) {
+            return String(assignment.turma_id);
+        })).size;
+        getDeclarationAssignments(grade.assignments, semester, updatedRecords, startDate);
+        saveSubstitutionsAndTeacherStatuses(updatedRecords, statusUpdates);
+        teacherSubstitutionEditingId = '';
+        render();
+        const message = (isCampusExit
+            ? existingRecord ? 'Saída do campus atualizada' : 'Saída do campus registrada'
+            : existingRecord ? 'Substituição atualizada' : 'Grade atualizada') + ': ' +
+            transferredCount + ' aula(s) transferida(s)' +
+            (isCampusExit ? ' em ' + affectedClassCount + ' turma(s)' : '') +
+            (blockedCount ? ', ' + blockedCount + ' bloqueada(s) por impacto' : '') +
+            '. As demais aulas e horários foram preservados.';
+        notify(message, blockedCount ? 'warning' : 'success');
+    }
+
+    function saveSubstitutionsAndTeacherStatuses(substitutions, statusUpdates) {
+        const updates = statusUpdates instanceof Map ? statusUpdates : new Map();
+        const teachers = readRecords(KEYS.professores);
+        let teachersChanged = false;
+        updates.forEach(function (status, teacherId) {
+            const teacher = teachers.find(function (item) { return String(item.id) === String(teacherId); });
+            if (!teacher) throw new Error('Um dos professores a atualizar não foi encontrado.');
+            if (String(teacher.status || '').toLowerCase() !== String(status).toLowerCase()) {
+                teacher.status = status;
+                teachersChanged = true;
+            }
+        });
+        const keys = teachersChanged ? [KEYS.substituicoes, KEYS.professores] : [KEYS.substituicoes];
+        const previousValues = new Map(keys.map(function (key) { return [key, localStorage.getItem(key)]; }));
+        try {
+            saveRecords(KEYS.substituicoes, substitutions, 'SubstituicoesDocentes');
+            if (teachersChanged) saveRecords(KEYS.professores, teachers, 'Professores');
+        } catch (error) {
+            let rollbackFailed = false;
+            previousValues.forEach(function (value, key) {
+                try {
+                    if (value === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, value);
+                } catch (rollbackError) {
+                    rollbackFailed = true;
+                    console.error('Falha ao reverter dados da movimentação docente:', key, rollbackError);
+                }
+            });
+            throw new Error('Não foi possível salvar a movimentação docente. ' + error.message +
+                (rollbackFailed ? ' A restauração automática dos dados também falhou; verifique o backup local.' : ''));
+        }
+    }
+
+    function deleteTeacherSubstitution(id) {
+        const records = readRecords(KEYS.substituicoes);
+        const record = records.find(function (item) { return String(item.id) === String(id); });
+        if (!record) throw new Error('A substituição não foi encontrada.');
+        if (!window.confirm('Excluir a substituição de ' +
+            nameById(KEYS.professores, record.professor_original_id, record.professor_original_nome || 'Professor') + ' por ' +
+            nameById(KEYS.professores, record.professor_substituto_id, record.professor_substituto_nome || 'Professor') + '?')) return;
+        const updatedRecords = records.filter(function (item) { return String(item.id) !== String(id); });
+        const statusUpdates = new Map();
+        if (record.abrangencia === 'todas-aulas-professor') {
+            const teacherId = String(record.professor_original_id);
+            const hasOtherCampusExit = updatedRecords.some(function (item) {
+                return item.abrangencia === 'todas-aulas-professor' &&
+                    String(item.professor_original_id) === teacherId;
+            });
+            const teacher = findById(KEYS.professores, teacherId);
+            if (!hasOtherCampusExit && teacher &&
+                String(teacher.status || '').toLowerCase() === 'inativo') {
+                statusUpdates.set(teacherId, record.status_anterior_professor || 'Ativo');
+            }
+        }
+        saveSubstitutionsAndTeacherStatuses(updatedRecords, statusUpdates);
+        if (teacherSubstitutionEditingId === String(id)) teacherSubstitutionEditingId = '';
+        render();
+        notify('Substituição removida.', 'success');
+    }
+
+    function getTeacherAvailability(professorId, day, slotId) {
+        const records = readRecords(KEYS.disponibilidade).filter(function (row) {
+            return String(row.professor_id) === String(professorId) && semesterMatches(row) && row.dia_semana === day;
+        });
+        if (records.some(function (row) { return String(row.tipo || '').toLowerCase() === 'prd'; })) {
+            return { available: false, isPrd: true, label: 'PRD neste dia · sem aulas' };
+        }
+        const exact = records.filter(function (row) { return String(row.horario_id || '') === String(slotId); });
+        const dayWide = records.filter(function (row) { return !row.horario_id; });
+        const value = exact.length ? exact[exact.length - 1].disponivel : dayWide.length ? dayWide[dayWide.length - 1].disponivel : null;
+        if (value == null) {
+            const anyTeacherRecords = readRecords(KEYS.disponibilidade).some(function (row) {
+                return String(row.professor_id) === String(professorId) && semesterMatches(row);
+            });
+            return {
+                available: null,
+                label: anyTeacherRecords ? 'Sem disponibilidade cadastrada neste período' : 'Disponibilidade não cadastrada'
+            };
+        }
+        return value === true || Number(value) === 1 || String(value).trim().toLowerCase() === 'sim'
+            ? { available: true, label: 'Disponível neste período' }
+            : { available: false, label: 'Indisponível neste período' };
+    }
+
+    function renderAssignmentGuidance(form) {
+        const classId = form.dataset.classId;
+        const professorField = form.elements.namedItem('professor_id');
+        const professorId = professorField ? professorField.value : '';
+        const day = form.elements.namedItem('dia_semana').value;
+        const slotId = form.elements.namedItem('horario_id').value;
+        const state = readEditableSimulation(getSemester());
+        const assignments = state.assignments.filter(function (item) { return String(item.id) !== String(form.dataset.assignmentId || ''); });
+        const demands = getDemandsForClass(classId);
+        const demandRows = demands.map(function (demand) {
+            const allocated = assignments.filter(function (item) {
+                return String(item.turma_id) === String(classId) && String(item.disciplina_id) === String(demand.disciplina_id);
+            }).length;
+            const remaining = Math.max(0, demand.aulas_semanais - allocated);
+            return '<div class="assignment-demand-row"><span>' + h(demand.disciplina_nome) + '</span><strong>' +
+                allocated + ' / ' + demand.aulas_semanais + '</strong><span class="' + (remaining ? 'text-primary' : 'text-success') + '">' +
+                (remaining ? remaining + ' restante(s)' : 'completa') + '</span></div>';
+        }).join('');
+        const demandSummary = demands.length
+            ? '<div class="assignment-demand-list">' + demandRows + '</div>'
+            : '<div class="alert alert-warning py-2 mb-0">Esta turma ainda não tem demandas cadastradas. A aula poderá ser adicionada manualmente, mas não será comparada com uma carga prevista.</div>';
+        const teacher = findById(KEYS.professores, professorId);
+        const slot = findById(KEYS.horarios, slotId);
+        let teacherSummary = '<div class="text-muted">Selecione um professor e período para consultar a disponibilidade e carga.</div>';
+        if (teacher && slot) {
+            const teacherAssignments = assignments.filter(function (item) { return String(item.professor_id) === String(professorId); });
+            const weeklyLimit = Number(teacher.carga_horaria_semanal == null ? 40 : teacher.carga_horaria_semanal);
+            const dailyLimit = Number(teacher.limite_aulas_dia == null ? 5 : teacher.limite_aulas_dia);
+            const weeklyLoad = teacherAssignments.length;
+            const dailyLoad = teacherAssignments.filter(function (item) { return item.dia_semana === day; }).length;
+            const availability = getTeacherAvailability(professorId, day, slotId);
+            const conflict = teacherAssignments.some(function (item) {
+                return String(item.dia_semana) === String(day) && String(item.horario_id) === String(slotId);
+            });
+            teacherSummary = '<div class="assignment-teacher-status' + (availability.available === false || conflict ? ' is-warning' : availability.available === true ? ' is-available' : '') + '">' +
+                '<strong>' + h(availability.label) + '</strong>' + (conflict ? '<span>Já existe outra aula deste professor neste horário.</span>' : '') +
+                '<span>Carga semanal: ' + weeklyLoad + ' / ' + weeklyLimit + ' aulas</span>' +
+                '<span>Carga em ' + h(day) + ': ' + dailyLoad + ' / ' + dailyLimit + ' aulas</span></div>';
+        }
+        const demandHost = document.getElementById('assignment-demand-guidance');
+        const teacherHost = document.getElementById('assignment-teacher-guidance');
+        if (demandHost) demandHost.innerHTML = demandSummary;
+        if (teacherHost) teacherHost.innerHTML = teacherSummary;
+    }
+
+    function getTeachersForDiscipline(disciplineId, includeTeacherId) {
+        const activeTeachers = activeRecords(KEYS.professores, ['ativo']);
+        const activeTeacherIds = new Set(activeTeachers.map(function (teacher) { return String(teacher.id); }));
+        const vínculos = readRecords(KEYS.vinculos).filter(function (row) {
+            return semesterMatches(row) && String(row.disciplina_id) === String(disciplineId);
+        });
+        const linkedIds = Array.from(new Set(vínculos.map(function (row) { return String(row.professor_id); })));
+        const linkedTeachers = linkedIds.map(function (id) {
+            return findById(KEYS.professores, id);
+        }).filter(function (teacher) {
+            return teacher && activeTeacherIds.has(String(teacher.id));
+        });
+        if (includeTeacherId && !linkedTeachers.some(function (teacher) { return String(teacher.id) === String(includeTeacherId); })) {
+            const existingTeacher = findById(KEYS.professores, includeTeacherId);
+            if (existingTeacher) linkedTeachers.push(existingTeacher);
+        }
+        return linkedTeachers;
+    }
+
+    function getPreGenerationInjectionTeacherOptions(classId, disciplineId, day, slotId, assignments) {
+        const links = readRecords(KEYS.vinculos).filter(function (row) {
+            return semesterMatches(row) && String(row.disciplina_id) === String(disciplineId);
+        });
+        const activeTeachers = activeRecords(KEYS.professores, ['ativo']);
+        const linkedByTeacher = new Map();
+        links.forEach(function (link) {
+            const teacherId = String(link.professor_id);
+            const teacher = activeTeachers.find(function (item) { return String(item.id) === teacherId; });
+            if (!teacher) return;
+            let linkedTeacher = linkedByTeacher.get(teacherId);
+            if (!linkedTeacher) {
+                linkedTeacher = {
+                    teacher: teacher,
+                    groupIds: new Set(),
+                    unrestricted: false
+                };
+                linkedByTeacher.set(teacherId, linkedTeacher);
+            }
+            const groupIds = Array.isArray(link.grupo_ids) ? link.grupo_ids.map(String) : [];
+            if (groupIds.length) groupIds.forEach(function (id) { linkedTeacher.groupIds.add(id); });
+            else linkedTeacher.unrestricted = true;
+        });
+        const classGroupIds = new Set(readRecords(KEYS.grupos).filter(semesterMatches).filter(function (group) {
+            return Array.isArray(group.turma_ids) && group.turma_ids.some(function (id) {
+                return String(id) === String(classId);
+            });
+        }).map(function (group) { return String(group.id); }));
+        const eligible = Array.from(linkedByTeacher.values()).filter(function (item) {
+            return item.unrestricted || Array.from(item.groupIds).some(function (id) {
+                return classGroupIds.has(id);
+            });
+        });
+        const config = getQdpConfig();
+        const slot = config.horarios.find(function (item) { return String(item.id) === String(slotId); });
+        const discipline = config.disciplinas.find(function (item) { return String(item.id) === String(disciplineId); });
+        const restrictions = discipline && discipline.restricoes || {};
+        return eligible.map(function (item) {
+            const teacher = item.teacher;
+            const teacherId = String(teacher.id);
+            const teacherAssignments = assignments.filter(function (assignment) {
+                return String(assignment.professor_id) === teacherId;
+            });
+            const reasons = [];
+            if (teacherAssignments.some(function (assignment) {
+                return String(assignment.dia_semana) === String(day) && String(assignment.horario_id) === String(slotId);
+            })) reasons.push('já tem aula neste horário');
+            const availability = config.disponibilidades[teacherId];
+            if (availability && availability.dias_semana.length && !availability.dias_semana.includes(day)) {
+                reasons.push('não atende neste dia');
+            }
+            if (availability && availability.restricoes.some(function (restriction) {
+                return restriction.dia_semana === day && Number(restriction.horario_id) === Number(slotId);
+            })) reasons.push('indisponível neste horário ou em PRD');
+            const directAvailability = getTeacherAvailability(teacherId, day, slotId);
+            if (directAvailability.isPrd) reasons.push('em PRD neste dia');
+            else if (directAvailability.available === false && !reasons.includes('indisponível neste horário ou em PRD')) {
+                reasons.push('indisponível neste horário');
+            }
+            if (Array.isArray(restrictions.apenas_dias) && !restrictions.apenas_dias.includes(day)) {
+                reasons.push('disciplina permitida somente em dias específicos');
+            }
+            if (Array.isArray(restrictions.proibido_dias) && restrictions.proibido_dias.includes(day)) {
+                reasons.push('dia proibido para a disciplina');
+            }
+            if (Array.isArray(restrictions.apenas_aulas) && slot &&
+                !restrictions.apenas_aulas.map(Number).includes(Number(slot.ordem_aula || 0))) {
+                reasons.push('disciplina permitida somente em períodos específicos');
+            }
+            const weeklyLimit = Number(teacher.carga_horaria_semanal == null ? 40 : teacher.carga_horaria_semanal);
+            const dailyLimit = Number(teacher.limite_aulas_dia == null ? 5 : teacher.limite_aulas_dia);
+            const weeklyLoad = teacherAssignments.length;
+            const dailyLoad = teacherAssignments.filter(function (assignment) {
+                return String(assignment.dia_semana) === String(day);
+            }).length;
+            if (weeklyLoad >= weeklyLimit) reasons.push('limite semanal atingido');
+            if (dailyLoad >= dailyLimit) reasons.push('limite diário atingido');
+            return {
+                id: teacher.id,
+                nome: teacher.nome || 'Professor',
+                weeklyLoad: weeklyLoad,
+                weeklyLimit: weeklyLimit,
+                dailyLoad: dailyLoad,
+                dailyLimit: dailyLimit,
+                available: reasons.length === 0,
+                reason: reasons.join('; ')
+            };
+        });
+    }
+
+    function updatePreGenerationInjectionOptions(form) {
+        const classId = String(form.elements.namedItem('turma_id').value || '');
+        const day = String(form.elements.namedItem('dia_semana').value || '');
+        const slotId = String(form.elements.namedItem('horario_id').value || '');
+        const assignments = readSimulation(getSemester()).assignments;
+        const disciplineSelect = form.elements.namedItem('disciplina_id');
+        const teacherSelect = form.elements.namedItem('professor_id');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const demandSummary = document.getElementById('injection-demand-summary');
+        const teacherGuidance = document.getElementById('injection-teacher-guidance');
+        const previousDisciplineId = String(disciplineSelect.value || '');
+        const demands = getDemandsForClass(classId).map(function (demand) {
+            const allocated = assignments.filter(function (assignment) {
+                return String(assignment.turma_id) === classId &&
+                    String(assignment.disciplina_id) === String(demand.disciplina_id);
+            }).length;
+            return Object.assign({}, demand, { remaining: Math.max(0, demand.aulas_semanais - allocated) });
+        }).filter(function (demand) { return demand.remaining > 0; });
+        disciplineSelect.innerHTML = '<option value="">Selecione uma disciplina pendente</option>' +
+            demands.map(function (demand) {
+                return '<option value="' + h(demand.disciplina_id) + '">' + h(demand.disciplina_nome) +
+                    ' · ' + demand.remaining + ' de ' + demand.aulas_semanais + ' restante(s)</option>';
+            }).join('');
+        const selectedDemand = demands.find(function (demand) {
+            return String(demand.disciplina_id) === previousDisciplineId;
+        }) || demands[0];
+        disciplineSelect.value = selectedDemand ? String(selectedDemand.disciplina_id) : '';
+        disciplineSelect.disabled = demands.length === 0;
+        demandSummary.textContent = demands.length
+            ? 'A seleção considera apenas as demandas ainda não atendidas.'
+            : 'Todas as demandas desta turma já foram atendidas.';
+        const teachers = selectedDemand
+            ? getPreGenerationInjectionTeacherOptions(classId, selectedDemand.disciplina_id, day, slotId, assignments)
+            : [];
+        const availableTeachers = teachers.filter(function (teacher) { return teacher.available; });
+        const previousTeacherId = String(teacherSelect.value || '');
+        teacherSelect.innerHTML = '<option value="">Selecione um professor disponível</option>' +
+            teachers.map(function (teacher) {
+                const disabled = teacher.available ? '' : ' disabled';
+                const detail = teacher.available
+                    ? ' · ' + teacher.weeklyLoad + '/' + teacher.weeklyLimit + ' semanal · ' +
+                    teacher.dailyLoad + '/' + teacher.dailyLimit + ' no dia'
+                    : ' · ' + teacher.reason;
+                return '<option value="' + h(teacher.id) + '"' + disabled + '>' +
+                    h(teacher.nome + detail) + '</option>';
+            }).join('');
+        teacherSelect.disabled = availableTeachers.length === 0;
+        if (availableTeachers.some(function (teacher) { return String(teacher.id) === previousTeacherId; })) {
+            teacherSelect.value = previousTeacherId;
+        } else if (availableTeachers.length === 1) {
+            teacherSelect.value = String(availableTeachers[0].id);
+        }
+        teacherGuidance.textContent = availableTeachers.length
+            ? availableTeachers.length + ' professor(es) vinculado(s) apto(s) para este horário.'
+            : teachers.length
+                ? 'Os professores compatíveis com esta turma estão indisponíveis neste horário. Confira o motivo ao lado de cada nome; se algum docente esperado não aparecer, revise os grupos da turma e do vínculo.'
+                : selectedDemand
+                    ? 'Não há professor vinculado a esta disciplina para esta turma. Confira os vínculos, grupos associados e semestre.'
+                    : 'Selecione uma disciplina com demanda pendente.';
+        submitButton.disabled = !selectedDemand || !teacherSelect.value;
+    }
+
+    function openPreGenerationInjectionDialog(button) {
+        const classId = String(button.dataset.injectionClassId || button.dataset.classId || '');
+        const day = String(button.dataset.injectionDay || button.dataset.day || '');
+        const slotId = String(button.dataset.injectionSlotId || button.dataset.slotId || '');
+        const state = readSimulation(getSemester());
+        if (state.qdpInfo || state.lastGenerationReport || hasNonInjectionAssignments(state.assignments)) {
+            throw new Error('A injeção manual deve ser feita antes de gerar ou aplicar aulas à Grade oficial.');
+        }
+        const turma = findById(KEYS.turmas, classId);
+        const slot = findById(KEYS.horarios, slotId);
+        if (!turma || !slot || slot.dia_semana !== day || !slotMatchesClassPeriod(turma, slot)) {
+            throw new Error('Não foi possível identificar uma turma e um horário de aula compatíveis.');
+        }
+        if (getGradeProtections(getSemester()).some(function (protection) {
+            return String(protection.turma_id) === classId &&
+                String(protection.dia_semana) === day &&
+                String(protection.horario_id) === slotId;
+        })) throw new Error('Este horário está protegido por evento, peculiaridade ou sort.');
+        if (state.assignments.some(function (assignment) {
+            return String(assignment.turma_id) === classId &&
+                String(assignment.dia_semana) === day &&
+                String(assignment.horario_id) === slotId;
+        })) throw new Error('Esta turma já tem uma aula neste horário.');
+        const form = document.getElementById('pre-generation-injection-form');
+        const dialog = document.getElementById('pre-generation-injection-dialog');
+        if (!form || !dialog) throw new Error('A janela de injeção manual não está disponível.');
+        form.elements.namedItem('turma_id').value = classId;
+        form.elements.namedItem('dia_semana').value = day;
+        form.elements.namedItem('horario_id').value = slotId;
+        document.getElementById('pre-generation-injection-context').textContent =
+            turma.nome + ' · ' + day + ' · ' + slot.hora_inicio + '–' + slot.hora_fim;
+        updatePreGenerationInjectionOptions(form);
+        if (!dialog.open) dialog.showModal();
+    }
+
+    function savePreGenerationInjection(form) {
+        const data = new FormData(form);
+        const classId = String(data.get('turma_id') || '');
+        const day = String(data.get('dia_semana') || '');
+        const slotId = String(data.get('horario_id') || '');
+        const disciplineId = String(data.get('disciplina_id') || '');
+        const teacherId = String(data.get('professor_id') || '');
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        if (state.qdpInfo || state.lastGenerationReport || hasNonInjectionAssignments(state.assignments)) {
+            throw new Error('A injeção manual deve ser feita antes de gerar ou aplicar aulas à Grade oficial.');
+        }
+        const turma = findById(KEYS.turmas, classId);
+        const slot = findById(KEYS.horarios, slotId);
+        const discipline = findById(KEYS.disciplinas, disciplineId);
+        const teacher = findById(KEYS.professores, teacherId);
+        if (!turma || !slot || !discipline || !teacher || slot.dia_semana !== day ||
+            String(slot.tipo || 'Aula').toLowerCase() !== 'aula' || !slotMatchesClassPeriod(turma, slot)) {
+            throw new Error('Revise a turma, o período, a disciplina e o professor selecionados.');
+        }
+        if (getGradeProtections(semester).some(function (protection) {
+            return String(protection.turma_id) === classId &&
+                String(protection.dia_semana) === day &&
+                String(protection.horario_id) === slotId;
+        })) throw new Error('Este horário está protegido e não pode receber uma aula.');
+        if (state.assignments.some(function (assignment) {
+            return String(assignment.turma_id) === classId &&
+                String(assignment.dia_semana) === day &&
+                String(assignment.horario_id) === slotId;
+        })) throw new Error('Esta turma já tem uma aula neste horário.');
+        const demand = getDemandsForClass(classId, semester).find(function (item) {
+            return String(item.disciplina_id) === disciplineId;
+        });
+        const allocated = state.assignments.filter(function (assignment) {
+            return String(assignment.turma_id) === classId &&
+                String(assignment.disciplina_id) === disciplineId;
+        }).length;
+        if (!demand || allocated >= demand.aulas_semanais) {
+            throw new Error('A demanda desta disciplina já foi atendida ou não existe para esta turma.');
+        }
+        const teacherOption = getPreGenerationInjectionTeacherOptions(
+            classId, disciplineId, day, slotId, state.assignments
+        ).find(function (item) { return String(item.id) === teacherId; });
+        if (!teacherOption || !teacherOption.available) {
+            throw new Error(teacherOption
+                ? 'Este professor não pode ser aplicado neste horário: ' + teacherOption.reason + '.'
+                : 'O professor não está vinculado e elegível para esta disciplina e turma.');
+        }
+        state.assignments = state.assignments.concat({
+            id: nextId(state.assignments),
+            turma_id: Number(classId),
+            dia_semana: day,
+            horario_id: Number(slotId),
+            disciplina_id: Number(disciplineId),
+            disciplina_nome: discipline.nome,
+            professor_id: Number(teacherId),
+            professor_nome: teacher.nome,
+            hora_inicio: slot.hora_inicio,
+            hora_fim: slot.hora_fim,
+            origem: PRE_GENERATION_INJECTION_ORIGIN
+        });
+        state.activeTurmaId = Number(classId);
+        saveSimulation(semester, state);
+        document.getElementById('pre-generation-injection-dialog').close();
+        render();
+        notify('Aula de ' + discipline.nome + ' aplicada à turma ' + turma.nome +
+            '. A escolha será preservada na geração da Grade oficial.', 'success');
+    }
+
+    function renderManualTeacherField(disciplineId, selectedTeacherId, includeTeacherId) {
+        const teachers = getTeachersForDiscipline(disciplineId, includeTeacherId);
+        if (!teachers.length) {
+            return '<div class="alert alert-warning py-2 mb-0">Nenhum professor está vinculado a esta disciplina neste semestre. Cadastre o vínculo para adicionar a aula.</div>';
+        }
+        if (teachers.length === 1) {
+            const teacher = teachers[0];
+            return '<input type="hidden" name="professor_id" value="' + h(teacher.id) + '">' +
+                '<div class="form-control-plaintext fw-semibold">' + h(teacher.nome) + ' <span class="text-muted fw-normal">(professor vinculado)</span></div>';
+        }
+        return '<select class="form-select" name="professor_id" id="manual-teacher" required>' +
+            '<option value="">Selecione o professor</option>' +
+            teachers.map(function (teacher) {
+                return '<option value="' + h(teacher.id) + '"' + (String(selectedTeacherId) === String(teacher.id) ? ' selected' : '') + '>' + h(teacher.nome) + '</option>';
+            }).join('') + '</select>';
+    }
+
+    function renderManualAssignment(turma, slots, assignment, targetDay, targetSlotId) {
+        const disciplines = readRecords(KEYS.disciplinas);
+        if (!turma) return '';
+        const selectedDay = assignment ? assignment.dia_semana : targetDay;
+        const selectedDemand = getDemandsForClass(turma.id).find(function (demand) {
+            return assignment ? String(demand.disciplina_id) === String(assignment.disciplina_id) : demand.aulas_semanais > 0;
+        });
+        const selectedDisciplineId = assignment ? assignment.disciplina_id : selectedDemand ? selectedDemand.disciplina_id : disciplines[0] && disciplines[0].id;
+        const initialTeachers = getTeachersForDiscipline(selectedDisciplineId, assignment && assignment.professor_id);
+        const selectedTeacherId = assignment ? assignment.professor_id : initialTeachers.length === 1 ? initialTeachers[0].id : '';
+        const slotOptions = slots.map(function (slot) {
+            const selectedSlot = assignment ? String(assignment.horario_id) === String(slot.id) : targetSlotId ? String(targetSlotId) === String(slot.id) : selectedDay && slot.dia_semana === selectedDay;
+            return '<option value="' + h(slot.id) + '" data-day="' + h(slot.dia_semana) + '"' + (selectedSlot ? ' selected' : '') + '>' +
+                h(slot.dia_semana + ' · ' + slot.hora_inicio + '–' + slot.hora_fim) + '</option>';
+        }).join('');
+        const dialog = '<dialog class="assignment-dialog assignment-editor-dialog" id="manual-assignment-dialog" aria-labelledby="manual-assignment-title">' +
+            '<div class="assignment-dialog-header"><div><h2 id="manual-assignment-title">' + (assignment ? 'Editar aula' : 'Adicionar aula à turma ' + h(turma.nome)) + '</h2>' +
+            '<p class="mb-0 text-muted">' + (assignment ? 'Revise os dados da aula e as orientações antes de salvar.' : 'Escolha a disciplina. O professor será preenchido automaticamente quando houver apenas um vínculo.') + '</p></div>' +
+            '<button type="button" class="btn-close" data-action="cancel-assignment-edit" aria-label="Fechar"></button></div>' +
+            '<details class="assignment-demand-reference"><summary class="assignment-demand-reference-toggle">' +
+            '<strong>Demandas da turma</strong><span>Informativo · abrir/recolher</span></summary>' +
+            '<div class="assignment-demand-reference-content"><p>Somente consulta. Para alterar a aula, use o formulário abaixo; para mudar as demandas, acesse <a href="#/demandas">Demandas das turmas</a>.</p>' +
+            '<div id="assignment-demand-guidance"></div></div></details>' +
+            '<form id="manual-assignment-form" data-class-id="' + h(turma.id) + '"' +
+            (assignment ? ' data-assignment-id="' + h(assignment.id) + '" data-original-discipline-id="' + h(assignment.disciplina_id) + '" data-original-professor-id="' + h(assignment.professor_id) + '"' : '') + '>' +
+            '<div class="row g-3 mb-3"><div class="col-md-3"><label class="form-label" for="manual-day">Dia</label><select class="form-select" name="dia_semana" id="manual-day" required>' +
+            DAYS.map(function (day) { return '<option value="' + h(day) + '"' + (selectedDay === day ? ' selected' : '') + '>' + h(day) + '</option>'; }).join('') + '</select></div>' +
+            '<div class="col-md-3"><label class="form-label" for="manual-slot">Período</label><select class="form-select" name="horario_id" id="manual-slot" required>' +
+            slotOptions + '</select></div><div class="col-md-3"><label class="form-label" for="manual-subject">Disciplina</label><select class="form-select" name="disciplina_id" id="manual-subject" required>' +
+            (disciplines.length ? disciplines.map(function (item) { return '<option value="' + h(item.id) + '"' + (String(selectedDisciplineId) === String(item.id) ? ' selected' : '') + '>' + h(item.nome) + '</option>'; }).join('') :
+                '<option value="" selected disabled>Cadastre uma disciplina</option>') + '</select></div>' +
+            '<div class="col-md-3" id="manual-teacher-field"><label class="form-label">Professor</label>' +
+            renderManualTeacherField(selectedDisciplineId, selectedTeacherId, assignment && assignment.professor_id) + '</div></div>' +
+            '<section class="assignment-guidance-section"><h3>Disponibilidade e carga do professor</h3><div id="assignment-teacher-guidance"></div></section>' +
+            '<div class="d-flex flex-wrap gap-2 mt-4"><button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>' + (assignment ? 'Salvar alteração' : 'Adicionar aula') + '</button>' +
+            (assignment ? '<button class="btn btn-outline-danger ms-auto" type="button" data-action="delete-assignment" data-id="' + h(assignment.id) + '">Excluir aula</button>' : '') +
+            '<button class="btn btn-outline-secondary" type="button" data-action="cancel-assignment-edit">Cancelar</button></div></form></dialog>';
+        return dialog;
+    }
+
+    function openAssignmentDialog() {
+        render();
+        const dialog = document.getElementById('manual-assignment-dialog');
+        const form = document.getElementById('manual-assignment-form');
+        if (!dialog || !form) throw new Error('Não foi possível abrir o formulário de aula. Selecione uma turma e um horário válido.');
+        if (!dialog.open) dialog.showModal();
+        renderAssignmentGuidance(form);
+    }
+
+    function readSimulation(semester) {
+        if (!window.OwltimeGradeLocal) throw new Error('O armazenamento da grade não foi carregado. Atualize a página e tente novamente.');
+        return window.OwltimeGradeLocal.loadState(semester);
+    }
+
+    function laboratoryKey(semester) {
+        return 'owltime_laboratorio_' + (semester || 'default');
+    }
+
+    function cloneGradeState(state) {
+        return JSON.parse(JSON.stringify(state));
+    }
+
+    function isLaboratoryRoute() {
+        return window.location.hash.replace(/^#\/?/, '').split('/')[0] === 'laboratorio';
+    }
+
+    function loadLaboratory(semester) {
+        const key = laboratoryKey(semester);
+        const raw = localStorage.getItem(key);
+        if (raw) {
+            let parsed;
+            try {
+                parsed = JSON.parse(raw);
+            } catch (error) {
+                throw new Error('O rascunho do Laboratório deste semestre não contém JSON válido.');
+            }
+            if (!parsed || typeof parsed !== 'object' || !parsed.originalState ||
+                !parsed.state || !Array.isArray(parsed.originalState.assignments) ||
+                !Array.isArray(parsed.state.assignments) || typeof parsed.officialSignature !== 'string') {
+                throw new Error('O rascunho do Laboratório não tem o formato esperado. Cancele-o para iniciar outro.');
+            }
+            return parsed;
+        }
+        const officialState = readSimulation(semester);
+        const laboratory = {
+            version: 1,
+            createdAt: new Date().toISOString(),
+            officialSignature: JSON.stringify(officialState),
+            originalState: cloneGradeState(officialState),
+            state: cloneGradeState(officialState)
+        };
+        localStorage.setItem(key, JSON.stringify(laboratory));
+        return laboratory;
+    }
+
+    function readEditableSimulation(semester) {
+        return isLaboratoryRoute() ? loadLaboratory(semester).state : readSimulation(semester);
+    }
+
+    function saveEditableSimulation(semester, state) {
+        if (!isLaboratoryRoute()) {
+            saveSimulation(semester, state);
+            return;
+        }
+        const laboratory = loadLaboratory(semester);
+        laboratory.state = state;
+        localStorage.setItem(laboratoryKey(semester), JSON.stringify(laboratory));
+    }
+
+    function assignmentFingerprint(assignment) {
+        return [assignment.turma_id, assignment.disciplina_id, assignment.professor_id].map(String).join('|');
+    }
+
+    function getLaboratoryPending(laboratory) {
+        const currentAssignments = laboratory.state.assignments || [];
+        const originalAssignments = laboratory.originalState.assignments || [];
+        const exactCounts = new Map();
+        const fingerprintCounts = new Map();
+        currentAssignments.forEach(function (assignment) {
+            const fingerprint = assignmentFingerprint(assignment);
+            const exactKey = String(assignment.id) + '|' + fingerprint;
+            exactCounts.set(exactKey, (exactCounts.get(exactKey) || 0) + 1);
+            fingerprintCounts.set(fingerprint, (fingerprintCounts.get(fingerprint) || 0) + 1);
+        });
+        const exactMatches = new Set();
+        originalAssignments.forEach(function (original, index) {
+            const fingerprint = assignmentFingerprint(original);
+            const exactKey = String(original.id) + '|' + fingerprint;
+            const exactCount = exactCounts.get(exactKey) || 0;
+            if (!exactCount) return;
+            exactMatches.add(index);
+            exactCounts.set(exactKey, exactCount - 1);
+            fingerprintCounts.set(fingerprint, (fingerprintCounts.get(fingerprint) || 0) - 1);
+        });
+        const pending = [];
+        originalAssignments.forEach(function (original, index) {
+            if (exactMatches.has(index)) return;
+            const fingerprint = assignmentFingerprint(original);
+            const count = fingerprintCounts.get(fingerprint) || 0;
+            if (count) fingerprintCounts.set(fingerprint, count - 1);
+            else pending.push(original);
+        });
+        return pending;
+    }
+
+    function laboratoryClassDisciplineKey(classId, disciplineId) {
+        return String(classId) + '|' + String(disciplineId);
+    }
+
+    function getLaboratoryReplacementCandidates(laboratory, original, assignmentsByClassDiscipline) {
+        const classDisciplineKey = laboratoryClassDisciplineKey(original.turma_id, original.disciplina_id);
+        const candidates = assignmentsByClassDiscipline
+            ? assignmentsByClassDiscipline.get(classDisciplineKey) || []
+            : laboratory.state.assignments || [];
+        const matchingAssignments = candidates.filter(function (assignment) {
+            return String(assignment.turma_id) === String(original.turma_id) &&
+                String(assignment.disciplina_id) === String(original.disciplina_id) &&
+                String(assignment.professor_id) !== String(original.professor_id);
+        });
+        const sameId = matchingAssignments.find(function (assignment) {
+            return String(assignment.id) === String(original.id);
+        });
+        if (sameId) return [sameId];
+        const sameSlot = matchingAssignments.filter(function (assignment) {
+            return String(assignment.dia_semana) === String(original.dia_semana) &&
+                String(assignment.horario_id) === String(original.horario_id);
+        });
+        return sameSlot.length ? sameSlot : matchingAssignments;
+    }
+
+    function buildLaboratoryAnalysis(laboratory, semester) {
+        const originalAssignments = laboratory.originalState.assignments || [];
+        const currentAssignments = laboratory.state.assignments || [];
+        const allClasses = readRecords(KEYS.turmas);
+        const activeClasses = allClasses.filter(function (turma) {
+            return !turma.status || ['ativa', 'ativo'].includes(String(turma.status).toLowerCase());
+        });
+        const classById = new Map(allClasses.map(function (turma) { return [String(turma.id), turma]; }));
+        const disciplineById = new Map(readRecords(KEYS.disciplinas).map(function (discipline) {
+            return [String(discipline.id), discipline];
+        }));
+        const teacherById = new Map(readRecords(KEYS.professores).map(function (teacher) {
+            return [String(teacher.id), teacher];
+        }));
+        const slotById = new Map(readRecords(KEYS.horarios).map(function (slot) {
+            return [String(slot.id), slot];
+        }));
+        const classIds = new Set(activeClasses.map(function (turma) { return String(turma.id); }));
+        originalAssignments.concat(currentAssignments).forEach(function (assignment) {
+            classIds.add(String(assignment.turma_id));
+        });
+        const demandsByClass = new Map();
+        readRecords(KEYS.demandas).forEach(function (demand) {
+            if (!semesterMatches(demand, semester)) return;
+            const classId = String(demand.turma_id);
+            if (!demandsByClass.has(classId)) demandsByClass.set(classId, []);
+            demandsByClass.get(classId).push(demand);
+        });
+        const demandsByClassDiscipline = new Map();
+        const classPlannedCounts = new Map();
+        classIds.forEach(function (classId) {
+            const turma = classById.get(classId);
+            const relations = demandsByClass.get(classId) || [];
+            const demands = relations.length
+                ? relations.map(function (demand) {
+                    const disciplineId = Number(demand.disciplina_id);
+                    const discipline = disciplineById.get(String(demand.disciplina_id));
+                    return {
+                        disciplina_id: disciplineId,
+                        disciplina_nome: discipline ? discipline.nome : demand.disciplina_nome || '—',
+                        aulas_semanais: Number(demand.aulas_semanais || demand.aulas_previstas || 0)
+                    };
+                }).filter(function (demand) { return demand.disciplina_id && demand.aulas_semanais > 0; })
+                : (turma && Array.isArray(turma.matriz) ? turma.matriz : []).map(function (demand) {
+                    const disciplineId = Number(demand.disciplina_id);
+                    const discipline = disciplineById.get(String(demand.disciplina_id));
+                    return {
+                        disciplina_id: disciplineId,
+                        disciplina_nome: discipline ? discipline.nome : demand.disciplina_nome || '—',
+                        aulas_semanais: Number(demand.aulas_semanais || demand.aulas_previstas || 0)
+                    };
+                }).filter(function (demand) { return demand.disciplina_id && demand.aulas_semanais > 0; });
+            classPlannedCounts.set(classId, demands.reduce(function (total, demand) {
+                return total + demand.aulas_semanais;
+            }, 0));
+            demands.forEach(function (demand) {
+                const key = laboratoryClassDisciplineKey(classId, demand.disciplina_id);
+                if (!demandsByClassDiscipline.has(key)) demandsByClassDiscipline.set(key, demand);
+            });
+        });
+
+        const initialByClass = new Map();
+        const currentByClass = new Map();
+        const initialByDiscipline = new Map();
+        const currentByDiscipline = new Map();
+        const currentByTeacher = new Map();
+        const currentByClassDiscipline = new Map();
+        const assignmentsByClassDiscipline = new Map();
+        function incrementCount(counts, key) {
+            const normalizedKey = String(key);
+            counts.set(normalizedKey, (counts.get(normalizedKey) || 0) + 1);
+        }
+        function indexAssignments(assignments, isCurrent) {
+            assignments.forEach(function (assignment) {
+                incrementCount(isCurrent ? currentByClass : initialByClass, assignment.turma_id);
+                incrementCount(isCurrent ? currentByDiscipline : initialByDiscipline, assignment.disciplina_id);
+                if (!isCurrent) return;
+                incrementCount(currentByTeacher, assignment.professor_id);
+                const key = laboratoryClassDisciplineKey(assignment.turma_id, assignment.disciplina_id);
+                incrementCount(currentByClassDiscipline, key);
+                if (!assignmentsByClassDiscipline.has(key)) assignmentsByClassDiscipline.set(key, []);
+                assignmentsByClassDiscipline.get(key).push(assignment);
+            });
+        }
+        indexAssignments(originalAssignments, false);
+        indexAssignments(currentAssignments, true);
+
+        const classRows = Array.from(classIds).map(function (classId) {
+            const initial = initialByClass.get(classId) || 0;
+            const allocated = currentByClass.get(classId) || 0;
+            const planned = classPlannedCounts.get(classId) || 0;
+            const turma = classById.get(classId);
+            return {
+                id: classId,
+                name: turma ? turma.nome : 'Turma',
+                initial: initial,
+                allocated: allocated,
+                planned: planned,
+                pending: Math.max(0, planned - allocated),
+                excess: Math.max(0, allocated - planned)
+            };
+        }).filter(function (row) { return row.initial || row.allocated || row.planned; })
+            .sort(function (a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
+
+        const disciplineIds = new Set(Array.from(disciplineById.keys()));
+        originalAssignments.concat(currentAssignments).forEach(function (assignment) {
+            disciplineIds.add(String(assignment.disciplina_id));
+        });
+        const disciplineRows = Array.from(disciplineIds).map(function (disciplineId) {
+            let planned = 0;
+            const byClass = [];
+            activeClasses.forEach(function (turma) {
+                const demand = demandsByClassDiscipline.get(
+                    laboratoryClassDisciplineKey(turma.id, disciplineId)
+                );
+                if (!demand) return;
+                planned += demand.aulas_semanais;
+                const allocated = currentByClassDiscipline.get(
+                    laboratoryClassDisciplineKey(turma.id, disciplineId)
+                ) || 0;
+                if (allocated !== demand.aulas_semanais) {
+                    byClass.push({
+                        turma: turma.nome,
+                        allocated: allocated,
+                        planned: demand.aulas_semanais
+                    });
+                }
+            });
+            const initial = initialByDiscipline.get(disciplineId) || 0;
+            const allocated = currentByDiscipline.get(disciplineId) || 0;
+            const discipline = disciplineById.get(disciplineId);
+            return {
+                id: disciplineId,
+                name: discipline ? discipline.nome : 'Disciplina',
+                initial: initial,
+                allocated: allocated,
+                planned: planned,
+                pending: Math.max(0, planned - allocated),
+                excess: Math.max(0, allocated - planned),
+                byClass: byClass
+            };
+        }).filter(function (row) { return row.initial || row.allocated || row.planned; })
+            .sort(function (a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
+        return {
+            classes: classRows,
+            disciplines: disciplineRows,
+            classById: classById,
+            disciplineById: disciplineById,
+            teacherById: teacherById,
+            slotById: slotById,
+            demandsByClassDiscipline: demandsByClassDiscipline,
+            currentByTeacher: currentByTeacher,
+            currentByClassDiscipline: currentByClassDiscipline,
+            assignmentsByClassDiscipline: assignmentsByClassDiscipline
+        };
+    }
+
+    function renderLaboratoryTeacherTab(laboratory, pending, analysis) {
+        if (!pending.length) return '<div class="laboratory-tab-empty">Todos os professores mantêm as aulas da grade inicial neste rascunho.</div>';
+        const pendingByTeacher = new Map();
+        pending.forEach(function (assignment) {
+            const teacherId = String(assignment.professor_id);
+            pendingByTeacher.set(teacherId, (pendingByTeacher.get(teacherId) || 0) + 1);
+        });
+        const rows = pending.map(function (assignment) {
+            const slot = analysis.slotById.get(String(assignment.horario_id)) || {};
+            const teacher = analysis.teacherById.get(String(assignment.professor_id));
+            const teacherAssignments = Number(analysis.currentByTeacher.get(String(assignment.professor_id)) || 0);
+            const teacherPending = pendingByTeacher.get(String(assignment.professor_id)) || 0;
+            const weeklyLimit = Number(teacher && teacher.carga_horaria_semanal != null
+                ? teacher.carga_horaria_semanal
+                : 40);
+            const classDisciplineKey = laboratoryClassDisciplineKey(assignment.turma_id, assignment.disciplina_id);
+            const demand = analysis.demandsByClassDiscipline.get(classDisciplineKey);
+            const allocatedForDemand = analysis.currentByClassDiscipline.get(classDisciplineKey) || 0;
+            const time = slot.hora_inicio && slot.hora_fim
+                ? assignment.dia_semana + ' · ' + slot.hora_inicio + '–' + slot.hora_fim
+                : assignment.dia_semana || 'Horário não informado';
+            const replacements = getLaboratoryReplacementCandidates(
+                laboratory,
+                assignment,
+                analysis.assignmentsByClassDiscipline
+            );
+            const replacement = replacements.length === 1 ? replacements[0] : null;
+            const replacementSlot = replacement && analysis.slotById.get(String(replacement.horario_id));
+            const restoreButton = replacements.length > 1
+                ? '<button class="btn btn-sm btn-outline-secondary" type="button" disabled>Mais de uma cobertura possível</button>' +
+                '<small class="text-warning-emphasis">Remova a cobertura excedente manualmente para identificar qual aula devolver.</small>'
+                : '<button class="btn btn-sm btn-primary" type="button" data-action="restore-laboratory-assignment" data-assignment-id="' +
+                h(assignment.id) + '"><i class="bi bi-arrow-return-left" aria-hidden="true"></i><span>Devolver aula</span></button>';
+            const replacementInfo = replacement
+                ? '<span class="laboratory-replacement-info">Cobertura atual: ' +
+                h(replacement.professor_nome || (analysis.teacherById.get(String(replacement.professor_id)) || {}).nome || 'Professor') +
+                ' · ' + h(replacement.dia_semana || '') +
+                (replacementSlot && replacementSlot.hora_inicio
+                    ? ' ' + h(replacementSlot.hora_inicio + '–' + replacementSlot.hora_fim)
+                    : '') + '. Ao devolver, essa cobertura será removida e a aula original voltará ao horário inicial.</span>'
+                : '';
+            return '<li class="laboratory-pending-item"><strong>' +
+                h(assignment.disciplina_nome || (analysis.disciplineById.get(String(assignment.disciplina_id)) || {}).nome || 'Disciplina') +
+                '</strong><span>Professor sem a aula original: ' +
+                h(assignment.professor_nome || (analysis.teacherById.get(String(assignment.professor_id)) || {}).nome || 'Professor') +
+                '</span><span>Turma e horário original: ' +
+                h((analysis.classById.get(String(assignment.turma_id)) || {}).nome || 'Turma') +
+                ' · ' + h(time) + '</span>' +
+                '<span>Aulas do professor no rascunho: <strong>' + teacherAssignments + ' / ' + weeklyLimit +
+                ' semanais</strong> · ' + teacherPending + ' pendência(s) deste professor</span>' +
+                '<span>Aulas da disciplina nesta turma: <strong>' + allocatedForDemand +
+                (demand ? ' / ' + demand.aulas_semanais + ' previstas' : ' alocada(s) · sem demanda cadastrada') +
+                '</strong></span>' + replacementInfo +
+                '<div class="laboratory-pending-actions">' + restoreButton +
+                '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="laboratory-filter-class" data-class-id="' +
+                h(assignment.turma_id) + '"><i class="bi bi-funnel" aria-hidden="true"></i><span>Filtrar turma</span></button></div></li>';
+        }).join('');
+        return '<ul class="laboratory-pending-list">' + rows + '</ul>';
+    }
+
+    function renderLaboratoryCoverageTab(rows, dimension) {
+        if (!rows.length) return '<div class="laboratory-tab-empty">Não há turmas ou disciplinas com dados para comparar neste semestre.</div>';
+        return '<ul class="laboratory-pending-list">' + rows.map(function (row) {
+            const deficit = row.pending;
+            const excess = row.excess;
+            const badge = deficit
+                ? '<span class="badge text-bg-warning">' + deficit + ' pendente(s)</span>'
+                : excess
+                    ? '<span class="badge text-bg-info">' + excess + ' excedente(s)</span>'
+                    : '<span class="badge text-bg-success">Cobertura completa</span>';
+            const classDetails = dimension === 'disciplinas' && row.byClass.length
+                ? '<div class="laboratory-coverage-breakdown"><strong>Por turma:</strong>' +
+                row.byClass.map(function (item) {
+                    const classPending = Math.max(0, item.planned - item.allocated);
+                    return '<span>' + h(item.turma) + ': ' + item.allocated + ' / ' + item.planned +
+                        (classPending ? ' · faltam ' + classPending : item.allocated > item.planned ? ' · excedente ' + (item.allocated - item.planned) : '') +
+                        '</span>';
+                }).join('') + '</div>'
+                : '';
+            return '<li class="laboratory-coverage-item"><div class="laboratory-coverage-heading"><strong>' +
+                h(row.name) + '</strong>' + badge + '</div>' +
+                '<span>No início: ' + row.initial + ' · no rascunho: ' + row.allocated +
+                (dimension === 'turmas' ? ' · demanda total: ' + row.planned : ' · demanda da disciplina: ' + row.planned) +
+                '</span>' + classDetails + '</li>';
+        }).join('') + '</ul>';
+    }
+
+    function renderLaboratoryPendingPanel(laboratory) {
+        if (laboratoryPendingCollapsed) {
+            const pendingCount = getLaboratoryPending(laboratory).length;
+            return '<button class="laboratory-panel-launcher" type="button" data-action="toggle-laboratory-pending-panel" ' +
+                'aria-controls="laboratory-pending-panel" aria-expanded="false" aria-label="Expandir painel do Laboratório; ' +
+                pendingCount + ' aula(s) pendente(s)" title="Expandir painel do Laboratório">' +
+                '<img src="assets/img/logo.png" alt=""></button>';
+        }
+        const semester = getSemester();
+        const pending = getLaboratoryPending(laboratory);
+        const analysis = buildLaboratoryAnalysis(laboratory, semester);
+        const classIssues = analysis.classes.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        const disciplineIssues = analysis.disciplines.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        if (!['professores', 'turmas', 'disciplinas'].includes(laboratoryPendingTab)) laboratoryPendingTab = 'professores';
+        const teacherOptions = new Map();
+        pending.forEach(function (assignment) {
+            const teacherId = String(assignment.professor_id);
+            if (teacherOptions.has(teacherId)) return;
+            const teacher = analysis.teacherById.get(teacherId);
+            teacherOptions.set(teacherId, assignment.professor_nome || (teacher && teacher.nome) || 'Professor');
+        });
+        const filterDefinitions = {
+            professores: {
+                label: 'Professor',
+                allLabel: 'Todos os professores',
+                options: Array.from(teacherOptions, function (entry) {
+                    return { id: entry[0], name: entry[1] };
+                }).sort(function (a, b) { return a.name.localeCompare(b.name, 'pt-BR'); })
+            },
+            turmas: {
+                label: 'Turma',
+                allLabel: 'Todas as turmas',
+                options: analysis.classes.map(function (row) { return { id: row.id, name: row.name }; })
+            },
+            disciplinas: {
+                label: 'Disciplina',
+                allLabel: 'Todas as disciplinas',
+                options: analysis.disciplines.map(function (row) { return { id: row.id, name: row.name }; })
+            }
+        };
+        const filterDefinition = filterDefinitions[laboratoryPendingTab];
+        let selectedFilter = laboratoryPendingFilters[laboratoryPendingTab];
+        if (selectedFilter && !filterDefinition.options.some(function (option) {
+            return String(option.id) === String(selectedFilter);
+        })) {
+            selectedFilter = '';
+            laboratoryPendingFilters[laboratoryPendingTab] = '';
+        }
+        const tabs = [
+            { id: 'professores', label: 'Professores', count: pending.length },
+            { id: 'turmas', label: 'Turmas', count: classIssues },
+            { id: 'disciplinas', label: 'Disciplinas', count: disciplineIssues }
+        ].map(function (tab) {
+            const active = laboratoryPendingTab === tab.id;
+            return '<button class="laboratory-pending-tab' + (active ? ' is-active' : '') +
+                '" type="button" role="tab" id="laboratory-tab-' + tab.id +
+                '" aria-selected="' + String(active) + '" aria-controls="laboratory-tab-content" data-action="select-laboratory-pending-tab" data-tab="' +
+                tab.id + '">' + tab.label + '<span class="badge text-bg-' + (tab.count ? 'warning' : 'success') +
+                '">' + tab.count + '</span></button>';
+        }).join('');
+        const classFilter = gradeTurmaFilter
+            ? '<button class="btn btn-sm btn-outline-secondary" type="button" data-action="laboratory-clear-class-filter">' +
+            '<i class="bi bi-x-circle me-1" aria-hidden="true"></i>Remover filtro de turma: ' +
+            h((analysis.classById.get(String(gradeTurmaFilter)) || {}).nome || 'Turma selecionada') + '</button>'
+            : '';
+        const filterIcons = { professores: 'bi-person', turmas: 'bi-people', disciplinas: 'bi-book' };
+        const clearFilterButton = selectedFilter
+            ? '<button class="laboratory-filter-clear" type="button" data-action="clear-laboratory-pending-filter" data-tab="' +
+            laboratoryPendingTab + '" aria-label="Limpar filtro de ' + h(filterDefinition.label.toLowerCase()) +
+            '" title="Limpar filtro"><i class="bi bi-x-lg" aria-hidden="true"></i></button>'
+            : '';
+        const filterControl = '<div class="laboratory-pending-filter"><label for="laboratory-pending-filter"><i class="bi ' +
+            filterIcons[laboratoryPendingTab] + '" aria-hidden="true"></i> Filtrar por ' +
+            h(filterDefinition.label.toLowerCase()) + '</label><div class="laboratory-pending-filter-controls">' +
+            '<select class="form-select form-select-sm" id="laboratory-pending-filter" data-tab="' +
+            laboratoryPendingTab + '"><option value="">' + h(filterDefinition.allLabel) + '</option>' +
+            filterDefinition.options.map(function (option) {
+                return '<option value="' + h(option.id) + '"' +
+                    (String(option.id) === String(selectedFilter) ? ' selected' : '') + '>' + h(option.name) + '</option>';
+            }).join('') + '</select>' + clearFilterButton + '</div></div>';
+        const filteredPending = laboratoryPendingTab === 'professores' && selectedFilter
+            ? pending.filter(function (assignment) { return String(assignment.professor_id) === String(selectedFilter); })
+            : pending;
+        const filteredClasses = laboratoryPendingTab === 'turmas' && selectedFilter
+            ? analysis.classes.filter(function (row) { return String(row.id) === String(selectedFilter); })
+            : analysis.classes;
+        const filteredDisciplines = laboratoryPendingTab === 'disciplinas' && selectedFilter
+            ? analysis.disciplines.filter(function (row) { return String(row.id) === String(selectedFilter); })
+            : analysis.disciplines;
+        const content = laboratoryPendingTab === 'professores'
+            ? renderLaboratoryTeacherTab(laboratory, filteredPending, analysis)
+            : laboratoryPendingTab === 'turmas'
+                ? renderLaboratoryCoverageTab(filteredClasses, 'turmas')
+                : renderLaboratoryCoverageTab(filteredDisciplines, 'disciplinas');
+        const filteredClassIssues = filteredClasses.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        const filteredDisciplineIssues = filteredDisciplines.reduce(function (total, row) {
+            return total + row.pending + row.excess;
+        }, 0);
+        const selectedCount = laboratoryPendingTab === 'professores'
+            ? filteredPending.length
+            : laboratoryPendingTab === 'turmas' ? filteredClassIssues : filteredDisciplineIssues;
+        return '<aside id="laboratory-pending-panel" class="laboratory-pending-panel" aria-live="polite" aria-label="Situação de professores, turmas e disciplinas">' +
+            '<div class="laboratory-pending-heading"><strong><i class="bi bi-sticky me-1" aria-hidden="true"></i>Situação da grade</strong>' +
+            '<button class="laboratory-panel-collapse" type="button" data-action="toggle-laboratory-pending-panel" aria-controls="laboratory-pending-panel" aria-expanded="true" aria-label="Ocultar painel de pendências" title="Ocultar painel">' +
+            '<i class="bi bi-chevron-up" aria-hidden="true"></i><span>Ocultar</span></button>' +
+            '<span class="badge text-bg-' + (selectedCount ? 'warning' : 'success') + '">' + selectedCount + '</span></div>' +
+            '<p class="small text-muted mb-2">' + (laboratory.state.assignments || []).length +
+            ' aula(s) no rascunho · confira as diferenças por professor, turma ou disciplina.</p>' +
+            (classFilter ? '<div class="mb-2">' + classFilter + '</div>' : '') +
+            '<div class="laboratory-pending-tabs" role="tablist" aria-label="Dimensão da situação da grade">' + tabs + '</div>' +
+            filterControl +
+            '<div id="laboratory-tab-content" class="laboratory-pending-content" role="tabpanel" aria-labelledby="laboratory-tab-' +
+            laboratoryPendingTab + '">' + content + '</div></aside>';
+    }
+
+    function summarizeLaboratoryChanges(laboratory) {
+        const before = laboratory.originalState.assignments || [];
+        const after = laboratory.state.assignments || [];
+        const afterById = new Map(after.map(function (assignment) { return [String(assignment.id), assignment]; }));
+        const beforeById = new Map(before.map(function (assignment) { return [String(assignment.id), assignment]; }));
+        const summary = { adicionadas: 0, removidas: 0, movidas: 0, alteradas: 0 };
+        after.forEach(function (assignment) {
+            const original = beforeById.get(String(assignment.id));
+            if (!original) summary.adicionadas += 1;
+            else if (assignmentFingerprint(original) !== assignmentFingerprint(assignment)) summary.alteradas += 1;
+            else if (String(original.horario_id) !== String(assignment.horario_id) ||
+                String(original.dia_semana) !== String(assignment.dia_semana)) summary.movidas += 1;
+        });
+        before.forEach(function (assignment) {
+            if (!afterById.has(String(assignment.id))) summary.removidas += 1;
+        });
+        return summary;
+    }
+
+    function updateGenerationReportAfterLaboratory(state, semester) {
+        if (!state.lastGenerationReport) return;
+        let totalPrevistas = 0;
+        let totalAtendidas = 0;
+        const failures = [];
+        const classReports = [];
+        const previousFailures = Array.isArray(state.lastGenerationReport.falhas)
+            ? state.lastGenerationReport.falhas
+            : [];
+        activeRecords(KEYS.turmas, ['ativa', 'ativo']).forEach(function (turma) {
+            const classDemands = getDemandsForClass(turma.id, semester);
+            let classPlanned = 0;
+            let classAttended = 0;
+            const disciplineReports = classDemands.map(function (demand) {
+                classPlanned += demand.aulas_semanais;
+                totalPrevistas += demand.aulas_semanais;
+                const allocated = state.assignments.filter(function (assignment) {
+                    return String(assignment.turma_id) === String(turma.id) &&
+                        String(assignment.disciplina_id) === String(demand.disciplina_id);
+                }).length;
+                const attended = Math.min(demand.aulas_semanais, allocated);
+                const pending = Math.max(0, demand.aulas_semanais - attended);
+                totalAtendidas += attended;
+                classAttended += attended;
+                if (!pending) return {
+                    disciplina_id: demand.disciplina_id,
+                    disciplina_nome: demand.disciplina_nome,
+                    previstas: demand.aulas_semanais,
+                    atendidas: attended,
+                    pendentes: 0
+                };
+                const previousFailure = previousFailures.find(function (failure) {
+                    return String(failure.turma_id) === String(turma.id) &&
+                        String(failure.disciplina_id) === String(demand.disciplina_id);
+                });
+                failures.push({
+                    turma_id: turma.id,
+                    turma_nome: turma.nome,
+                    disciplina_id: demand.disciplina_id,
+                    disciplina_nome: demand.disciplina_nome,
+                    previstas: demand.aulas_semanais,
+                    atendidas: attended,
+                    pendentes: pending,
+                    motivo: 'Pendência após a geração e os ajustes manuais.',
+                    professores: previousFailure && Array.isArray(previousFailure.professores)
+                        ? previousFailure.professores
+                        : []
+                });
+                return {
+                    disciplina_id: demand.disciplina_id,
+                    disciplina_nome: demand.disciplina_nome,
+                    previstas: demand.aulas_semanais,
+                    atendidas: attended,
+                    pendentes: pending
+                };
+            });
+            classReports.push({
+                turma_id: turma.id,
+                turma_nome: turma.nome,
+                totalPrevistas: classPlanned,
+                atendidas: classAttended,
+                pendentes: classPlanned - classAttended,
+                disciplinas: disciplineReports,
+                completa: classPlanned === classAttended
+            });
+        });
+        const totalPendentes = Math.max(0, totalPrevistas - totalAtendidas);
+        const teacherReports = activeRecords(KEYS.professores, ['ativo']).map(function (teacher) {
+            const teacherAssignments = state.assignments.filter(function (assignment) {
+                return String(assignment.professor_id) === String(teacher.id);
+            });
+            return {
+                professor_id: Number(teacher.id),
+                professor_nome: teacher.nome || 'Professor',
+                carga_alocada: teacherAssignments.length,
+                carga_total: teacherAssignments.length
+            };
+        });
+        state.lastGenerationReport = Object.assign({}, state.lastGenerationReport, {
+            totalPrevistas: totalPrevistas,
+            totalAtendidas: totalAtendidas,
+            totalPendentes: totalPendentes,
+            percentual: totalPrevistas ? Number((totalAtendidas / totalPrevistas * 100).toFixed(2)) : 0,
+            completo: totalPendentes === 0,
+            falhas: failures,
+            turmas: classReports,
+            professores: teacherReports
+        });
+    }
+
+    function applyLaboratory() {
+        const semester = getSemester();
+        const key = laboratoryKey(semester);
+        const laboratory = loadLaboratory(semester);
+        const officialState = readSimulation(semester);
+        if (JSON.stringify(officialState) !== laboratory.officialSignature) {
+            throw new Error('A Grade oficial mudou depois que o Laboratório foi iniciado. Cancele este rascunho e abra o Laboratório novamente para evitar substituir alterações recentes.');
+        }
+        const changed = JSON.stringify(laboratory.originalState.assignments) !==
+            JSON.stringify(laboratory.state.assignments);
+        const updatedState = changed ? cloneGradeState(laboratory.state) : officialState;
+        if (changed) {
+            const entry = Object.assign({
+                aplicadoEm: new Date().toISOString(),
+                aulasAntes: laboratory.originalState.assignments.length,
+                aulasDepois: updatedState.assignments.length,
+                pendencias: getLaboratoryPending(laboratory).length
+            }, summarizeLaboratoryChanges(laboratory));
+            updatedState.laboratoryAdjustments = (updatedState.laboratoryAdjustments || []).concat(entry);
+            updateGenerationReportAfterLaboratory(updatedState, semester);
+        }
+        saveSimulation(semester, updatedState);
+        localStorage.removeItem(key);
+        window.location.hash = '#/grade';
+        render();
+        window.setTimeout(function () {
+            notify(changed
+                ? 'Alterações do Laboratório aplicadas à Grade oficial e aos relatórios.'
+                : 'Laboratório aplicado sem alterações; a Grade oficial foi mantida.',
+                'success');
+        }, 50);
+    }
+
+    function cancelLaboratory() {
+        const semester = getSemester();
+        const laboratory = loadLaboratory(semester);
+        const changed = JSON.stringify(laboratory.originalState.assignments) !==
+            JSON.stringify(laboratory.state.assignments);
+        if (changed && !window.confirm('Descartar todas as alterações deste Laboratório? A Grade oficial não será modificada.')) return;
+        localStorage.removeItem(laboratoryKey(semester));
+        window.location.hash = '#/grade';
+        render();
+        window.setTimeout(function () {
+            notify('Rascunho do Laboratório descartado. A Grade oficial foi mantida.', 'success');
+        }, 50);
+    }
+
+    function restoreLaboratoryAssignment(assignmentId) {
+        const semester = getSemester();
+        const laboratory = loadLaboratory(semester);
+        const original = laboratory.originalState.assignments.find(function (assignment) {
+            return String(assignment.id) === String(assignmentId);
+        });
+        if (!original || !getLaboratoryPending(laboratory).some(function (assignment) {
+            return String(assignment.id) === String(assignmentId);
+        })) throw new Error('Esta aula não está mais pendente para o professor original.');
+        const replacements = getLaboratoryReplacementCandidates(laboratory, original);
+        if (replacements.length > 1) {
+            throw new Error('Há mais de uma cobertura possível para esta aula. Remova a cobertura excedente manualmente antes de devolvê-la.');
+        }
+        const replacement = replacements[0] || null;
+        const slot = findById(KEYS.horarios, original.horario_id);
+        if (!slot || slot.dia_semana !== original.dia_semana ||
+            String(slot.tipo || 'Aula').toLowerCase() !== 'aula') {
+            throw new Error('O horário original desta aula não está mais disponível. Revise os horários antes de devolvê-la.');
+        }
+        if (getGradeProtections(semester).some(function (protection) {
+            return String(protection.turma_id) === String(original.turma_id) &&
+                String(protection.dia_semana) === String(original.dia_semana) &&
+                String(protection.horario_id) === String(original.horario_id);
+        })) throw new Error('O horário original está protegido e não pode receber a aula devolvida.');
+        const assignments = laboratory.state.assignments || [];
+        const remaining = assignments.filter(function (assignment) {
+            return !replacement || String(assignment.id) !== String(replacement.id);
+        });
+        if (remaining.some(function (assignment) {
+            return String(assignment.turma_id) === String(original.turma_id) &&
+                String(assignment.dia_semana) === String(original.dia_semana) &&
+                String(assignment.horario_id) === String(original.horario_id);
+        })) throw new Error('O horário original da turma já está ocupado por outra aula. Libere-o antes de devolver esta aula.');
+        if (remaining.some(function (assignment) {
+            return String(assignment.professor_id) === String(original.professor_id) &&
+                String(assignment.dia_semana) === String(original.dia_semana) &&
+                String(assignment.horario_id) === String(original.horario_id);
+        })) throw new Error('O professor original já tem outra aula neste horário. Libere o período antes de devolver esta aula.');
+        const availability = getTeacherAvailability(original.professor_id, original.dia_semana, original.horario_id);
+        if (availability.isPrd) throw new Error('O professor original está em PRD neste dia e não pode receber a aula devolvida.');
+        if (availability.available === false && !window.confirm(
+            'O professor original está marcado como indisponível neste horário. Deseja devolver a aula mesmo assim?'
+        )) return;
+        const restoredId = remaining.some(function (assignment) {
+            return String(assignment.id) === String(original.id);
+        }) ? nextId(remaining) : original.id;
+        const restored = Object.assign({}, original, { id: restoredId });
+        laboratory.state.assignments = remaining.concat(restored);
+        laboratory.state.activeTurmaId = Number(original.turma_id);
+        localStorage.setItem(laboratoryKey(semester), JSON.stringify(laboratory));
+        render();
+        const replacementSlot = replacement && findById(KEYS.horarios, replacement.horario_id);
+        const replacementDescription = replacement
+            ? ' A aula de ' + (replacement.professor_nome || nameById(KEYS.professores, replacement.professor_id, 'Professor')) +
+            ' foi removida de ' + (replacement.dia_semana || 'seu dia') +
+            (replacementSlot && replacementSlot.hora_inicio
+                ? ' ' + replacementSlot.hora_inicio + '–' + replacementSlot.hora_fim
+                : '') + '.'
+            : '';
+        notify(
+            'Aula devolvida a ' + (original.professor_nome || nameById(KEYS.professores, original.professor_id, 'Professor')) +
+            ' · ' + nameById(KEYS.turmas, original.turma_id, 'Turma') + ' · ' +
+            original.dia_semana + ' ' + slot.hora_inicio + '–' + slot.hora_fim + '.' + replacementDescription,
+            'success'
+        );
+    }
+
+    function simulationKey(semester) {
+        return 'owltime_simulacao_painel_' + (semester || 'default');
+    }
+
+    function saveSimulation(semester, state) {
+        const key = window.OwltimeGradeLocal ? window.OwltimeGradeLocal.getStorageKey(semester) : simulationKey(semester);
+        localStorage.setItem(key, JSON.stringify(state));
+    }
+
+    function addManualAssignment(form) {
+        const data = new FormData(form);
+        const turmaId = String(form.dataset.classId || '');
+        const assignmentId = String(form.dataset.assignmentId || '');
+        const day = String(data.get('dia_semana') || '');
+        const slotId = Number(data.get('horario_id') || 0);
+        const subjectId = Number(data.get('disciplina_id') || 0);
+        const teacherId = Number(data.get('professor_id') || 0);
+        if (!teacherId) throw new Error('Selecione uma disciplina com professor vinculado para adicionar a aula.');
+        const slot = findById(KEYS.horarios, slotId);
+        const subject = findById(KEYS.disciplinas, subjectId);
+        const teacher = findById(KEYS.professores, teacherId);
+        if (!turmaId || !slot || !subject || !teacher || slot.dia_semana !== day) throw new Error('Revise a turma, o dia, o horário, a disciplina e o professor selecionados.');
+        const semester = getSemester();
+        const state = readEditableSimulation(semester);
+        const oldAssignment = assignmentId ? state.assignments.find(function (item) { return String(item.id) === assignmentId; }) : null;
+        if (assignmentId && !oldAssignment) throw new Error('A aula que você tentou editar não foi encontrada.');
+        if (getGradeProtections(semester).some(function (protection) {
+            return String(protection.turma_id) === turmaId &&
+                String(protection.dia_semana) === day &&
+                String(protection.horario_id) === String(slotId);
+        })) throw new Error('Este período está protegido para a turma e não pode receber uma aula.');
+        const remainingAssignments = state.assignments.filter(function (item) { return String(item.id) !== assignmentId; });
+        const conflict = state.assignments.find(function (item) {
+            if (String(item.id) === assignmentId) return false;
+            if (String(item.dia_semana) !== day || String(item.horario_id) !== String(slotId)) return false;
+            return String(item.turma_id) === turmaId || String(item.professor_id) === String(teacherId);
+        });
+        const warnings = [];
+        if (conflict) warnings.push('Este horário já está ocupado para a turma ou para o professor.');
+        const demands = getDemandsForClass(turmaId);
+        const demand = demands.find(function (item) { return String(item.disciplina_id) === String(subjectId); });
+        const allocated = remainingAssignments.filter(function (item) {
+            return String(item.turma_id) === turmaId && String(item.disciplina_id) === String(subjectId);
+        }).length;
+        if (!demand) warnings.push('Esta disciplina não tem demanda cadastrada para a turma.');
+        else if (allocated >= demand.aulas_semanais) warnings.push('A demanda semanal desta disciplina já foi atendida (' + allocated + ' / ' + demand.aulas_semanais + ').');
+
+        const availability = getTeacherAvailability(teacherId, day, slotId);
+        if (availability.isPrd) throw new Error('O professor está em PRD neste dia e não pode receber aulas.');
+        if (availability.available === false) warnings.push('O professor está marcado como indisponível neste período.');
+        const weeklyLimit = Number(teacher.carga_horaria_semanal == null ? 40 : teacher.carga_horaria_semanal);
+        const dailyLimit = Number(teacher.limite_aulas_dia == null ? 5 : teacher.limite_aulas_dia);
+        const weeklyLoad = remainingAssignments.filter(function (item) { return String(item.professor_id) === String(teacherId); }).length;
+        const dailyLoad = remainingAssignments.filter(function (item) {
+            return String(item.professor_id) === String(teacherId) && item.dia_semana === day;
+        }).length;
+        if (weeklyLoad >= weeklyLimit) warnings.push('O professor atingirá ou ultrapassará o limite semanal (' + weeklyLoad + ' / ' + weeklyLimit + ').');
+        if (dailyLoad >= dailyLimit) warnings.push('O professor atingirá ou ultrapassará o limite diário (' + dailyLoad + ' / ' + dailyLimit + ').');
+        if (warnings.length && !window.confirm(warnings.join('\n') + '\n\nDeseja salvar mesmo assim?')) return;
+        const updatedAssignment = Object.assign({}, oldAssignment || {}, {
+            id: oldAssignment ? oldAssignment.id : nextId(state.assignments),
+            turma_id: Number(turmaId), dia_semana: day, horario_id: slotId,
+            disciplina_id: subjectId, disciplina_nome: subject.nome,
+            professor_id: teacherId, professor_nome: teacher.nome,
+            hora_inicio: slot.hora_inicio, hora_fim: slot.hora_fim, origem: 'manual'
+        });
+        state.assignments = oldAssignment
+            ? state.assignments.map(function (item) { return String(item.id) === assignmentId ? updatedAssignment : item; })
+            : state.assignments.concat(updatedAssignment);
+        state.activeTurmaId = Number(turmaId);
+        saveEditableSimulation(semester, state);
+        gradeEditingId = null;
+        gradeFocusDay = '';
+        gradeFocusSlotId = '';
+        render();
+        notify(oldAssignment ? 'Aula atualizada na grade local.' : 'Aula adicionada à grade local.', 'success');
+    }
+
+    function moveAssignment(assignmentId, classId, day, slotId) {
+        const semester = getSemester();
+        const state = readEditableSimulation(semester);
+        const assignment = state.assignments.find(function (item) { return String(item.id) === String(assignmentId); });
+        const slot = findById(KEYS.horarios, slotId);
+        if (!assignment || String(assignment.turma_id) !== String(classId)) throw new Error('A aula ou a turma de destino não foi encontrada.');
+        if (!slot || slot.dia_semana !== day || String(slot.tipo || 'Aula').toLowerCase() !== 'aula') {
+            throw new Error('O horário de destino não é um período de aula válido.');
+        }
+        if (String(assignment.dia_semana) === String(day) && String(assignment.horario_id) === String(slotId)) return;
+        if (getGradeProtections(semester).some(function (protection) {
+            return String(protection.turma_id) === String(classId) &&
+                String(protection.dia_semana) === String(day) &&
+                String(protection.horario_id) === String(slotId);
+        })) throw new Error('Este período está protegido para a turma e não pode receber uma aula.');
+        const otherAssignments = state.assignments.filter(function (item) { return String(item.id) !== String(assignmentId); });
+        if (otherAssignments.some(function (item) {
+            return String(item.turma_id) === String(classId) && String(item.dia_semana) === String(day) && String(item.horario_id) === String(slotId);
+        })) {
+            throw new Error('A turma já tem uma aula neste horário. Escolha um horário vazio.');
+        }
+        const warnings = [];
+        if (otherAssignments.some(function (item) {
+            return String(item.professor_id) === String(assignment.professor_id) && String(item.dia_semana) === String(day) && String(item.horario_id) === String(slotId);
+        })) warnings.push('O professor já tem outra aula neste período.');
+        const availability = getTeacherAvailability(assignment.professor_id, day, slotId);
+        if (availability.isPrd) throw new Error('O professor está em PRD neste dia e a aula não pode ser movida para esse período.');
+        if (availability.available === false) warnings.push('O professor está marcado como indisponível neste período.');
+        if (warnings.length && !window.confirm(warnings.join('\n') + '\n\nDeseja mover a aula mesmo assim?')) return;
+        assignment.dia_semana = day;
+        assignment.horario_id = Number(slotId);
+        assignment.hora_inicio = slot.hora_inicio;
+        assignment.hora_fim = slot.hora_fim;
+        assignment.origem = 'manual';
+        state.activeTurmaId = Number(classId);
+        saveEditableSimulation(semester, state);
+        render();
+        notify('Aula movida para ' + day + ', ' + slot.hora_inicio + '–' + slot.hora_fim + '.', 'success');
+    }
+
+    function removeAssignment(id) {
+        const semester = getSemester();
+        const state = readEditableSimulation(semester);
+        state.assignments = state.assignments.filter(function (item) { return String(item.id) !== String(id); });
+        saveEditableSimulation(semester, state);
+        gradeEditingId = null;
+        gradeFocusDay = '';
+        gradeFocusSlotId = '';
+        render();
+        notify('Aula removida da grade.', 'success');
+    }
+
+    function exportJson(filename, data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportBackup() {
+        const backup = {};
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index);
+            if (key && key.startsWith('owltime_')) backup[key] = localStorage.getItem(key);
+        }
+        if (!Object.keys(backup).length) {
+            notify('Ainda não há dados Owltime para exportar.', 'warning');
+            return;
+        }
+        exportJson('owltime_backup_' + new Date().toISOString().slice(0, 10) + '.json', backup);
+        notify('Backup exportado. Guarde o arquivo em um local seguro.', 'success');
+    }
+
+    function normalizeBackup(payload) {
+        const source = payload && payload.storage && typeof payload.storage === 'object' ? payload.storage :
+            (payload && payload.data && typeof payload.data === 'object' ? payload.data : payload);
+        if (!source || typeof source !== 'object' || Array.isArray(source)) throw new Error('O arquivo selecionado não contém um backup Owltime válido.');
+        const entries = Object.entries(source).filter(function (entry) { return entry[0].startsWith('owltime_'); });
+        if (!entries.length) throw new Error('Nenhuma chave Owltime foi encontrada no arquivo.');
+        const validated = {};
+        entries.forEach(function (entry) {
+            const key = entry[0];
+            const value = entry[1];
+            const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+            if (serialized === undefined) throw new Error('O valor da chave ' + key + ' não pode ser restaurado.');
+            if (!PLAIN_TEXT_PREFERENCE_KEYS.includes(key)) {
+                let parsed;
+                try { parsed = JSON.parse(serialized); } catch (error) {
+                    throw new Error('O conteúdo da chave ' + key + ' não é JSON válido.');
+                }
+                if (!(Array.isArray(parsed) || (parsed && typeof parsed === 'object'))) {
+                    throw new Error('O conteúdo da chave ' + key + ' não tem um formato de dados reconhecido.');
+                }
+            }
+            validated[key] = serialized;
+        });
+        return validated;
+    }
+
+    function restoreBackup(payload) {
+        const values = normalizeBackup(payload);
+        if (!window.confirm('A restauração substituirá as chaves locais que aparecem no backup. Deseja continuar?')) return;
+        const previous = {};
+        Object.keys(values).forEach(function (key) { previous[key] = localStorage.getItem(key); });
+        try {
+            Object.keys(values).forEach(function (key) { localStorage.setItem(key, values[key]); });
+        } catch (error) {
+            Object.keys(previous).forEach(function (key) {
+                try {
+                    if (previous[key] === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, previous[key]);
+                } catch (rollbackError) {
+                    console.error('Falha ao restaurar a chave durante rollback:', key, rollbackError);
+                }
+            });
+            throw new Error('Não foi possível restaurar o backup. Verifique o espaço disponível no navegador. ' + error.message);
+        }
+        semesterMigrationComplete = false;
+        editing = null;
+        render();
+        notify(Object.keys(values).length + ' chave(s) restaurada(s) neste navegador.', 'success');
+    }
+
+    function deleteSemesterData(semester) {
+        const selectedSemester = String(semester || '').trim();
+        if (!/^\d{4}\/[12]$/.test(selectedSemester)) {
+            throw new Error('Selecione um semestre válido para excluir.');
+        }
+        if (selectedSemester === getSemester()) {
+            throw new Error('O semestre ativo não pode ser excluído. Selecione outro semestre antes.');
+        }
+        if (!getStoredSemesters().includes(selectedSemester)) {
+            throw new Error('O semestre selecionado não foi encontrado.');
+        }
+        if (!window.confirm(
+            'Excluir o semestre ' + selectedSemester + ' e todos os seus grupos, demandas, vínculos, PRDs/disponibilidades, eventos aplicados, peculiaridades, substituições e aulas da grade? ' +
+            'Cursos, professores, disciplinas, turmas, horários e definições de eventos e sorts serão mantidos. Esta ação não pode ser desfeita sem um backup.'
+        )) return false;
+
+        const scopedModules = [
+            [KEYS.grupos, 'Grupos'],
+            [KEYS.demandas, 'TurmaDisciplina'],
+            [KEYS.vinculos, 'ProfessorDisciplina'],
+            [KEYS.disponibilidade, 'ProfessorDisponibilidade'],
+            [KEYS.eventosGrade, 'EventosGrade'],
+            [KEYS.protecoesGrade, 'ProtecoesGrade'],
+            [KEYS.substituicoes, 'SubstituicoesDocentes']
+        ];
+        const simulationKey = 'owltime_simulacao_painel_' + selectedSemester;
+        const laboratoryStorageKey = laboratoryKey(selectedSemester);
+        const previousValues = {};
+        scopedModules.forEach(function (item) { previousValues[item[0]] = localStorage.getItem(item[0]); });
+        previousValues[simulationKey] = localStorage.getItem(simulationKey);
+        previousValues[laboratoryStorageKey] = localStorage.getItem(laboratoryStorageKey);
+        try {
+            scopedModules.forEach(function (item) {
+                const remaining = readRecords(item[0]).filter(function (record) {
+                    return !semesterMatches(record, selectedSemester);
+                });
+                saveRecords(item[0], remaining, item[1]);
+            });
+            localStorage.removeItem(simulationKey);
+            localStorage.removeItem(laboratoryStorageKey);
+        } catch (error) {
+            Object.keys(previousValues).forEach(function (key) {
+                try {
+                    if (previousValues[key] === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, previousValues[key]);
+                } catch (rollbackError) {
+                    console.error('Falha ao restaurar dados durante exclusão do semestre:', key, rollbackError);
+                }
+            });
+            throw new Error('Não foi possível concluir a exclusão do semestre; os dados foram restaurados quando possível. ' + error.message);
+        }
+        return true;
+    }
+
+    function renderSemesterDashboard() {
+        const scopedKeys = [
+            KEYS.grupos, KEYS.demandas, KEYS.vinculos, KEYS.disponibilidade,
+            KEYS.eventosGrade, KEYS.protecoesGrade, KEYS.substituicoes
+        ];
+        const recordsByKey = {};
+        const semesters = new Set([getSemester()]);
+        scopedKeys.forEach(function (key) {
+            recordsByKey[key] = readRecords(key);
+            recordsByKey[key].forEach(function (record) {
+                semesters.add(semesterOf(record));
+            });
+        });
+        const simulationPrefix = 'owltime_simulacao_painel_';
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index) || '';
+            const match = new RegExp('^(?:' + simulationPrefix + '|owltime_laboratorio_)(\\d{4}/[12])$').exec(key);
+            if (match) semesters.add(match[1]);
+        }
+        const cards = Array.from(semesters).sort(function (a, b) { return b.localeCompare(a); }).map(function (semester) {
+            const count = function (key) {
+                return recordsByKey[key].filter(function (record) {
+                    return semesterMatches(record, semester);
+                }).length;
+            };
+            const dataBytes = scopedKeys.reduce(function (total, key) {
+                const records = recordsByKey[key].filter(function (record) {
+                    return semesterMatches(record, semester);
+                });
+                return total + (records.length ? new Blob([JSON.stringify(records)]).size : 0);
+            }, 0) + (localStorage.getItem(simulationKey(semester))
+                ? new Blob([localStorage.getItem(simulationKey(semester))]).size
+                : 0) + (localStorage.getItem(laboratoryKey(semester))
+                    ? new Blob([localStorage.getItem(laboratoryKey(semester))]).size
+                    : 0);
+            const lessons = readSimulation(semester).assignments || [];
+            const active = semester === getSemester();
+            return '<div class="col-md-6 col-xl-4"><article class="card h-100"><div class="card-header d-flex justify-content-between align-items-center gap-2">' +
+                '<strong>' + h(semester) + '</strong>' + (active ? '<span class="badge text-bg-primary">Ativo</span>' : '') + '</div>' +
+                '<div class="card-body"><div class="row row-cols-2 g-2 small">' +
+                '<div><strong>' + count(KEYS.grupos) + '</strong><span class="d-block text-muted">grupos</span></div>' +
+                '<div><strong>' + count(KEYS.demandas) + '</strong><span class="d-block text-muted">demandas</span></div>' +
+                '<div><strong>' + count(KEYS.vinculos) + '</strong><span class="d-block text-muted">vínculos</span></div>' +
+                '<div><strong>' + count(KEYS.disponibilidade) + '</strong><span class="d-block text-muted">PRD/disponibilidades</span></div>' +
+                '<div><strong>' + count(KEYS.eventosGrade) + '</strong><span class="d-block text-muted">marcações de eventos</span></div>' +
+                '<div><strong>' + count(KEYS.protecoesGrade) + '</strong><span class="d-block text-muted">peculiaridades</span></div>' +
+                '<div><strong>' + count(KEYS.substituicoes) + '</strong><span class="d-block text-muted">substituições</span></div>' +
+                '<div><strong>' + lessons.length + '</strong><span class="d-block text-muted">aulas na grade</span></div>' +
+                '<div class="col-12 border-top pt-2"><strong>' + formatSemesterDataSize(dataBytes) +
+                '</strong><span class="d-block text-muted">tamanho estimado dos dados</span></div>' +
+                '</div><div class="d-flex flex-wrap gap-2 mt-3"><button class="btn btn-sm ' + (active ? 'btn-outline-secondary' : 'btn-outline-primary') +
+                '" type="button" data-action="select-semester-dashboard" data-semester="' + h(semester) + '"' +
+                (active ? ' disabled' : '') + '>' + (active ? 'Semestre atual' : 'Abrir semestre') + '</button>' +
+                (active ? '' : '<button class="btn btn-sm btn-outline-danger" type="button" data-action="delete-semester" data-semester="' +
+                    h(semester) + '">Excluir semestre</button>') + '</div></div></article></div>';
+        }).join('');
+        return '<section class="mb-4"><div class="d-flex justify-content-between align-items-end gap-2 flex-wrap mb-2">' +
+            '<div><h2 class="h5 mb-1">Semestres e seus dados</h2><p class="small text-muted mb-0">Resumo dos cadastros, da grade e do tamanho estimado dos dados em cada período.</p></div>' +
+            '<button class="btn btn-sm btn-outline-primary" type="button" data-action="open-semester-copy" data-target-semester="' +
+            h(getSemester()) + '"><i class="bi bi-copy me-1"></i>Copiar dados de outro semestre</button></div>' +
+            '<div class="row g-3">' + (cards || '<div class="col-12"><div class="empty-state">Nenhum semestre com dados.</div></div>') +
+            '</div></section>';
+    }
+
+    function renderStorage() {
+        const items = [];
+        for (let index = 0; index < localStorage.length; index += 1) {
+            const key = localStorage.key(index);
+            if (!key || !key.startsWith('owltime_')) continue;
+            const raw = localStorage.getItem(key) || '';
+            let moduleName = PLAIN_TEXT_PREFERENCE_KEYS.includes(key) ? 'Preferências locais' : 'Configuração';
+            if (!PLAIN_TEXT_PREFERENCE_KEYS.includes(key)) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.module) moduleName = parsed.module;
+                    else if (Array.isArray(parsed)) moduleName = 'Registros';
+                    else if (parsed && Array.isArray(parsed.records)) moduleName = parsed.module || 'Registros';
+                    else if (parsed && Array.isArray(parsed.assignments)) moduleName = 'Grade';
+                } catch (error) {
+                    moduleName = 'JSON inválido';
+                }
+            }
+            if (key.startsWith('owltime_laboratorio_')) moduleName = 'Laboratório · rascunho isolado';
+            items.push({ key: key, moduleName: moduleName, bytes: new Blob([raw]).size });
+        }
+        items.sort(function (a, b) { return a.key.localeCompare(b.key); });
+        const rows = items.map(function (item) {
+            return '<tr><td><input class="form-check-input storage-check" type="checkbox" value="' + h(item.key) + '" aria-label="Selecionar ' + h(item.key) + '"></td>' +
+                '<td class="storage-key">' + h(item.key) + '</td><td>' + h(item.moduleName) + '</td><td class="text-end">' + formatBytes(item.bytes) + '</td>' +
+                '<td class="text-end"><button class="btn btn-sm btn-outline-danger" type="button" data-action="delete-storage-key" data-key="' + h(item.key) + '">Excluir</button></td></tr>';
+        }).join('');
+        return pageHeader('Armazenamento e backup', 'bi-hdd-stack', 'Inspecione e proteja os registros locais. O conteúdo não é enviado para o site.') +
+            '<div class="alert local-callout"><strong>Importante:</strong> o localStorage é específico deste navegador e dispositivo. Limpar os dados do navegador pode apagá-los permanentemente; mantenha cópias exportadas.</div>' +
+            renderSemesterDashboard() +
+            '<div class="d-flex flex-wrap gap-2 mb-3 no-print"><button class="btn btn-primary" type="button" data-action="export-backup"><i class="bi bi-download me-1"></i>Exportar backup</button>' +
+            '<button class="btn btn-outline-primary" type="button" data-action="pick-backup"><i class="bi bi-upload me-1"></i>Importar backup</button>' +
+            '<button class="btn btn-outline-warning" type="button" data-action="delete-selected-storage">Excluir selecionadas</button>' +
+            '<button class="btn btn-danger" type="button" data-action="clear-storage">Limpar dados Owltime</button>' +
+            '<input id="backup-file" class="d-none" type="file" accept=".json,application/json"></div>' +
+            '<div class="card"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Chaves locais (' + items.length + ')</strong><div class="d-flex gap-2">' +
+            renderDataSectionToggle('local-storage-keys', 'Mostrar chaves', 'Recolher chaves') +
+            '<button class="btn btn-sm btn-outline-secondary no-print" type="button" data-action="toggle-storage-checks">Selecionar tudo</button></div></div>' +
+            renderDataSectionContent('local-storage-keys', '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th></th><th>Chave</th><th>Módulo</th><th class="text-end">Tamanho</th><th></th></tr></thead><tbody>' +
+                (rows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-hdd"></i>Nenhum dado Owltime salvo neste navegador.</div></td></tr>') +
+                '</tbody></table></div>') + '</div>' + renderSemesterCopyDialog();
+    }
+
+    function formatBytes(bytes) {
+        if (!bytes) return '0 B';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function formatSemesterDataSize(bytes) {
+        if (!bytes) return '0 KB';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function renderReports() {
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        const lastReport = state.lastGenerationReport;
+        const allAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
+        const teachers = readRecords(KEYS.professores);
+        const activeTeachers = activeRecords(KEYS.professores, ['ativo']);
+        const classes = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
+        const courses = activeRecords(KEYS.cursos, ['ativo', 'ativa']);
+        const disciplines = readRecords(KEYS.disciplinas);
+        const normalizeReportSearch = function (value) {
+            return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+        };
+        if (reportCourseFilter && !courses.some(function (course) { return String(course.id) === reportCourseFilter; })) reportCourseFilter = '';
+        const selectedCourse = courses.find(function (course) { return String(course.id) === reportCourseFilter; });
+        const courseClasses = reportCourseFilter ? classes.filter(function (turma) {
+            return String(turma.curso_id || '') === reportCourseFilter ||
+                (!turma.curso_id && normalizeReportSearch(turma.curso_nome) === normalizeReportSearch(selectedCourse && selectedCourse.nome));
+        }) : classes;
+        const courseClassIds = new Set(courseClasses.map(function (turma) { return String(turma.id); }));
+        const courseTeacherIds = new Set(allAssignments.filter(function (item) {
+            return courseClassIds.has(String(item.turma_id));
+        }).map(function (item) { return String(item.professor_id || ''); }));
+        const reportTeachers = reportCourseFilter
+            ? activeTeachers.filter(function (teacher) { return courseTeacherIds.has(String(teacher.id)); })
+            : activeTeachers;
+        if (reportTeacherFilter && !reportTeachers.some(function (teacher) { return String(teacher.id) === reportTeacherFilter; })) reportTeacherFilter = '';
+        if (reportTurmaFilter && !courseClasses.some(function (turma) { return String(turma.id) === reportTurmaFilter; })) reportTurmaFilter = '';
+        if (reportDisciplineFilter && !disciplines.some(function (discipline) { return String(discipline.id) === reportDisciplineFilter; })) reportDisciplineFilter = '';
+        const searchQuery = normalizeReportSearch(reportSearchQuery.trim());
+        const selectedTeacher = reportTeachers.find(function (teacher) { return String(teacher.id) === reportTeacherFilter; });
+        const selectedClass = courseClasses.find(function (turma) { return String(turma.id) === reportTurmaFilter; });
+        const selectedDiscipline = disciplines.find(function (discipline) { return String(discipline.id) === reportDisciplineFilter; });
+        const filteredAssignments = allAssignments.filter(function (item) {
+            if (reportCourseFilter && !courseClassIds.has(String(item.turma_id))) return false;
+            if (reportTeacherFilter && String(item.professor_id) !== reportTeacherFilter) return false;
+            if (reportTurmaFilter && String(item.turma_id) !== reportTurmaFilter) return false;
+            if (reportDisciplineFilter && String(item.disciplina_id) !== reportDisciplineFilter) return false;
+            if (!searchQuery) return true;
+            const teacher = findById(KEYS.professores, item.professor_id);
+            const turma = findById(KEYS.turmas, item.turma_id);
+            const discipline = findById(KEYS.disciplinas, item.disciplina_id);
+            const searchable = [
+                item.professor_nome, teacher && teacher.nome, item.turma_nome, turma && turma.nome,
+                item.disciplina_nome, discipline && discipline.nome
+            ].join(' ');
+            return normalizeReportSearch(searchable).includes(searchQuery);
+        });
+        const filteredClasses = courseClasses.filter(function (turma) {
+            return !reportTurmaFilter || String(turma.id) === reportTurmaFilter;
+        });
+        const demandRows = [];
+        filteredClasses.forEach(function (turma) {
+            getDemandsForClass(turma.id).forEach(function (demand) {
+                if (reportDisciplineFilter && String(demand.disciplina_id) !== reportDisciplineFilter) return;
+                const rawAllocated = allAssignments.filter(function (item) {
+                    return String(item.turma_id) === String(turma.id) &&
+                        String(item.disciplina_id) === String(demand.disciplina_id);
+                });
+                if (reportTeacherFilter && !rawAllocated.some(function (item) {
+                    return String(item.professor_id) === reportTeacherFilter;
+                })) return;
+                if (searchQuery) {
+                    const teacherNames = rawAllocated.map(function (item) {
+                        const teacher = findById(KEYS.professores, item.professor_id);
+                        return item.professor_nome || (teacher && teacher.nome) || '';
+                    }).join(' ');
+                    const searchable = normalizeReportSearch([turma.nome, demand.disciplina_nome, teacherNames].join(' '));
+                    if (!searchable.includes(searchQuery)) return;
+                }
+                const allocated = filteredAssignments.filter(function (item) {
+                    return String(item.turma_id) === String(turma.id) &&
+                        String(item.disciplina_id) === String(demand.disciplina_id);
+                });
+                const teachersByDiscipline = new Map();
+                allocated.forEach(function (item) {
+                    const teacherId = String(item.professor_id || '');
+                    const teacher = findById(KEYS.professores, teacherId);
+                    const teacherName = item.professor_nome || (teacher && teacher.nome) || 'Sem professor';
+                    const summary = teachersByDiscipline.get(teacherId) || { nome: teacherName, aulas: 0 };
+                    summary.aulas += 1;
+                    teachersByDiscipline.set(teacherId, summary);
+                });
+                demandRows.push({
+                    turma: turma.nome || 'Turma',
+                    turma_id: turma.id,
+                    disciplina: demand.disciplina_nome || nameById(KEYS.disciplinas, demand.disciplina_id, 'Disciplina'),
+                    disciplina_id: demand.disciplina_id,
+                    previstas: demand.aulas_semanais,
+                    alocadas: allocated.length,
+                    pendentes: Math.max(0, demand.aulas_semanais - allocated.length),
+                    professores: Array.from(teachersByDiscipline.values()).sort(function (a, b) {
+                        return a.nome.localeCompare(b.nome, 'pt-BR');
+                    })
+                });
+            });
+        });
+        const lessonRangeMatches = function (count) {
+            return (reportMinimumLessons === '' || count >= Number(reportMinimumLessons)) &&
+                (reportMaximumLessons === '' || count <= Number(reportMaximumLessons));
+        };
+        const reportClasses = filteredClasses.filter(function (turma) {
+            const classRows = demandRows.filter(function (row) { return String(row.turma_id) === String(turma.id); });
+            const classSearch = normalizeReportSearch(turma.nome).includes(searchQuery);
+            const hasRelevantDemand = classRows.length > 0;
+            const classHasSearchMatch = (!searchQuery || classSearch || hasRelevantDemand) &&
+                (!(reportTeacherFilter || reportDisciplineFilter) || hasRelevantDemand);
+            const classLessons = filteredAssignments.filter(function (item) { return String(item.turma_id) === String(turma.id); }).length;
+            return classHasSearchMatch && lessonRangeMatches(classLessons);
+        });
+        const reportClassIds = new Set(reportClasses.map(function (turma) { return String(turma.id); }));
+        const visibleDemandRows = demandRows.filter(function (row) { return reportClassIds.has(String(row.turma_id)); });
+        const totalDemand = visibleDemandRows.reduce(function (sum, row) { return sum + row.previstas; }, 0);
+        const totalPending = visibleDemandRows.reduce(function (sum, row) { return sum + row.pendentes; }, 0);
+        const completion = totalDemand ? Math.round((totalDemand - totalPending) / totalDemand * 100) : 0;
+        const teachersInScope = reportCourseFilter ? reportTeachers : teachers;
+        const teacherTotals = new Map(teachersInScope.map(function (teacher) {
+            return [String(teacher.id), { id: teacher.id, nome: teacher.nome || 'Professor', aulas: 0 }];
+        }));
+        const classTotals = new Map();
+        const disciplineTotals = new Map();
+        filteredAssignments.forEach(function (item) {
+            const teacherId = String(item.professor_id || '');
+            const classId = String(item.turma_id || '');
+            const disciplineId = String(item.disciplina_id || '');
+            const teacher = findById(KEYS.professores, teacherId);
+            const turma = findById(KEYS.turmas, classId);
+            const discipline = findById(KEYS.disciplinas, disciplineId);
+            const teacherName = item.professor_nome || (teacher && teacher.nome) || 'Sem professor';
+            const className = (turma && turma.nome) || 'Turma removida';
+            const disciplineName = item.disciplina_nome || (discipline && discipline.nome) || 'Disciplina removida';
+            if (!teacherTotals.has(teacherId)) {
+                teacherTotals.set(teacherId, { id: teacherId, nome: teacherName, aulas: 0 });
+            }
+            teacherTotals.get(teacherId).aulas += 1;
+            const classSummary = classTotals.get(classId) || { id: classId, nome: className, aulas: 0 };
+            classSummary.aulas += 1;
+            classTotals.set(classId, classSummary);
+            const disciplineSummary = disciplineTotals.get(disciplineId) || {
+                id: disciplineId, nome: disciplineName, aulas: 0
+            };
+            disciplineSummary.aulas += 1;
+            disciplineTotals.set(disciplineId, disciplineSummary);
+        });
+        const hasNarrowingFilter = Boolean(reportCourseFilter || searchQuery || reportTeacherFilter || reportTurmaFilter || reportDisciplineFilter);
+        const teacherRanking = Array.from(teacherTotals.values()).filter(function (teacher) {
+            return (!hasNarrowingFilter || teacher.aulas > 0 || String(teacher.id) === reportTeacherFilter) &&
+                lessonRangeMatches(teacher.aulas);
+        }).sort(function (a, b) {
+            return b.aulas - a.aulas || a.nome.localeCompare(b.nome, 'pt-BR');
+        });
+        const classRanking = Array.from(classTotals.values()).filter(function (turma) {
+            return lessonRangeMatches(turma.aulas);
+        }).sort(function (a, b) {
+            return b.aulas - a.aulas || a.nome.localeCompare(b.nome, 'pt-BR');
+        });
+        const disciplineRanking = Array.from(disciplineTotals.values()).filter(function (discipline) {
+            return lessonRangeMatches(discipline.aulas);
+        }).sort(function (a, b) {
+            return b.aulas - a.aulas || a.nome.localeCompare(b.nome, 'pt-BR');
+        });
+        function emptyRow(columns, message) {
+            return '<tr><td colspan="' + columns + '" class="text-center text-muted py-4">' + message + '</td></tr>';
+        }
+        function pieChart(title, items, colorFor) {
+            const values = items.filter(function (item) { return item.aulas > 0; });
+            const total = values.reduce(function (sum, item) { return sum + item.aulas; }, 0);
+            let current = 0;
+            const stops = values.map(function (item, index) {
+                const start = current;
+                current += item.aulas / total * 100;
+                const color = colorFor(item, index);
+                return color + ' ' + start.toFixed(2) + '% ' + current.toFixed(2) + '%';
+            });
+            const legend = values.map(function (item, index) {
+                const color = colorFor(item, index);
+                return '<li><i style="--report-chart-color:' + color + '"></i><span>' + h(item.nome) +
+                    '</span><strong>' + item.aulas + ' (' + Math.round(item.aulas / total * 100) + '%)</strong></li>';
+            }).join('');
+            return '<section class="card h-100"><div class="card-header">' + h(title) + '</div><div class="card-body">' +
+                (total ? '<div class="report-pie-layout"><div class="report-pie" role="img" aria-label="' + h(title + ', ' + total + ' aulas') +
+                    '" style="background:conic-gradient(' + stops.join(',') + ')"><div><strong>' + total + '</strong><span>aulas</span></div></div>' +
+                    '<ul class="report-pie-legend">' + legend + '</ul></div>' :
+                    '<div class="empty-state py-4"><i class="bi bi-pie-chart"></i>Sem aulas alocadas neste semestre.</div>') +
+                '</div></section>';
+        }
+        function barChart(title, items) {
+            const values = items;
+            const maximum = Math.max.apply(null, values.map(function (item) { return item.aulas; }).concat([1]));
+            const bars = values.map(function (item) {
+                const width = item.aulas ? Math.max(3, Math.round(item.aulas / maximum * 100)) : 0;
+                const color = item.id ? subjectColor(item.id) : '#dceeff';
+                return '<div class="report-bar-row"><span class="report-bar-label" title="' + h(item.nome) + '">' + h(item.nome) +
+                    '</span><div class="report-bar-track"><i style="width:' + width + '%;--report-bar-color:' + color + '"></i></div>' +
+                    '<strong>' + item.aulas + '</strong></div>';
+            }).join('');
+            return '<section class="card h-100"><div class="card-header">' + h(title) + '</div><div class="card-body">' +
+                (bars || '<div class="empty-state py-4"><i class="bi bi-bar-chart"></i>Sem aulas alocadas neste semestre.</div>') +
+                '</div></section>';
+        }
+        const teacherRows = teacherRanking.map(function (teacher, index) {
+            const share = filteredAssignments.length ? Math.round(teacher.aulas / filteredAssignments.length * 100) : 0;
+            return '<tr><td><span class="report-rank">' + (index + 1) + '</span></td><td>' + h(teacher.nome) +
+                '</td><td class="text-end fw-semibold">' + teacher.aulas + '</td><td><div class="report-share"><i style="width:' +
+                share + '%"></i></div><span class="small text-muted">' + share + '% da grade</span></td></tr>';
+        }).join('');
+        const teacherRankingSection = '<div class="d-grid gap-2"><button class="btn btn-outline-secondary text-start" type="button" data-action="toggle-report-teacher-ranking" aria-controls="report-teacher-ranking-content" aria-expanded="' +
+            String(!reportTeacherRankingCollapsed) + '"><i class="bi ' + (reportTeacherRankingCollapsed ? 'bi-chevron-down' : 'bi-chevron-up') +
+            ' me-1" aria-hidden="true"></i>' + (reportTeacherRankingCollapsed ? 'Mostrar ranking de professores por aulas' : 'Ocultar ranking de professores por aulas') +
+            '</button><div id="report-teacher-ranking-content"' + (reportTeacherRankingCollapsed ? ' hidden' : '') + '>' +
+            barChart('Ranking de professores por aulas', teacherRanking) +
+            '<section class="card mt-3"><div class="card-header">Ranking de professores</div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>#</th><th>Professor</th><th class="text-end">Aulas</th><th>Participação na grade</th></tr></thead><tbody>' +
+            (teacherRows || emptyRow(4, 'Nenhum professor corresponde aos filtros selecionados.')) + '</tbody></table></div></section></div></div>';
+        const reportProtections = getGradeProtections(semester);
+        const reportSlotsById = new Map(readRecords(KEYS.horarios).map(function (slot) {
+            return [String(slot.id), slot];
+        }));
+        const classSummaries = reportClasses.map(function (turma) {
+            const subjects = visibleDemandRows.filter(function (row) { return String(row.turma_id) === String(turma.id); });
+            const planned = subjects.reduce(function (sum, row) { return sum + row.previstas; }, 0);
+            const allocated = subjects.reduce(function (sum, row) { return sum + row.alocadas; }, 0);
+            const complete = planned > 0 && subjects.every(function (row) { return row.alocadas === row.previstas; });
+            const classProtections = reportProtections.filter(function (protection) {
+                return String(protection.turma_id) === String(turma.id);
+            }).sort(function (a, b) {
+                const dayDifference = DAYS.indexOf(String(a.dia_semana || '')) - DAYS.indexOf(String(b.dia_semana || ''));
+                if (dayDifference) return dayDifference;
+                const slotA = reportSlotsById.get(String(a.horario_id)) || {};
+                const slotB = reportSlotsById.get(String(b.horario_id)) || {};
+                return String(slotA.hora_inicio || '').localeCompare(String(slotB.hora_inicio || ''));
+            });
+            const subjectList = subjects.map(function (row) {
+                const teacherList = row.professores.length
+                    ? row.professores.map(function (teacher) {
+                        return h(teacher.nome) + ' <span class="report-teacher-lessons">(' + teacher.aulas + ')</span>';
+                    }).join(', ')
+                    : '<span class="text-muted">Sem professor alocado</span>';
+                return '<div class="report-class-subject"><div class="report-class-subject-heading"><span class="demand-discipline"><i style="--demand-color:' +
+                    subjectColor(row.disciplina_id) + '"></i><strong>' + h(row.disciplina) + '</strong></span><span class="report-subject-coverage">' +
+                    row.alocadas + '/' + row.previstas + '</span></div><div class="report-class-teachers"><span>Professor(es):</span> ' +
+                    teacherList + '</div></div>';
+            }).join('');
+            const protectionList = classProtections.map(function (protection) {
+                const slot = reportSlotsById.get(String(protection.horario_id)) || {};
+                const time = slot.hora_inicio && slot.hora_fim
+                    ? ' · ' + slot.hora_inicio + '–' + slot.hora_fim
+                    : '';
+                const name = protection.peculiaridade_nome ||
+                    nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção');
+                return '<li><strong>' + h(protection.dia_semana || 'Dia não informado') + h(time) +
+                    '</strong><span class="report-protection-kind">' +
+                    (protection.tipo_marcacao === 'evento'
+                        ? 'Evento: '
+                        : protection.tipo_marcacao === 'sort' ? 'Sort: ' : 'Proteção: ') + h(name) + '</span></li>';
+            }).join('');
+            const protectionSummary = '<section class="report-class-protections" aria-label="Proteções, eventos e sorts da turma ' +
+                h(turma.nome || 'Turma') + '"><h3><i class="bi bi-shield-exclamation" aria-hidden="true"></i>Proteções, eventos e sorts' +
+                (classProtections.length ? ' <span>' + classProtections.length + '</span>' : '') + '</h3>' +
+                (protectionList ? '<ul>' + protectionList + '</ul>' :
+                    '<p>Nenhum horário protegido para esta turma neste semestre.</p>') + '</section>';
+            return '<article class="card report-class-card"><div class="report-class-heading"><h2>' + h(turma.nome || 'Turma') +
+                '</h2><span class="report-class-coverage ' + (complete ? 'is-complete' : 'is-pending') + '">' +
+                allocated + '/' + planned + ' aulas preenchidas</span></div>' +
+                '<div class="report-class-subjects">' + (subjectList || '<p class="text-muted mb-0">Nenhuma demanda cadastrada para esta turma.</p>') +
+                '</div>' + protectionSummary + '</article>';
+        }).join('');
+        const generationCard = lastReport
+            ? '<div class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Última geração automática</strong><span class="badge text-bg-' +
+            (lastReport.completo ? 'success' : 'warning') + '">' + (lastReport.completo ? 'Completa' : 'Com pendências') + '</span></div><div class="card-body d-flex flex-wrap gap-4">' +
+            '<span>Gerada em <strong>' + h(formatDate(lastReport.geradoEm || lastReport.generatedAt)) + '</strong></span><span>Previstas <strong>' +
+            h(lastReport.totalPrevistas || 0) + '</strong></span><span>Preenchidas <strong>' + h(lastReport.totalAtendidas || 0) +
+            '</strong></span><span>Pendentes na geração <strong>' + h(lastReport.totalPendentes || 0) + '</strong></span></div></div>'
+            : '';
+        const laboratoryAdjustments = Array.isArray(state.laboratoryAdjustments) ? state.laboratoryAdjustments : [];
+        const laboratoryAdjustmentRows = laboratoryAdjustments.slice().reverse().map(function (adjustment) {
+            return '<li><strong>' + h(formatDate(adjustment.aplicadoEm)) + '</strong> · ' +
+                h(adjustment.adicionadas || 0) + ' adicionada(s), ' +
+                h(adjustment.removidas || 0) + ' removida(s), ' +
+                h(adjustment.movidas || 0) + ' movida(s), ' +
+                h(adjustment.alteradas || 0) + ' alterada(s); ' +
+                h(adjustment.pendencias || 0) + ' aula(s) inicial(is) ainda sem reaplicação.</li>';
+        }).join('');
+        const laboratoryAdjustmentSection = laboratoryAdjustments.length
+            ? '<section class="card mb-3"><div class="card-header"><strong>Histórico de ajustes aplicados no Laboratório</strong></div>' +
+            '<div class="card-body"><ul class="mb-0">' + laboratoryAdjustmentRows + '</ul></div></section>'
+            : '';
+        const recordedGenerationFailures = lastReport && Array.isArray(lastReport.falhas) ? lastReport.falhas : [];
+        const visibleGenerationFailures = recordedGenerationFailures.filter(function (failure) {
+            if (reportCourseFilter && !courseClassIds.has(String(failure.turma_id))) return false;
+            if (reportTurmaFilter && String(failure.turma_id) !== reportTurmaFilter) return false;
+            if (reportDisciplineFilter && String(failure.disciplina_id) !== reportDisciplineFilter) return false;
+            const candidateTeachers = Array.isArray(failure.professores) ? failure.professores : [];
+            if (reportTeacherFilter && candidateTeachers.length && !candidateTeachers.some(function (teacher) {
+                return String(teacher.id) === reportTeacherFilter;
+            })) return false;
+            if (!searchQuery) return true;
+            return normalizeReportSearch([
+                failure.turma_nome,
+                failure.disciplina_nome,
+                candidateTeachers.map(function (teacher) { return teacher.nome; }).join(' ')
+            ].join(' ')).includes(searchQuery);
+        });
+        const generationFailureRows = visibleGenerationFailures.map(function (failure) {
+            const candidateTeachers = Array.isArray(failure.professores) ? failure.professores : [];
+            const teacherNames = candidateTeachers.map(function (teacher) {
+                return teacher.nome || nameById(KEYS.professores, teacher.id, 'Professor');
+            });
+            return '<tr><td>' + h(failure.turma_nome || nameById(KEYS.turmas, failure.turma_id, 'Turma')) +
+                '</td><td>' + h(failure.disciplina_nome || nameById(KEYS.disciplinas, failure.disciplina_id, 'Disciplina')) +
+                '</td><td>' + h(failure.previstas == null ? '—' : failure.previstas) + '</td><td>' +
+                h(failure.atendidas == null ? '—' : failure.atendidas) + '</td><td><strong class="text-danger">' +
+                h(failure.pendentes || 0) + '</strong></td><td>' +
+                h(failure.motivo || 'O motivo não foi registrado. Gere novamente a grade para obter o diagnóstico.') +
+                (teacherNames.length ? '<small class="d-block text-muted mt-1">Professores elegíveis: ' + h(teacherNames.join(', ')) + '</small>' : '') +
+                '</td></tr>';
+        }).join('');
+        const generationPendingSection = lastReport
+            ? '<section class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap"><strong>Pendências da última geração e possíveis causas</strong>' +
+            '<span class="badge text-bg-' + (Number(lastReport.totalPendentes || 0) ? 'warning' : 'success') + '">' +
+            h(lastReport.totalPendentes || 0) + ' aula(s) pendente(s)</span>' +
+            renderDataSectionToggle('report-pending-details', 'Mostrar detalhes', 'Recolher detalhes') + '</div>' +
+            renderDataSectionContent('report-pending-details', '<div class="card-body">' +
+                (Number(lastReport.totalPendentes || 0) === 0
+                    ? '<p class="text-success mb-0">A última geração não deixou pendências.</p>'
+                    : recordedGenerationFailures.length
+                        ? (generationFailureRows
+                            ? '<div class="table-responsive"><table class="table table-sm table-striped align-middle mb-0"><thead><tr><th>Turma</th><th>Disciplina</th><th>Previstas</th><th>Alocadas</th><th>Faltantes</th><th>Possível causa</th></tr></thead><tbody>' +
+                            generationFailureRows + '</tbody></table></div>'
+                            : '<p class="text-muted mb-0">Nenhuma pendência corresponde aos filtros atuais.</p>')
+                        : '<div class="alert alert-warning mb-0">Esta geração não guardou o detalhamento das causas. Gere a grade novamente para registrar o diagnóstico das pendências.</div>') +
+                '</div>') + '</section>'
+            : '';
+        const reportTeacherOptions = '<option value="">Todos os professores</option>' + reportTeachers.map(function (teacher) {
+            return '<option value="' + h(teacher.id) + '"' + (String(teacher.id) === reportTeacherFilter ? ' selected' : '') + '>' +
+                h(teacher.nome || 'Professor') + '</option>';
+        }).join('');
+        const courseOptions = '<option value="">Todos os cursos</option>' + courses.map(function (course) {
+            return '<option value="' + h(course.id) + '"' + (String(course.id) === reportCourseFilter ? ' selected' : '') + '>' +
+                h(course.nome || 'Curso') + '</option>';
+        }).join('');
+        const classOptions = '<option value="">Todas as turmas</option>' + courseClasses.map(function (turma) {
+            return '<option value="' + h(turma.id) + '"' + (String(turma.id) === reportTurmaFilter ? ' selected' : '') + '>' +
+                h(turma.nome || 'Turma') + '</option>';
+        }).join('');
+        const disciplineOptions = '<option value="">Todas as disciplinas</option>' + disciplines.map(function (discipline) {
+            return '<option value="' + h(discipline.id) + '"' + (String(discipline.id) === reportDisciplineFilter ? ' selected' : '') + '>' +
+                h(discipline.nome || 'Disciplina') + '</option>';
+        }).join('');
+        const appliedFilters = [
+            searchQuery,
+            selectedCourse && selectedCourse.nome,
+            selectedTeacher && selectedTeacher.nome,
+            selectedClass && selectedClass.nome,
+            selectedDiscipline && selectedDiscipline.nome,
+            reportMinimumLessons !== '' && 'mín. ' + reportMinimumLessons + ' aulas',
+            reportMaximumLessons !== '' && 'máx. ' + reportMaximumLessons + ' aulas'
+        ].filter(Boolean);
+        return '<div class="report-screen-only">' + pageHeader('Relatórios', 'bi-bar-chart', 'Resumo das aulas por turma, disciplinas e professores.') +
+            renderSemesterTools() + '</div>' +
+            '<div class="report-print-header"><span>OWLTIME · GESTÃO ESCOLAR</span><h1>Relatório de aulas por turma</h1><p>Semestre ' + h(semester) +
+            ' · Emitido em ' + h(new Date().toLocaleDateString('pt-BR')) + '</p></div>' +
+            '<div class="card mb-3 no-print"><div class="card-body d-flex flex-wrap align-items-end gap-3"><div><label class="form-label" for="report-semester">Semestre</label><input class="form-control" id="report-semester" value="' + h(semester) + '" pattern="\\d{4}/[12]" placeholder="AAAA/1"></div>' +
+            '<button class="btn btn-outline-primary" type="button" data-action="report-apply">Aplicar</button><button class="btn btn-danger" type="button" data-action="print"><i class="bi bi-file-earmark-pdf me-1"></i>Gerar PDF</button>' +
+            '<button class="btn btn-outline-success" type="button" data-action="export-csv">Exportar grade CSV</button></div></div>' +
+            '<div class="card mb-3 no-print"><div class="card-header d-flex align-items-center gap-2"><i class="bi bi-funnel"></i>Filtros dos relatórios</div><div class="card-body"><div class="row g-3 align-items-end">' +
+            '<div class="col-md-6 col-xl-4"><label class="form-label" for="report-search">Buscar por professor, turma ou disciplina</label><input class="form-control" id="report-search" type="search" value="' + h(reportSearchQuery) + '" placeholder="Digite um nome"></div>' +
+            '<div class="col-md-6 col-xl-2"><label class="form-label" for="report-course-filter">Curso</label><select class="form-select" id="report-course-filter">' + courseOptions + '</select></div>' +
+            '<div class="col-md-6 col-xl-2"><label class="form-label" for="report-teacher-filter">Professor</label><select class="form-select" id="report-teacher-filter">' + reportTeacherOptions + '</select></div>' +
+            '<div class="col-md-6 col-xl-2"><label class="form-label" for="report-class-filter">Turma</label><select class="form-select" id="report-class-filter">' + classOptions + '</select></div>' +
+            '<div class="col-md-6 col-xl-2"><label class="form-label" for="report-discipline-filter">Disciplina</label><select class="form-select" id="report-discipline-filter">' + disciplineOptions + '</select></div>' +
+            '<div class="col-6 col-xl-1"><label class="form-label" for="report-min-lessons">Mín. aulas</label><input class="form-control" id="report-min-lessons" type="number" min="0" step="1" value="' + h(reportMinimumLessons) + '" placeholder="0"></div>' +
+            '<div class="col-6 col-xl-1"><label class="form-label" for="report-max-lessons">Máx. aulas</label><input class="form-control" id="report-max-lessons" type="number" min="0" step="1" value="' + h(reportMaximumLessons) + '" placeholder="—"></div>' +
+            '<div class="col-12 d-flex flex-wrap align-items-center gap-2"><button class="btn btn-primary" type="button" data-action="apply-report-filters"><i class="bi bi-search me-1"></i>Filtrar relatórios</button>' +
+            '<button class="btn btn-outline-secondary" type="button" data-action="clear-report-filters">Limpar filtros</button>' +
+            '<span class="small text-muted">' + (appliedFilters.length ? h(appliedFilters.join(' · ')) : 'Os filtros atualizam indicadores, gráficos, ranking e resumo por turma. A quantidade considera as aulas preenchidas.') + '</span></div></div></div></div>' +
+            '<div class="report-screen-only"><div class="row g-3 mb-3"><div class="col-6 col-xl-3"><div class="card report-kpi"><span>Aulas no recorte</span><strong>' + filteredAssignments.length +
+            '</strong><small>alocações no semestre</small></div></div><div class="col-6 col-xl-3"><div class="card report-kpi"><span>Professores ativos</span><strong>' +
+            (hasNarrowingFilter ? teacherRanking.length : activeTeachers.length) + '</strong><small>' + teacherRanking.filter(function (item) {
+                return item.aulas > 0 && activeTeachers.some(function (teacher) { return String(teacher.id) === String(item.id); });
+            }).length + ' com aulas no recorte</small></div></div>' +
+            '<div class="col-6 col-xl-3"><div class="card report-kpi"><span>Turmas com aula</span><strong>' + classRanking.length + '</strong><small>de ' + reportClasses.length + ' no recorte</small></div></div>' +
+            '<div class="col-6 col-xl-3"><div class="card report-kpi"><span>Atendimento das demandas</span><strong>' + completion + '%</strong><small>' + totalPending + ' aula(s) pendente(s) · ' + totalDemand + ' previstas</small></div></div></div>' +
+            generationCard + laboratoryAdjustmentSection +
+            '<div class="row g-3 mb-3"><div class="col-xl-6">' + teacherRankingSection + '</div>' +
+            '<div class="col-xl-6">' + pieChart('Distribuição de aulas por disciplina', disciplineRanking, function (item) { return subjectColor(item.id); }) + '</div></div></div>' +
+            generationPendingSection +
+            '<section class="report-class-list"><div class="report-class-list-heading d-flex justify-content-between align-items-center gap-2 flex-wrap"><div><h2>Resumo por turma</h2><p>Disciplinas, aulas previstas e professores responsáveis.</p></div>' +
+            renderDataSectionToggle('report-class-summaries', 'Mostrar turmas', 'Recolher turmas') + '</div>' +
+            renderDataSectionContent('report-class-summaries',
+                classSummaries || '<div class="empty-state"><i class="bi bi-journal-x"></i>Nenhuma turma ou demanda corresponde aos filtros selecionados.</div>',
+                'report-class-items') + '</section>' + renderSemesterCopyDialog();
+    }
+
+    function tutorialVideoDetails(link) {
+        try {
+            const url = new URL(link);
+            if (url.protocol !== 'https:') return null;
+            let videoId = '';
+            if (url.hostname === 'youtu.be') {
+                videoId = url.pathname.split('/').filter(Boolean)[0] || '';
+            } else if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname)) {
+                videoId = url.searchParams.get('v') || '';
+                if (!videoId) {
+                    const match = /^\/(?:embed|shorts)\/([^/]+)/.exec(url.pathname);
+                    videoId = match ? match[1] : '';
+                }
+            }
+            if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return null;
+            return {
+                videoId: videoId,
+                link: url.href,
+                thumbnail: 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg'
+            };
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function renderTutorials() {
+        const tutorials = VIDEOS_TUTORIAIS.slice().sort(function (first, second) {
+            return Number(second.destaque === true) - Number(first.destaque === true);
+        });
+        const categories = ['Todos'].concat(CATEGORIAS_TUTORIAIS);
+        if (!categories.includes(tutorialCategoryFilter)) tutorialCategoryFilter = 'Todos';
+        const categoryFilters = categories.map(function (category) {
+            return '<button class="tutorial-category-filter' + (category === tutorialCategoryFilter ? ' is-active' : '') +
+                '" type="button" data-action="filter-tutorial-category" data-category="' + h(category) +
+                '" aria-pressed="' + String(category === tutorialCategoryFilter) + '">' + h(category) + '</button>';
+        }).join('');
+        const cards = tutorials.map(function (tutorial) {
+            const video = tutorialVideoDetails(tutorial.link);
+            const featured = tutorial.destaque === true;
+            const category = String(tutorial.categoria || 'Módulo 1').trim() || 'Módulo 1';
+            const preview = video
+                ? '<button class="tutorial-gallery-thumbnail" type="button" data-action="play-tutorial" data-video-id="' + h(video.videoId) +
+                '" data-video-title="' + h(tutorial.title) + '" data-video-description="' + h(tutorial.description) +
+                '" aria-label="Assistir ' + h(tutorial.title) + '">' +
+                (featured ? '<span class="tutorial-featured-badge"><i class="bi bi-stars" aria-hidden="true"></i> ' + h(category) + '</span>' : '') +
+                '<img src="' + h(video.thumbnail) +
+                '" alt="" loading="lazy"><span class="tutorial-gallery-play"><i class="bi bi-play-fill" aria-hidden="true"></i></span></button>'
+                : '<div class="tutorial-gallery-thumbnail tutorial-gallery-thumbnail-empty" aria-hidden="true"><i class="bi bi-camera-video"></i></div>';
+            const searchText = normalizeCatalogValue(String(tutorial.title || '') + ' ' + String(tutorial.description || ''));
+            return '<article class="tutorial-card' + (featured ? ' is-featured' : '') + '" data-tutorial-category="' +
+                h(category) + '" data-tutorial-search="' + h(searchText) + '">' + preview +
+                '<div class="tutorial-card-content">' +
+                '<h2>' + h(tutorial.title) + '</h2><p>' + h(tutorial.description) + '</p>' +
+                (video ? '' : '<span class="tutorial-unavailable">Link do YouTube inválido ou indisponível.</span>') +
+                '</div></article>';
+        }).join('');
+        return pageHeader('Tutoriais', 'bi-play-btn', 'Aprenda a usar o Owltime com vídeos rápidos e orientações passo a passo.', null, null, true) +
+            '<section class="tutorials-page">' +
+            '<div class="tutorials-section-heading"><div><span class="tutorials-section-eyebrow">Aprenda com a Owlly</span>' +
+            '<h2>Vídeos tutoriais</h2><p>Clique em uma miniatura para assistir.</p></div>' +
+            '<span class="tutorials-count" id="tutorials-count" aria-live="polite"><i class="bi bi-collection-play" aria-hidden="true"></i> <span>' +
+            tutorials.length + (tutorials.length === 1 ? ' vídeo' : ' vídeos') + '</span></span></div>' +
+            (cards
+                ? '<div class="tutorials-filter-panel"><label class="tutorial-search-field"><i class="bi bi-search" aria-hidden="true"></i>' +
+                '<input id="tutorial-search" type="search" autocomplete="off" placeholder="Buscar por título ou descrição" aria-label="Buscar tutoriais"></label>' +
+                '<div class="tutorial-category-filters" role="group" aria-label="Filtrar tutoriais por módulo">' + categoryFilters + '</div>' +
+                '</div>' +
+                '<div class="tutorials-grid">' + cards + '</div>' +
+                '<p class="tutorials-no-results" id="tutorials-no-results" role="status" hidden>Nenhum tutorial encontrado. Tente outro termo ou assunto.</p>'
+                : '<div class="tutorials-empty"><span><i class="bi bi-camera-video" aria-hidden="true"></i></span><h3>Novos tutoriais em breve</h3><p>Estamos preparando vídeos para ajudar você a aproveitar cada recurso do Owltime.</p></div>') +
+            '<dialog class="tutorial-player-dialog" id="tutorial-player-dialog" aria-labelledby="tutorial-player-title">' +
+            '<div class="tutorial-player-dialog-content"><header class="tutorial-player-dialog-header">' +
+            '<span><i class="bi bi-play-circle-fill" aria-hidden="true"></i> Owltime · Tutoriais</span>' +
+            '<button class="tutorial-player-dialog-close" type="button" data-action="close-tutorial" aria-label="Fechar vídeo"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header>' +
+            '<div class="tutorial-player-frame" id="tutorial-player-frame"></div>' +
+            '<div class="tutorial-player-info"><h2 id="tutorial-player-title"></h2><p id="tutorial-player-description"></p></div></div></dialog>' +
+            '</section>';
+    }
+
+    function applyTutorialFilters() {
+        const searchInput = document.getElementById('tutorial-search');
+        const cards = Array.from(document.querySelectorAll('.tutorial-card'));
+        const noResults = document.getElementById('tutorials-no-results');
+        const countLabel = document.querySelector('#tutorials-count span');
+        if (!searchInput || !noResults || !countLabel) return;
+        const query = normalizeCatalogValue(searchInput.value);
+        let visibleCount = 0;
+        cards.forEach(function (card) {
+            const matchesCategory = tutorialCategoryFilter === 'Todos' ||
+                card.dataset.tutorialCategory === tutorialCategoryFilter;
+            const matchesSearch = !query || (card.dataset.tutorialSearch || '').includes(query);
+            card.hidden = !matchesCategory || !matchesSearch;
+            if (!card.hidden) visibleCount += 1;
+        });
+        noResults.hidden = visibleCount > 0;
+        countLabel.textContent = visibleCount + (visibleCount === 1 ? ' vídeo' : ' vídeos');
+    }
+
+    function playTutorial(button) {
+        const dialog = document.getElementById('tutorial-player-dialog');
+        const player = document.getElementById('tutorial-player-frame');
+        const videoId = button.dataset.videoId || '';
+        const title = button.dataset.videoTitle || '';
+        const description = button.dataset.videoDescription || '';
+        if (!/^[A-Za-z0-9_-]{11}$/.test(videoId) || !dialog || !player) {
+            throw new Error('Não foi possível abrir este vídeo tutorial.');
+        }
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0';
+        iframe.title = title;
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        iframe.allowFullscreen = true;
+        player.replaceChildren(iframe);
+        document.getElementById('tutorial-player-title').textContent = title;
+        document.getElementById('tutorial-player-description').textContent = description;
+        dialog.showModal();
+    }
+
+    function closeTutorial(button) {
+        const dialog = button.closest('#tutorial-player-dialog');
+        if (!dialog) throw new Error('Não foi possível fechar este vídeo tutorial.');
+        dialog.close();
+    }
+
+    function renderAbout() {
+        const people = TEAM_MEMBERS.map(function (person) {
+            return '<div class="col-md-6 col-xl-4"><article class="card about-person-card ' + person.color + '">' +
+                '<div class="card-body"><div class="about-person-heading"><img class="about-person-photo" src="' + h(person.photo) +
+                '" alt="Foto de ' + h(person.name) + '" loading="lazy"><div><h3 class="h5 mb-1">' + h(person.name) + '</h3>' +
+                '<span class="badge about-department-badge">Assistente de Administração · ' + h(person.department) + '</span></div></div>' +
+                '<div class="about-project-role">' + h(person.role) + '</div>' +
+                '<p class="text-muted about-person-description">' + h(person.description) + '</p>' +
+                '<div class="about-person-contacts"><a href="tel:' + h(person.phoneLink) + '"><i class="bi bi-telephone" aria-hidden="true"></i>' +
+                '<span>' + h(person.phone) + '</span></a><a href="mailto:' + h(person.email) + '"><i class="bi bi-envelope" aria-hidden="true"></i>' +
+                '<span>' + h(person.email) + '</span></a></div></div></article></div>';
+        }).join('');
+        const workflow = [
+            {
+                icon: 'bi-calendar2-range',
+                title: 'Organize o semestre',
+                description: 'Na Grade oficial, escolha o período letivo em que você vai trabalhar.',
+                items: [
+                    'Inicie o semestre sem copiar dados ou escolha qualquer semestre disponível como origem.',
+                    'Selecione quais grupos, demandas, vínculos e PRDs/disponibilidades deseja reaproveitar.',
+                    'A cópia cria registros no novo período e mantém o semestre de origem intacto.'
+                ]
+            },
+            {
+                icon: 'bi-people',
+                title: 'Monte a estrutura escolar',
+                description: 'Cadastre os elementos que identificam a organização da escola.',
+                items: [
+                    'Cursos e disciplinas formam a estrutura curricular.',
+                    'Professores podem ter cargas horárias e limites diários registrados.',
+                    'Turmas reúnem curso, ano, turno e matriz curricular; cadastros também podem ser importados por planilhas.'
+                ]
+            },
+            {
+                icon: 'bi-journal-check',
+                title: 'Prepare a distribuição das aulas',
+                description: 'Defina o que precisa ser ofertado e quem pode assumir cada aula.',
+                items: [
+                    'Cadastre os horários de aula e intervalos em cada dia da semana.',
+                    'Nas demandas, indique as disciplinas e a quantidade semanal prevista para cada turma.',
+                    'Vincule professores às disciplinas e registre PRDs e indisponibilidades para orientar a disponibilidade.'
+                ]
+            },
+            {
+                icon: 'bi-sliders',
+                title: 'Acrescente regras da escola',
+                description: 'Use os recursos opcionais para representar combinações e exceções da rotina escolar.',
+                items: [
+                    'Grupos organizam turmas relacionadas e podem delimitar vínculos de professores.',
+                    'Peculiaridades protegem horários específicos; eventos marcam períodos que se repetem na grade.',
+                    'Sort reserva horários para subgrupos de turmas e evita coincidências dentro do mesmo subgrupo.'
+                ]
+            },
+            {
+                icon: 'bi-magic',
+                title: 'Gere a grade e faça os ajustes',
+                description: 'O QDP calcula uma proposta usando as informações e restrições cadastradas.',
+                items: [
+                    'A geração distribui as aulas conforme as demandas, horários, vínculos e disponibilidades.',
+                    'Confira aulas preenchidas e pendências para identificar o que ainda precisa de atenção.',
+                    'No Laboratório, teste mudanças em uma cópia isolada da grade e aplique-as ou descarte-as quando decidir.'
+                ]
+            },
+            {
+                icon: 'bi-file-earmark-bar-graph',
+                title: 'Acompanhe e proteja os dados',
+                description: 'Depois de gerar a grade, acompanhe os resultados e mantenha uma cópia segura do trabalho.',
+                items: [
+                    'Relatórios ajudam a verificar cobertura das demandas, pendências e distribuição da carga docente.',
+                    'Consulte ou exporte horários individuais, declarações e outros arquivos disponíveis no sistema.',
+                    'Os dados ficam no navegador atual: faça backups em Armazenamento e backup para poder restaurá-los.'
+                ]
+            }
+        ];
+        const workflowSteps = workflow.map(function (step, index) {
+            const items = step.items.map(function (item) {
+                return '<li>' + h(item) + '</li>';
+            }).join('');
+            return '<li class="about-flow-step"><div class="about-flow-card-heading"><span class="about-flow-icon"><i class="bi ' +
+                step.icon + '" aria-hidden="true"></i></span><span class="about-flow-number">ETAPA ' +
+                String(index + 1).padStart(2, '0') + '</span></div><div class="about-flow-copy"><h3>' + h(step.title) +
+                '</h3><p>' + h(step.description) + '</p><ul>' + items + '</ul></div></li>';
+        }).join('');
+        const releaseUpdates = [
+            'Painel repaginado com logo e fotos ampliadas da equipe; ao passar o mouse, cada foto mostra função, setor e contatos.',
+            'Removidas as seções Acesso rápido e Indisponibilidades do painel; notas recentes foram aproximadas do topo.',
+            'Gráficos de rosca e barras para cursos, professores, disciplinas e turmas, além de indicadores operacionais do semestre.',
+            'Owlly, mascote coruja do Owltime, apresentada ao lado da logo nos cards do Painel e de Sobre; no Ninho, traz um guia rápido interativo para explorar e baixar seus wallpapers favoritos.',
+            'Página Configurações acessível pela engrenagem identificada no cabeçalho; roxo é a cor padrão e há opções para personalizar o tema.',
+            'Menu alternável entre botão hambúrguer (abre/fecha) e expansão ao passar o mouse; hover é o padrão e oculta o botão. Há densidade confortável ou compacta e restauração dos padrões.',
+            'Repositório com exportações XLSX/PDF e modelos CSV/XLSX para cadastros compatíveis.',
+            'Glossário com resumos dos módulos e botão Saiba mais nas telas, com explicações em janela e textos de apoio mais enxutos.',
+            'Vigências e substituições por turma ou saída do campus, com validação de compatibilidade, impactos bloqueados e preservação da grade-base.',
+            'Declarações docentes com motivo, abrangência, turmas, disciplinas, aulas transferidas ou bloqueadas e seus motivos.',
+            'Busca global pela corujinha: encontre professores, turmas e outros registros digitando e abra o item correspondente no módulo.',
+            'Botão WhatsApp ao lado do telefone do professor, links de Configurações, Armazenamento e Sobre no cabeçalho e documentação atualizada no README.',
+            'Versão 1.6 concluída com a central de tutoriais em formato de galeria, player integrado e destaque para o vídeo-resumo sem alterar o tamanho dos demais.'
+        ];
+        const releaseUpdateItems = releaseUpdates.map(function (item) {
+            return '<li><i class="bi bi-check-circle-fill" aria-hidden="true"></i><span>' + h(item) + '</span></li>';
+        }).join('');
+        const projectDetails = [
+            { icon: 'bi-tag', label: 'Versão', value: APP_VERSION, detail: 'Criado em Novembro de 2026' },
+            { icon: 'bi-code-slash', label: 'Tecnologias', value: 'JavaScript · HTML · CSS', detail: 'Lógica, marcação e apresentação da interface' },
+            { icon: 'bi-globe2', label: 'Hospedagem', value: 'GitHub Pages', detail: 'Aplicação web publicada como site estático' },
+            { icon: 'bi-database', label: 'Armazenamento', value: 'localStorage', detail: 'Dados guardados no navegador deste dispositivo' }
+        ];
+        const projectDetailCards = projectDetails.map(function (item) {
+            return '<article class="about-detail-card"><span class="about-detail-icon"><i class="bi ' + item.icon +
+                '" aria-hidden="true"></i></span><div><span class="about-detail-label">' + h(item.label) +
+                '</span><h3>' + h(item.value) + '</h3><p>' + h(item.detail) + '</p></div></article>';
+        }).join('');
+        return pageHeader('Sobre', 'bi-info-circle', 'As pessoas por trás do Owltime e as contribuições de cada uma.') +
+            '<section class="about-page">' +
+            '<div class="about-hero"><div class="about-hero-brand"><div class="about-hero-identity-art">' +
+            '<img class="about-hero-logo" src="assets/img/logo.png" alt="Logo do Owltime">' +
+            '<figure class="about-hero-mascot"><img src="assets/img/coruja.png" alt="Owlly, mascote coruja do Owltime">' +
+            '<figcaption>Owlly · mascote do Owltime</figcaption></figure>' +
+            '</div>' +
+            '<div><span class="about-eyebrow">Projeto · 2026</span><h2>Owltime</h2>' +
+            '<p class="mb-2">Organização escolar com tecnologia e conhecimento da rotina educacional.</p>' +
+            '<a class="about-project-email" href="mailto:owltimesistema@gmail.com"><i class="bi bi-envelope" aria-hidden="true"></i> owltimesistema@gmail.com</a></div></div>' +
+            '<div class="about-institution"><i class="bi bi-mortarboard" aria-hidden="true"></i>' +
+            '<span>IFRO · Campus Colorado do Oeste</span></div></div>' +
+            '<div class="about-team-heading"><div><span class="about-eyebrow">Nossa equipe</span>' +
+            '<h2 class="h4 mb-1">Experiências que se complementam</h2>' +
+            '<p class="text-muted mb-0">Desenvolvimento, desempenho e prática escolar reunidos em um só projeto.</p></div></div>' +
+            '<div class="row g-3">' + people + '</div>' +
+            '<section class="about-workflow"><div class="about-team-heading"><div><span class="about-eyebrow">Do planejamento ao acompanhamento</span>' +
+            '<h2 class="h4 mb-1">Como o Owltime funciona</h2><p class="text-muted mb-0">Conheça as etapas para sair dos cadastros e chegar à grade pronta para acompanhar.</p></div></div>' +
+            '<ol class="about-flow-list">' + workflowSteps + '</ol>' +
+            '<section class="about-project-details"><div class="about-team-heading"><div><span class="about-eyebrow">Sobre a aplicação</span>' +
+            '<h2 class="h4 mb-1">Tecnologia e funcionamento</h2><p class="text-muted mb-0">Uma aplicação web leve, acessada pelo navegador.</p></div></div>' +
+            '<div class="about-details-grid">' + projectDetailCards + '</div></section></section>' +
+            '<section class="about-release-section"><div class="about-team-heading"><div><span class="about-eyebrow">Novidades da versão ' + h(APP_VERSION) + '</span>' +
+            '<h2 class="h4 mb-1">Atualizações implementadas no Owltime ' + h(APP_VERSION) + '</h2><p class="text-muted mb-0">Resumo dos principais recursos e melhorias desta atualização.</p></div></div>' +
+            '<ul class="about-release-list">' + releaseUpdateItems + '</ul></section>' +
+            '<section class="about-data-section"><div class="about-team-heading"><div><span class="about-eyebrow">Privacidade e segurança</span>' +
+            '<h2 class="h4 mb-1">Sobre os seus dados</h2><p class="text-muted mb-0">Entenda onde as informações ficam e como evitar perdê-las.</p></div></div>' +
+            '<div class="about-data-grid"><article class="about-data-card"><span class="about-detail-icon"><i class="bi bi-device-hdd" aria-hidden="true"></i></span>' +
+            '<div><h3>Salvos neste navegador</h3><p>Cadastros, vínculos, demandas, notas e grades ficam no armazenamento local do navegador deste dispositivo. Os dados não são sincronizados entre dispositivos e o Owltime não os envia para um servidor.</p></div></article>' +
+            '<article class="about-data-card"><span class="about-detail-icon"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i></span>' +
+            '<div><h3>Faça backups regularmente</h3><p>Em <strong>Armazenamento e backup</strong>, exporte uma cópia e guarde-a em local seguro. Se limpar os dados do navegador ou trocar de dispositivo, importe o backup para recuperar o trabalho.</p></div></article>' +
+            '<article class="about-data-card about-data-warning"><span class="about-detail-icon"><i class="bi bi-shield-exclamation" aria-hidden="true"></i></span>' +
+            '<div><h3>Limites de acesso</h3><p>O Owltime não tem login nem controle de acesso. Qualquer pessoa que use o mesmo perfil do navegador pode ver ou alterar os registros. Evite armazenar informações que exijam sigilo ou proteção especial.</p></div></article></div></section></section>';
+    }
+
+    function globalSearchRelatedNames(record, relationCache) {
+        const relationKeys = {
+            curso_id: KEYS.cursos,
+            disciplina_id: KEYS.disciplinas,
+            disciplina_ingresso_id: KEYS.disciplinas,
+            professor_id: KEYS.professores,
+            turma_id: KEYS.turmas,
+            turma_ids: KEYS.turmas,
+            grupo_ids: KEYS.grupos,
+            horario_id: KEYS.horarios
+        };
+        return Object.keys(relationKeys).reduce(function (names, field) {
+            if (record[field] == null) return names;
+            const key = relationKeys[field];
+            if (!relationCache[key]) {
+                relationCache[key] = Object.create(null);
+                readRecords(key).forEach(function (relatedRecord) {
+                    relationCache[key][String(relatedRecord.id)] = relatedRecord;
+                });
+            }
+            const ids = Array.isArray(record[field]) ? record[field] : [record[field]];
+            ids.forEach(function (id) {
+                const related = relationCache[key][String(id)];
+                const name = related && (related.nome || related.titulo || related.dia_semana);
+                if (name && !names.includes(name)) names.push(name);
+            });
+            return names;
+        }, []);
+    }
+
+    function renderGlobalSearchResults(query) {
+        const resultsElement = document.getElementById('global-search-results');
+        if (!resultsElement) return;
+        const normalizedQuery = normalizeCatalogValue(String(query || '').trim());
+        if (normalizedQuery.length < 2) {
+            resultsElement.innerHTML = '<p class="global-search-empty">Digite pelo menos 2 caracteres para pesquisar.</p>';
+            return;
+        }
+        const relationCache = Object.create(null);
+        const queryWords = normalizedQuery.split(/\s+/).filter(Boolean);
+        const matches = [];
+        Object.keys(specs).forEach(function (route) {
+            const spec = specs[route];
+            readRecords(spec.key).forEach(function (record) {
+                const relatedNames = globalSearchRelatedNames(record, relationCache);
+                const recordText = Object.keys(record).map(function (field) {
+                    const value = record[field];
+                    return Array.isArray(value) ? value.join(' ') : value == null ? '' : String(value);
+                }).join(' ');
+                const searchableText = normalizeCatalogValue([spec.title, recordText].concat(relatedNames).join(' '));
+                if (!queryWords.every(function (word) { return searchableText.includes(word); })) return;
+                const title = String(record.nome || record.titulo || record.dia_semana || spec.title);
+                const normalizedTitle = normalizeCatalogValue(title);
+                const context = [spec.title].concat(relatedNames).concat(record.semestre_letivo || []).filter(Boolean);
+                matches.push({
+                    route: route,
+                    id: record.id,
+                    title: title,
+                    context: Array.from(new Set(context)).join(' · '),
+                    icon: spec.icon,
+                    rank: normalizedTitle === normalizedQuery ? 0 : normalizedTitle.startsWith(normalizedQuery) ? 1 : 2
+                });
+            });
+        });
+        matches.sort(function (a, b) {
+            return a.rank - b.rank || a.title.localeCompare(b.title, 'pt-BR');
+        });
+        if (!matches.length) {
+            resultsElement.innerHTML = '<p class="global-search-empty">Nenhum registro corresponde à sua busca.</p>';
+            return;
+        }
+        const visibleMatches = matches.slice(0, 15);
+        const countLabel = matches.length > visibleMatches.length
+            ? 'Mostrando ' + visibleMatches.length + ' de ' + matches.length + ' resultados'
+            : matches.length + (matches.length === 1 ? ' resultado' : ' resultados');
+        const resultButtons = visibleMatches.map(function (match) {
+            return '<button class="global-search-result" type="button" role="option" data-action="open-global-search-result" data-route="' +
+                h(match.route) + '" data-record-id="' + h(match.id) + '"><span class="global-search-result-icon"><i class="bi ' +
+                h(match.icon) + '" aria-hidden="true"></i></span><span class="global-search-result-copy"><strong>' +
+                h(match.title) + '</strong><small>' + h(match.context) + '</small></span><i class="bi bi-arrow-up-right" aria-hidden="true"></i></button>';
+        }).join('');
+        resultsElement.innerHTML = '<p class="global-search-count">' + h(countLabel) + '</p>' + resultButtons;
+    }
+
+    function openGlobalSearchResult(button) {
+        const route = button.dataset.route || '';
+        const spec = specs[route];
+        if (!spec) throw new Error('O módulo deste resultado não está disponível.');
+        const record = readRecords(spec.key).find(function (item) {
+            return String(item.id) === String(button.dataset.recordId || '');
+        });
+        if (!record) throw new Error('Este registro não está mais disponível. Atualize a busca e tente novamente.');
+        if (['grupos', 'vinculos', 'disponibilidade', 'eventos', 'demandas'].includes(route) && record.semestre_letivo) {
+            availabilitySemester = setSemester(record.semestre_letivo);
+        }
+        globalSearchTarget = { route: route, id: String(record.id) };
+        if (route === 'disponibilidade') availabilityCourseId = '';
+        if (route === 'notas') collapsedDataSections['notes-board'] = false;
+        else collapsedDataSections['records-' + route] = false;
+        editing = null;
+        spreadsheetImport = null;
+        const dialog = document.getElementById('global-search-dialog');
+        if (dialog && dialog.open) dialog.close();
+        const currentRoute = window.location.hash.replace(/^#\/?/, '').split('/')[0];
+        if (currentRoute === route) render();
+        else window.location.hash = '#/' + route;
+    }
+
+    function focusGlobalSearchTarget(route) {
+        if (!globalSearchTarget || globalSearchTarget.route !== route) return;
+        const target = Array.from(view.querySelectorAll('[data-global-record-id]')).find(function (element) {
+            return element.dataset.globalRecordId === globalSearchTarget.id;
+        });
+        globalSearchTarget = null;
+        if (!target) {
+            notify('O registro foi encontrado, mas não está visível nesta tela. Confira o semestre ativo e tente novamente.', 'warning');
+            return;
+        }
+        target.classList.add('global-search-hit');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.focus({ preventScroll: true });
+        window.setTimeout(function () { target.classList.remove('global-search-hit'); }, 3500);
+    }
+
+    function render() {
+        const route = (window.location.hash.replace(/^#\/?/, '').split('/')[0] || 'dashboard');
+        if (route === 'ajustes') {
+            window.location.hash = '#/laboratorio';
+            return;
+        }
+        if (route === 'ajuda') {
+            window.location.hash = '#/sobre';
+            return;
+        }
+        if (spreadsheetImport && spreadsheetImport.route !== route) spreadsheetImport = null;
+        if (route !== 'grade' && route !== 'laboratorio') {
+            gradeEditingId = null;
+            gradeFocusDay = '';
+            gradeFocusSlotId = '';
+            teacherSubstitutionEditingId = '';
+        }
+        document.querySelectorAll('.side-link').forEach(function (link) {
+            link.classList.toggle('active', link.dataset.route === route);
+        });
+        document.querySelectorAll('.topbar-nav-link').forEach(function (link) {
+            const active = link.dataset.route === route;
+            link.classList.toggle('active', active);
+            if (active) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
+        });
+        try {
+            applyUserPreferences();
+            if (!semesterMigrationComplete) migrateLegacySemesterRecords();
+            const activeSemesterDisplay = document.getElementById('active-semester-display');
+            if (activeSemesterDisplay) activeSemesterDisplay.innerHTML =
+                '<i class="bi bi-calendar2-week" aria-hidden="true"></i> Semestre ativo: ' + h(getSemester());
+            editing = editing && editing.route === route ? editing : null;
+            if (route === 'notas') view.innerHTML = renderNotes();
+            else if (specs[route]) view.innerHTML = renderCrud(route);
+            else if (route === 'dashboard') view.innerHTML = renderDashboard();
+            else if (route === 'ninho') view.innerHTML = renderNinho();
+            else if (route === 'grade') view.innerHTML = renderGrade();
+            else if (route === 'laboratorio') view.innerHTML = renderGrade(true);
+            else if (route === 'relatorios') view.innerHTML = renderReports();
+            else if (route === 'armazenamento') view.innerHTML = renderStorage();
+            else if (route === 'configuracoes') view.innerHTML = renderSettings();
+            else if (route === 'sobre') view.innerHTML = renderAbout();
+            else if (route === 'tutoriais') view.innerHTML = renderTutorials();
+            else view.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-circle"></i>Página não encontrada.</div>';
+            sortSelectOptions(view);
+            ensureInputPlaceholders();
+            if (route === 'tutoriais') {
+                const tutorialDialog = document.getElementById('tutorial-player-dialog');
+                const tutorialPlayer = document.getElementById('tutorial-player-frame');
+                if (tutorialDialog && tutorialPlayer) {
+                    tutorialDialog.addEventListener('close', function () {
+                        tutorialPlayer.replaceChildren();
+                    });
+                    tutorialDialog.addEventListener('click', function (event) {
+                        if (event.target === tutorialDialog) tutorialDialog.close();
+                    });
+                }
+                applyTutorialFilters();
+            }
+            if (route === 'disponibilidade') syncAvailabilityForm(document.getElementById('record-form'));
+            if (route === 'laboratorio') {
+                const assignmentForm = document.getElementById('manual-assignment-form');
+                const assignmentDialog = document.getElementById('manual-assignment-dialog');
+                if (assignmentForm) renderAssignmentGuidance(assignmentForm);
+                if (assignmentDialog) assignmentDialog.addEventListener('cancel', function () {
+                    gradeEditingId = null;
+                    gradeFocusDay = '';
+                    gradeFocusSlotId = '';
+                });
+            }
+            alertBox.classList.add('d-none');
+            focusGlobalSearchTarget(route);
+        } catch (error) {
+            console.error('Falha ao exibir o módulo:', error);
+            view.innerHTML = pageHeader('Não foi possível abrir esta tela', 'bi-exclamation-triangle', '') +
+                '<div class="alert alert-danger">' + h(error.message || 'Erro inesperado ao carregar dados locais.') + '</div>' +
+                '<a class="btn btn-outline-primary" href="#/armazenamento">Abrir armazenamento e backup</a>';
+        }
+    }
+
+    function collectForm(form, fields) {
+        const values = {};
+        fields.forEach(function (field) {
+            if (field.type === 'sort-groups') {
+                values[field.name] = Array.from(form.querySelectorAll('[data-sort-subgroup]')).map(function (row) {
+                    return {
+                        nome: String(row.querySelector('[data-sort-subgroup-name]').value || '').trim(),
+                        turma_ids: Array.from(row.querySelectorAll('input[name="sort-subgroup-turmas"]:checked')).map(function (input) {
+                            return Number(input.value);
+                        })
+                    };
+                });
+                return;
+            }
+            if (field.type === 'multi-check') {
+                values[field.name] = Array.from(form.querySelectorAll('input[name="' + field.name + '"]:checked')).map(function (input) {
+                    return Number(input.value);
+                });
+                return;
+            }
+            const control = form.elements.namedItem(field.name);
+            if (!control) return;
+            let value = String(control.value || '').trim();
+            if (field.type === 'number') value = value === '' ? 0 : Number(value);
+            else if (field.name === 'disponivel') value = Number(value) === 1 ? 1 : 0;
+            else if (field.type === 'select' && field.optionsFrom && field.optionsFrom === 'cursos' && value) {
+                const course = findById(KEYS.cursos, value);
+                values.curso_nome = course ? course.nome : '';
+            }
+            if (field.name.endsWith('_id')) value = value === '' ? null : Number(value);
+            values[field.name] = value;
+        });
+        return values;
+    }
+
+    function submitRecord(form) {
+        const route = form.dataset.route;
+        const spec = specs[route];
+        if (!spec) return;
+        const values = collectForm(form, spec.fields);
+        if (route === 'horarios' && values.hora_fim <= values.hora_inicio) throw new Error('O horário final precisa ser posterior ao horário inicial.');
+        if (route === 'grupos') {
+            if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
+                throw new Error('Informe o semestre do grupo no formato AAAA/1 ou AAAA/2.');
+            }
+        }
+        if (route === 'disponibilidade') {
+            if (!DAYS.includes(values.dia_semana)) throw new Error('Selecione um dia válido.');
+            if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
+                throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+            }
+            if (values.horario_id && values.tipo !== 'prd') {
+                const slot = findById(KEYS.horarios, values.horario_id);
+                if (!slot || slot.dia_semana !== values.dia_semana || String(slot.tipo || 'Aula').toLowerCase() !== 'aula') {
+                    throw new Error('Selecione um horário de aula pertencente ao dia informado.');
+                }
+            }
+            if (values.tipo === 'prd') {
+                values.horario_id = null;
+                values.disponivel = 0;
+                const grade = readSimulation(values.semestre_letivo);
+                const matchingLessons = grade.assignments.filter(function (assignment) {
+                    return String(assignment.professor_id) === String(values.professor_id) &&
+                        String(assignment.dia_semana) === String(values.dia_semana) &&
+                        (!editing || editing.route !== route || String(assignment.id) !== String(editing.record.id));
+                });
+                if (matchingLessons.length) {
+                    throw new Error('Este professor já tem ' + matchingLessons.length + ' aula(s) na grade de ' + values.dia_semana +
+                        '. Realoque ou remova essas aulas antes de registrar o PRD.');
+                }
+            }
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    String(row.professor_id) === String(values.professor_id) &&
+                    String(row.dia_semana) === String(values.dia_semana) &&
+                    String(row.tipo || 'indisponibilidade') === String(values.tipo) &&
+                    String(row.horario_id || '') === String(values.horario_id || '') &&
+                    semesterMatches(row, values.semestre_letivo);
+            });
+            if (duplicate) throw new Error('Este registro de disponibilidade já existe para o professor nesse dia e semestre.');
+        }
+        if (route === 'vinculos') {
+            if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
+                throw new Error('Informe o semestre do vínculo no formato AAAA/1 ou AAAA/2.');
+            }
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    String(row.professor_id) === String(values.professor_id) &&
+                    String(row.disciplina_id) === String(values.disciplina_id) &&
+                    semesterMatches(row, values.semestre_letivo);
+            });
+            if (duplicate) throw new Error('Este professor já está vinculado a essa disciplina neste semestre.');
+        }
+        if (route === 'grupos') {
+            values.nome = String(values.nome || '').trim();
+            if (!values.nome) throw new Error('Informe o nome do grupo.');
+            if (!values.turma_ids.length) throw new Error('Marque ao menos uma turma para o grupo.');
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    groupIdentity(row) === groupIdentity(values) &&
+                    semesterMatches(row, values.semestre_letivo);
+            });
+            if (duplicate) throw new Error('Já existe um grupo com esse nome e essas turmas neste semestre.');
+        }
+        if (route === 'demandas') {
+            if (!/^\d{4}\/[12]$/.test(String(values.semestre_letivo || ''))) {
+                throw new Error('Informe o semestre da demanda no formato AAAA/1 ou AAAA/2.');
+            }
+            if (!values.aulas_semanais || values.aulas_semanais < 1) throw new Error('Informe ao menos uma aula por semana.');
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    String(row.turma_id) === String(values.turma_id) &&
+                    String(row.disciplina_id) === String(values.disciplina_id) &&
+                    semesterMatches(row, values.semestre_letivo);
+            });
+            if (duplicate) throw new Error('Já existe uma demanda dessa disciplina para a turma neste semestre. Edite o registro existente.');
+        }
+        if (route === 'peculiaridades' || route === 'eventos') {
+            values.nome = String(values.nome || '').trim();
+            if (!values.nome) throw new Error(route === 'eventos' ? 'Informe o nome do evento.' : 'Informe o nome da proteção.');
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    String(row.nome || '').trim().toLocaleLowerCase('pt-BR') === values.nome.toLocaleLowerCase('pt-BR');
+            });
+            if (duplicate) throw new Error(route === 'eventos' ? 'Já existe um evento com esse nome.' : 'Já existe uma proteção com esse nome.');
+        }
+        if (route === 'sorts') {
+            values.nome = String(values.nome || '').trim();
+            values.descricao = String(values.descricao || '').trim();
+            values.ocorrencias = Number(values.ocorrencias);
+            values.consecutivas = Number(values.consecutivas) === 1 ? 1 : 0;
+            values.subgrupos = normalizeSortSubgroups(values.subgrupos);
+            if (!values.nome) throw new Error('Informe o nome do sort.');
+            if (!Number.isInteger(values.ocorrencias) || values.ocorrencias < 1) {
+                throw new Error('Informe uma quantidade inteira de horários maior que zero.');
+            }
+            const duplicate = readRecords(spec.key).some(function (row) {
+                return String(row.id) !== String(editing && editing.id) &&
+                    normalizeCatalogValue(row.nome) === normalizeCatalogValue(values.nome);
+            });
+            if (duplicate) throw new Error('Já existe um sort com esse nome.');
+        }
+        const records = readRecords(spec.key);
+        const oldRecord = editing && editing.route === route ? records.find(function (row) { return String(row.id) === String(editing.id); }) : null;
+        const record = Object.assign({}, oldRecord || {}, values);
+        if (route === 'sorts') delete record.turma_ids;
+        if (route === 'disponibilidade' && record.tipo === 'prd') {
+            record.horario_id = null;
+            record.disponivel = 0;
+        }
+        if (route === 'professores') delete record.disciplina_ingresso_id;
+        if (oldRecord) {
+            record.id = oldRecord.id;
+            if (route === 'notas') record.created_at = oldRecord.created_at || new Date().toISOString();
+        } else {
+            record.id = nextId(records);
+            if (route === 'notas') record.created_at = new Date().toISOString();
+        }
+        if (route === 'notas') record.updated_at = new Date().toISOString();
+        saveRecords(spec.key, oldRecord ? records.map(function (row) { return String(row.id) === String(record.id) ? record : row; }) : records.concat(record), spec.module);
+        editing = null;
+        if (route === 'notas') renderNotesAfterMutation();
+        else render();
+        notify('Registro salvo neste navegador.', 'success');
+    }
+
+    function deleteRecord(route, id) {
+        const spec = specs[route];
+        if (!spec) return;
+        const record = findById(spec.key, id);
+        if (!record) throw new Error('O registro não foi encontrado.');
+        if (route === 'grupos' && readRecords(KEYS.vinculos).some(function (link) {
+            return (Array.isArray(link.grupo_ids) ? link.grupo_ids : []).some(function (groupId) {
+                return String(groupId) === String(id);
+            });
+        })) {
+            throw new Error('Este grupo está associado a vínculos professor-disciplina. Remova-o dos vínculos antes de excluir o grupo para não ampliar o alcance desses professores.');
+        }
+        if (route === 'peculiaridades' && readRecords(KEYS.protecoesGrade).some(function (protection) {
+            return String(protection.peculiaridade_id) === String(id);
+        })) {
+            throw new Error('Esta proteção está aplicada a uma ou mais turmas. Remova as marcações na Grade oficial antes de excluí-la.');
+        }
+        if (route === 'eventos' && readRecords(KEYS.eventosGrade).some(function (event) {
+            return String(event.evento_id) === String(id);
+        })) {
+            throw new Error('Este evento está aplicado a uma ou mais turmas. Remova as marcações na Grade oficial antes de excluí-lo.');
+        }
+        if (route === 'sorts' && readRecords(KEYS.protecoesGrade).some(function (protection) {
+            return protection.tipo_marcacao === 'sort' && String(protection.sort_id) === String(id);
+        })) {
+            throw new Error('Este sort está aplicado na Grade oficial. Remova a aplicação antes de excluí-lo.');
+        }
+        const label = record.nome || record.titulo || record.dia_semana || 'este registro';
+        if (!window.confirm('Excluir ' + label + '? Esta ação não pode ser desfeita sem um backup.')) return;
+        saveRecords(spec.key, readRecords(spec.key).filter(function (item) { return String(item.id) !== String(id); }), spec.module);
+        if (route === 'cursos') {
+            [KEYS.disciplinas, KEYS.turmas].forEach(function (key) {
+                const rows = readRecords(key).map(function (item) {
+                    return String(item.curso_id) === String(id) ? Object.assign({}, item, { curso_id: null, curso_nome: '' }) : item;
+                });
+                saveRecords(key, rows, key);
+            });
+            saveRecords(KEYS.eventos, readRecords(KEYS.eventos).map(function (event) {
+                const courseIds = Array.isArray(event.curso_ids)
+                    ? event.curso_ids.filter(function (courseId) { return String(courseId) !== String(id); })
+                    : [];
+                return Object.assign({}, event, { curso_ids: courseIds });
+            }), 'Eventos');
+        }
+        if (route === 'professores') {
+            [KEYS.vinculos, KEYS.disponibilidade].forEach(function (key) {
+                saveRecords(key, readRecords(key).filter(function (item) { return String(item.professor_id) !== String(id); }), key);
+            });
+        }
+        if (route === 'disciplinas') {
+            [KEYS.vinculos, KEYS.demandas].forEach(function (key) {
+                saveRecords(key, readRecords(key).filter(function (item) { return String(item.disciplina_id) !== String(id); }), key);
+            });
+        }
+        if (route === 'turmas') {
+            saveRecords(KEYS.demandas, readRecords(KEYS.demandas).filter(function (item) { return String(item.turma_id) !== String(id); }), 'TurmaDisciplina');
+            saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (item) { return String(item.turma_id) !== String(id); }), 'ProtecoesGrade');
+            saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (item) { return String(item.turma_id) !== String(id); }), 'EventosGrade');
+            saveRecords(KEYS.grupos, readRecords(KEYS.grupos).map(function (group) {
+                return Object.assign({}, group, {
+                    turma_ids: (Array.isArray(group.turma_ids) ? group.turma_ids : []).filter(function (turmaId) {
+                        return String(turmaId) !== String(id);
+                    })
+                });
+            }), 'Grupos');
+            saveRecords(KEYS.sorts, readRecords(KEYS.sorts).map(function (sort) {
+                if (!Array.isArray(sort.subgrupos)) {
+                    return Object.assign({}, sort, {
+                        turma_ids: (Array.isArray(sort.turma_ids) ? sort.turma_ids : []).filter(function (turmaId) {
+                            return String(turmaId) !== String(id);
+                        })
+                    });
+                }
+                return Object.assign({}, sort, {
+                    subgrupos: sort.subgrupos.map(function (group) {
+                        return Object.assign({}, group, {
+                            turma_ids: (Array.isArray(group.turma_ids) ? group.turma_ids : []).filter(function (turmaId) {
+                                return String(turmaId) !== String(id);
+                            })
+                        });
+                    }).filter(function (group) { return group.turma_ids.length; })
+                });
+            }), 'Sorts');
+        }
+        if (route === 'horarios') {
+            saveRecords(KEYS.disponibilidade, readRecords(KEYS.disponibilidade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProfessorDisponibilidade');
+            saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'ProtecoesGrade');
+            saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (item) { return String(item.horario_id) !== String(id); }), 'EventosGrade');
+        }
+        editing = null;
+        if (route === 'notas') renderNotesAfterMutation();
+        else render();
+        notify('Registro excluído.', 'success');
+    }
+
+    function updateSimulation(transform) {
+        const semester = getSemester();
+        const state = readEditableSimulation(semester);
+        transform(state);
+        saveEditableSimulation(semester, state);
+        render();
+    }
+
+    function exportGradeCsv() {
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        const effectiveAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
+        const rows = [['Semestre', 'Tipo', 'Turma', 'Dia', 'Início', 'Fim', 'Disciplina / proteção / evento', 'Professor']];
+        const slotMap = {};
+        readRecords(KEYS.horarios).forEach(function (slot) { slotMap[String(slot.id)] = slot; });
+        effectiveAssignments.forEach(function (item) {
+            const slot = slotMap[String(item.horario_id)] || {};
+            rows.push([
+                semester,
+                'Aula',
+                nameById(KEYS.turmas, item.turma_id, 'Turma'),
+                item.dia_semana || '',
+                slot.hora_inicio || item.hora_inicio || '',
+                slot.hora_fim || item.hora_fim || '',
+                item.disciplina_nome || nameById(KEYS.disciplinas, item.disciplina_id, ''),
+                item.professor_nome || nameById(KEYS.professores, item.professor_id, '')
+            ]);
+        });
+        getGradeProtections(semester).forEach(function (protection) {
+            const slot = slotMap[String(protection.horario_id)] || {};
+            rows.push([
+                semester,
+                gradeProtectionTypeLabel(protection),
+                nameById(KEYS.turmas, protection.turma_id, 'Turma'),
+                protection.dia_semana || '',
+                slot.hora_inicio || '',
+                slot.hora_fim || '',
+                protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido'),
+                ''
+            ]);
+        });
+        const csv = '\ufeff' + rows.map(function (row) {
+            return row.map(function (value) { return '"' + String(value).replace(/"/g, '""') + '"'; }).join(';');
+        }).join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'owltime_grade_' + semester.replace('/', '-') + '.csv';
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function getIndividualSchedule(type, entityId) {
+        const collection = type === 'turma' ? KEYS.turmas : KEYS.professores;
+        const entity = findById(collection, entityId);
+        if (!entity) throw new Error('Selecione uma turma ou professor válido para exportar.');
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        const effectiveAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
+        const slots = readRecords(KEYS.horarios);
+        const slotMap = {};
+        slots.forEach(function (slot) { slotMap[String(slot.id)] = slot; });
+        const assignments = effectiveAssignments.filter(function (assignment) {
+            return String(type === 'turma' ? assignment.turma_id : assignment.professor_id) === String(entityId);
+        }).slice().sort(function (a, b) {
+            const dayA = DAYS.indexOf(String(a.dia_semana || ''));
+            const dayB = DAYS.indexOf(String(b.dia_semana || ''));
+            if (dayA !== dayB) return dayA - dayB;
+            const slotA = slotMap[String(a.horario_id)] || {};
+            const slotB = slotMap[String(b.horario_id)] || {};
+            return String(slotA.hora_inicio || a.hora_inicio || '').localeCompare(String(slotB.hora_inicio || b.hora_inicio || ''));
+        });
+        const protections = type === 'turma' ? getGradeProtections(semester).filter(function (protection) {
+            return String(protection.turma_id) === String(entityId);
+        }) : [];
+        return { entity: entity, type: type, semester: semester, assignments: assignments, protections: protections, slots: slotMap };
+    }
+
+    function exportIndividualScheduleCsv() {
+        const schedule = getIndividualSchedule(pdfExportType, pdfExportId);
+        const entityLabel = schedule.type === 'turma' ? 'Turma' : 'Professor';
+        const rows = [
+            ['Semestre', 'Tipo', 'Nome', 'Dia', 'Início', 'Fim', 'Disciplina / proteção / evento', 'Turma', 'Professor'],
+            ...schedule.assignments.map(function (assignment) {
+                const slot = schedule.slots[String(assignment.horario_id)] || {};
+                return [
+                    schedule.semester,
+                    'Aula · ' + entityLabel,
+                    schedule.entity.nome,
+                    assignment.dia_semana || '',
+                    slot.hora_inicio || assignment.hora_inicio || '',
+                    slot.hora_fim || assignment.hora_fim || '',
+                    assignment.disciplina_nome || nameById(KEYS.disciplinas, assignment.disciplina_id, ''),
+                    nameById(KEYS.turmas, assignment.turma_id, ''),
+                    nameById(KEYS.professores, assignment.professor_id, '')
+                ];
+            }),
+            ...schedule.protections.map(function (protection) {
+                const slot = schedule.slots[String(protection.horario_id)] || {};
+                return [
+                    schedule.semester,
+                    gradeProtectionTypeLabel(protection),
+                    schedule.entity.nome,
+                    protection.dia_semana || '',
+                    slot.hora_inicio || '',
+                    slot.hora_fim || '',
+                    protection.peculiaridade_nome || nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Protegido'),
+                    schedule.entity.nome,
+                    ''
+                ];
+            })
+        ];
+        const csv = '\ufeff' + rows.map(function (row) {
+            return row.map(function (value) { return '"' + String(value).replace(/"/g, '""') + '"'; }).join(';');
+        }).join('\r\n');
+        const safeName = String(schedule.entity.nome || entityLabel).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || entityLabel.toLowerCase();
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'owltime_grade_' + schedule.type + '_' + safeName + '_' + schedule.semester.replace('/', '-') + '.csv';
+        link.click();
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        notify('CSV individual de ' + schedule.entity.nome + ' gerado.', 'success');
+    }
+
+    function individualSchedulePdfDocument(schedule) {
+        const isClass = schedule.type === 'turma';
+        const title = isClass ? 'Grade de horários da turma' : 'Horários do professor';
+        const lessons = schedule.assignments;
+        const activeDays = DAYS.slice(5).filter(function (day) {
+            return lessons.some(function (assignment) { return assignment.dia_semana === day; }) ||
+                schedule.protections.some(function (protection) { return protection.dia_semana === day; });
+        });
+        const days = WEEKDAYS.concat(activeDays);
+        const timeRanges = Array.from(new Set(lessons.map(function (assignment) {
+            const slot = schedule.slots[String(assignment.horario_id)] || {};
+            return (slot.hora_inicio || assignment.hora_inicio || '--:--') + '|' +
+                (slot.hora_fim || assignment.hora_fim || '--:--');
+        }).concat(schedule.protections.map(function (protection) {
+            const slot = schedule.slots[String(protection.horario_id)] || {};
+            return (slot.hora_inicio || '--:--') + '|' + (slot.hora_fim || '--:--');
+        })))).sort(function (a, b) { return a.localeCompare(b); });
+        const body = [[
+            { text: 'HORÁRIO', style: 'tableHeader' }
+        ].concat(days.map(function (day) { return { text: day.toLocaleUpperCase('pt-BR'), style: 'tableHeader' }; }))];
+        timeRanges.forEach(function (range) {
+            const times = range.split('|');
+            const row = [{ text: times[0] + '\n' + times[1], style: 'timeCell' }];
+            days.forEach(function (day) {
+                const atSlot = lessons.filter(function (assignment) {
+                    const slot = schedule.slots[String(assignment.horario_id)] || {};
+                    return assignment.dia_semana === day &&
+                        (slot.hora_inicio || assignment.hora_inicio || '--:--') === times[0] &&
+                        (slot.hora_fim || assignment.hora_fim || '--:--') === times[1];
+                });
+                if (!atSlot.length) {
+                    const protection = schedule.protections.find(function (item) {
+                        const slot = schedule.slots[String(item.horario_id)] || {};
+                        return item.dia_semana === day &&
+                            (slot.hora_inicio || '--:--') === times[0] &&
+                            (slot.hora_fim || '--:--') === times[1];
+                    });
+                    row.push(protection
+                        ? {
+                            text: (protection.tipo_marcacao === 'evento'
+                                ? 'EVENTO ESCOLAR\n'
+                                : protection.tipo_marcacao === 'sort' ? 'SORT\n' : 'HORÁRIO PROTEGIDO\n') + (protection.peculiaridade_nome ||
+                                    nameById(KEYS.peculiaridades, protection.peculiaridade_id, 'Proteção')),
+                            style: 'protectionCell'
+                        }
+                        : { text: '—', color: '#94a3b8', alignment: 'center' });
+                    return;
+                }
+                const stack = [];
+                atSlot.forEach(function (assignment, index) {
+                    if (index) stack.push({ text: ' ', margin: [0, 3, 0, 3] });
+                    stack.push({
+                        text: assignment.disciplina_nome || nameById(KEYS.disciplinas, assignment.disciplina_id, 'Disciplina'),
+                        bold: true,
+                        fontSize: 8,
+                        color: '#203b5b'
+                    });
+                    stack.push({
+                        text: isClass
+                            ? nameById(KEYS.professores, assignment.professor_id, 'Professor')
+                            : nameById(KEYS.turmas, assignment.turma_id, 'Turma'),
+                        fontSize: 7,
+                        color: '#53677d',
+                        margin: [0, 2, 0, 0]
+                    });
+                });
+                const firstAssignment = atSlot[0];
+                row.push({
+                    stack: stack,
+                    fillColor: subjectColor(firstAssignment.disciplina_id),
+                    margin: [5, 6, 5, 6]
+                });
+            });
+            body.push(row);
+        });
+        const content = [
+            { text: 'OWLTIME · PLANEJAMENTO ESCOLAR', style: 'eyebrow' },
+            { text: title, style: 'title' },
+            { text: schedule.entity.nome, style: 'entity' },
+            {
+                columns: [
+                    { text: 'Semestre ' + schedule.semester, style: 'meta' },
+                    {
+                        text: lessons.length + (lessons.length === 1 ? ' aula' : ' aulas') + ' · ' +
+                            schedule.protections.length + (schedule.protections.length === 1 ? ' horário protegido' : ' horários protegidos'),
+                        style: 'meta', alignment: 'right'
+                    }
+                ],
+                margin: [0, 0, 0, 18]
+            }
+        ];
+        if (timeRanges.length) {
+            content.push({
+                table: {
+                    headerRows: 1,
+                    widths: [54].concat(days.map(function () { return '*'; })),
+                    body: body
+                },
+                layout: {
+                    hLineColor: function () { return '#d9e2ec'; },
+                    vLineColor: function () { return '#d9e2ec'; },
+                    hLineWidth: function (index) { return index === 1 ? 1.2 : .6; },
+                    vLineWidth: function () { return .6; },
+                    paddingLeft: function () { return 5; },
+                    paddingRight: function () { return 5; },
+                    paddingTop: function () { return 7; },
+                    paddingBottom: function () { return 7; }
+                }
+            });
+        } else {
+            content.push({
+                text: schedule.protections.length
+                    ? 'Não há aulas alocadas. Os horários protegidos estão identificados na grade.'
+                    : 'Nenhuma aula alocada para ' + schedule.entity.nome + ' neste semestre.',
+                color: '#64748b',
+                alignment: 'center',
+                margin: [0, 24, 0, 0]
+            });
+        }
+        content.push({
+            text: 'Grade gerada em ' + new Date().toLocaleDateString('pt-BR') +
+                ' · Confira se esta é a versão atual antes de utilizar.',
+            style: 'footer',
+            margin: [0, 18, 0, 0]
+        });
+        return {
+            pageSize: 'A4',
+            pageOrientation: 'landscape',
+            pageMargins: [28, 28, 28, 32],
+            content: content,
+            defaultStyle: { font: 'Roboto', fontSize: 9, color: '#172b4d' },
+            styles: {
+                eyebrow: { fontSize: 8, bold: true, color: '#3478b8', characterSpacing: 1.1, margin: [0, 0, 0, 7] },
+                title: { fontSize: 21, bold: true, color: '#15335b', margin: [0, 0, 0, 4] },
+                entity: { fontSize: 14, bold: true, color: '#355a7d', margin: [0, 0, 0, 6] },
+                meta: { fontSize: 9, color: '#64748b' },
+                tableHeader: { bold: true, fontSize: 8, color: '#23486f', fillColor: '#edf4fc', alignment: 'center' },
+                timeCell: { bold: true, fontSize: 8, color: '#42566e', alignment: 'center' },
+                protectionCell: { bold: true, fontSize: 8, color: '#8f2933', fillColor: '#fdeced', alignment: 'center', margin: [5, 6, 5, 6] },
+                footer: { fontSize: 8, color: '#718096', alignment: 'right' }
+            }
+        };
+    }
+
+    function getIndividualSchedulePdfBlob(schedule) {
+        return createPdfBlob(individualSchedulePdfDocument(schedule));
+    }
+
+    function completeSchedulePdfDocument(schedules) {
+        if (!schedules.length) throw new Error('Não há turmas ativas para compartilhar.');
+        const content = [
+            { text: 'OWLTIME · PLANEJAMENTO ESCOLAR', style: 'eyebrow' },
+            { text: 'Grade completa das turmas', style: 'title' },
+            {
+                columns: [
+                    { text: 'Semestre ' + schedules[0].semester, style: 'meta' },
+                    { text: schedules.length + (schedules.length === 1 ? ' turma' : ' turmas'), style: 'meta', alignment: 'right' }
+                ],
+                margin: [0, 0, 0, 18]
+            }
+        ];
+        schedules.forEach(function (schedule, index) {
+            const individualContent = individualSchedulePdfDocument(schedule).content;
+            const sectionHeading = { text: schedule.entity.nome, style: 'entity' };
+            if (index) sectionHeading.pageBreak = 'before';
+            const sectionItems = [
+                sectionHeading,
+                {
+                    columns: [
+                        { text: schedule.entity.periodo || 'Horário semanal', style: 'meta' },
+                        {
+                            text: schedule.assignments.length +
+                                (schedule.assignments.length === 1 ? ' aula na grade' : ' aulas na grade'),
+                            style: 'meta',
+                            alignment: 'right'
+                        }
+                    ],
+                    margin: [0, 0, 0, 12]
+                }
+            ];
+            sectionItems.push(individualContent[4]);
+            if (individualContent[5]) {
+                sectionItems.push({
+                    text: 'Grade gerada em ' + new Date().toLocaleDateString('pt-BR') +
+                        ' · Confira se esta é a versão atual antes de utilizar.',
+                    style: 'footer',
+                    margin: [0, 12, 0, 0]
+                });
+            }
+            sectionItems.forEach(function (item) { content.push(item); });
+        });
+        return {
+            pageSize: 'A4',
+            pageOrientation: 'landscape',
+            pageMargins: [28, 28, 28, 32],
+            content: content,
+            defaultStyle: { font: 'Roboto', fontSize: 9, color: '#172b4d' },
+            styles: {
+                eyebrow: { fontSize: 8, bold: true, color: '#3478b8', characterSpacing: 1.1, margin: [0, 0, 0, 7] },
+                title: { fontSize: 21, bold: true, color: '#15335b', margin: [0, 0, 0, 10] },
+                entity: { fontSize: 14, bold: true, color: '#355a7d', margin: [0, 0, 0, 6] },
+                meta: { fontSize: 9, color: '#64748b' },
+                tableHeader: { bold: true, fontSize: 8, color: '#23486f', fillColor: '#edf4fc', alignment: 'center' },
+                timeCell: { bold: true, fontSize: 8, color: '#42566e', alignment: 'center' },
+                footer: { fontSize: 8, color: '#718096', alignment: 'right' }
+            }
+        };
+    }
+
+    function createPdfBlob(documentDefinition) {
+        if (!window.pdfMake || typeof window.pdfMake.createPdf !== 'function') {
+            throw new Error('A biblioteca de PDF não foi carregada. Verifique a conexão e atualize a página.');
+        }
+        return new Promise(function (resolve, reject) {
+            try {
+                window.pdfMake.createPdf(documentDefinition).getBlob(resolve);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    function declarationDateValue(date) {
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' +
+            String(date.getDate()).padStart(2, '0');
+    }
+
+    function getCurrentGradeAssignments(assignments, semester) {
+        const substitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || '') === semester;
+        });
+        return getDeclarationAssignments(assignments, semester, substitutions, declarationDateValue(new Date()));
+    }
+
+    function getDeclarationAssignments(assignments, semester, substitutions, referenceDate) {
+        return assignments.map(function (assignment) {
+            let current = Object.assign({}, assignment);
+            const visitedTeacherIds = new Set([String(current.professor_id)]);
+            while (true) {
+                const matchingSubstitutions = substitutions.filter(function (record) {
+                    return String(record.semestre_letivo) === semester &&
+                        String(record.data_inicio || '') <= referenceDate &&
+                        (!record.data_fim || String(record.data_fim) >= referenceDate) &&
+                        substitutionIncludesAssignment(record, current);
+                });
+                if (matchingSubstitutions.length > 1) {
+                    throw new Error('Há vigências sobrepostas para a mesma turma, disciplina e professor. Corrija os registros antes de gerar a declaração.');
+                }
+                if (!matchingSubstitutions.length) return current;
+                const substitution = matchingSubstitutions[0];
+                const replacement = findById(KEYS.professores, substitution.professor_substituto_id);
+                if (!replacement) throw new Error('Uma substituição vigente aponta para um professor removido. Corrija ou exclua esse registro antes de gerar a declaração.');
+                const replacementId = String(replacement.id);
+                if (visitedTeacherIds.has(replacementId)) {
+                    throw new Error('As substituições vigentes formam um ciclo de professores. Corrija os registros antes de gerar a declaração.');
+                }
+                visitedTeacherIds.add(replacementId);
+                current = Object.assign({}, current, {
+                    professor_id: replacement.id,
+                    professor_nome: replacement.nome,
+                    substituicao_id: substitution.id
+                });
+            }
+        });
+    }
+
+    function buildTeacherDeclarationData(assignments) {
+        const teachers = new Map(activeRecords(KEYS.professores, ['ativo']).map(function (teacher) {
+            return [String(teacher.id), { teacher: teacher, lessons: new Map() }];
+        }));
+        assignments.forEach(function (assignment) {
+            const teacherId = String(assignment.professor_id || '');
+            if (!teacherId) throw new Error('Há uma aula sem professor atribuído. Corrija a grade antes de gerar a declaração.');
+            if (!teachers.has(teacherId)) {
+                const teacher = findById(KEYS.professores, teacherId) || {
+                    id: teacherId,
+                    nome: assignment.professor_nome || 'Professor removido',
+                    carga_horaria_semanal: null
+                };
+                teachers.set(teacherId, { teacher: teacher, lessons: new Map() });
+            }
+            const entry = teachers.get(teacherId);
+            const classId = String(assignment.turma_id || '');
+            const disciplineId = String(assignment.disciplina_id || '');
+            const key = classId + '|' + disciplineId;
+            const row = entry.lessons.get(key) || { turma_id: classId, disciplina_id: disciplineId, aulas: 0 };
+            row.aulas += 1;
+            entry.lessons.set(key, row);
+        });
+        return Array.from(teachers.values()).map(function (entry) {
+            const teacher = entry.teacher;
+            const lessons = Array.from(entry.lessons.values()).map(function (row) {
+                const turma = findById(KEYS.turmas, row.turma_id);
+                return {
+                    turma: turma ? turma.nome : 'Turma removida',
+                    curso: turma ? (turma.curso_nome || nameById(KEYS.cursos, turma.curso_id, '—')) : '—',
+                    disciplina: nameById(KEYS.disciplinas, row.disciplina_id, 'Disciplina removida'),
+                    aulas: row.aulas
+                };
+            }).sort(function (a, b) {
+                return a.curso.localeCompare(b.curso, 'pt-BR') ||
+                    a.turma.localeCompare(b.turma, 'pt-BR') ||
+                    a.disciplina.localeCompare(b.disciplina, 'pt-BR');
+            });
+            const total = lessons.reduce(function (sum, row) { return sum + row.aulas; }, 0);
+            const declaredValue = teacher.carga_horaria_semanal;
+            const declared = declaredValue == null || String(declaredValue).trim() === ''
+                ? null
+                : Number(declaredValue);
+            return {
+                teacher: teacher,
+                lessons: lessons,
+                total: total,
+                declared: Number.isFinite(declared) ? declared : null,
+                difference: Number.isFinite(declared) ? total - declared : null
+            };
+        }).sort(function (a, b) {
+            return String(a.teacher.nome || '').localeCompare(String(b.teacher.nome || ''), 'pt-BR');
+        });
+    }
+
+    function teacherDeclarationPdfDocument(institution, semester, generatedAt, teachers, substitutions, baseAssignments) {
+        const content = [
+            { text: institution.toLocaleUpperCase('pt-BR'), style: 'institution' },
+            { text: 'DECLARAÇÃO DE DISTRIBUIÇÃO DE CARGA HORÁRIA DOCENTE', style: 'title' },
+            {
+                columns: [
+                    { text: 'Semestre letivo: ' + semester, style: 'meta' },
+                    { text: 'Data de geração: ' + generatedAt.toLocaleDateString('pt-BR'), style: 'meta', alignment: 'right' }
+                ],
+                margin: [0, 0, 0, 10]
+            },
+            {
+                text: 'Relatório de conferência das aulas semanais atribuídas por professor, conforme a grade registrada para o semestre. Os totais consideram as substituições vigentes na data de emissão.',
+                style: 'intro',
+                margin: [0, 0, 0, 14]
+            }
+        ];
+        teachers.forEach(function (item) {
+            const teacher = item.teacher;
+            content.push({
+                table: {
+                    widths: ['*', 'auto'],
+                    body: [[
+                        {
+                            text: (teacher.nome || 'Professor') + ' - ' + item.total + ' ' +
+                                (item.total === 1 ? 'Aula' : 'Aulas'),
+                            style: 'teacherName'
+                        },
+                        { text: teacher.matricula ? 'Matrícula: ' + teacher.matricula : 'Matrícula não informada', style: 'meta', alignment: 'right' }
+                    ]]
+                },
+                layout: 'noBorders',
+                margin: [0, 6, 0, 4]
+            });
+            const teacherMeta = [teacher.titulacao, teacher.email].filter(Boolean).join(' · ');
+            if (teacherMeta) content.push({ text: teacherMeta, style: 'meta', margin: [0, 0, 0, 5] });
+            content.push({
+                table: {
+                    headerRows: 1,
+                    widths: ['*', '*', '*', 70],
+                    body: [[
+                        { text: 'Turma', style: 'tableHeader' },
+                        { text: 'Curso', style: 'tableHeader' },
+                        { text: 'Disciplina', style: 'tableHeader' },
+                        { text: 'Aulas/semana', style: 'tableHeader' }
+                    ]].concat(item.lessons.length ? item.lessons.map(function (row) {
+                        return [row.turma, row.curso, row.disciplina, { text: String(row.aulas), alignment: 'center' }];
+                    }) : [[{ text: 'Nenhuma aula atribuída na data de emissão.', colSpan: 4, color: '#64748b', italics: true, alignment: 'center' }, {}, {}, {}]])
+                },
+                layout: {
+                    fillColor: function (rowIndex) { return rowIndex === 0 ? '#eaf1f8' : rowIndex % 2 ? '#ffffff' : '#f7f9fc'; },
+                    hLineColor: function () { return '#d5dee8'; },
+                    vLineColor: function () { return '#d5dee8'; },
+                    paddingLeft: function () { return 7; },
+                    paddingRight: function () { return 7; },
+                    paddingTop: function () { return 5; },
+                    paddingBottom: function () { return 5; }
+                },
+                margin: [0, 0, 0, 6]
+            });
+            const isCorrect = item.difference === 0;
+            const isOverDeclared = item.difference > 0;
+            if (item.declared == null || item.difference >= 0) {
+                let comparison;
+                if (item.declared == null) comparison = 'Carga semanal declarada: não informada no cadastro.';
+                else if (isCorrect) comparison = 'CORRETO · ' + item.total + ' aula(s) atribuída(s) de ' + item.declared + ' declarada(s).';
+                else if (isOverDeclared) comparison = 'DIVERGÊNCIA · ' + item.total + ' aula(s) atribuída(s) para ' +
+                    item.declared + ' declarada(s) (excedente de ' + item.difference + ' aula(s)).';
+                content.push({
+                    text: comparison,
+                    style: item.declared == null ? 'comparisonUnknown' : isCorrect ? 'comparisonCorrect' : 'comparisonMismatch',
+                    margin: [0, 0, 0, 10]
+                });
+            }
+        });
+        const substitutionItems = substitutions.slice().sort(function (a, b) {
+            return String(a.data_inicio || '').localeCompare(String(b.data_inicio || '')) ||
+                String(a.id).localeCompare(String(b.id), 'pt-BR', { numeric: true });
+        }).map(function (record) {
+            const affectedAssignments = getSubstitutionAffectedAssignments(
+                baseAssignments, semester, substitutions, record
+            );
+            const blockedAssignments = Array.isArray(record.aulas_bloqueadas) ? record.aulas_bloqueadas : [];
+            const isCampusExit = record.abrangencia === 'todas-aulas-professor';
+            const contexts = new Map();
+            affectedAssignments.concat(blockedAssignments).forEach(function (assignment) {
+                const className = nameById(KEYS.turmas, assignment.turma_id, 'Turma removida');
+                const disciplineName = nameById(KEYS.disciplinas, assignment.disciplina_id, 'Disciplina removida');
+                contexts.set(String(assignment.turma_id) + '|' + String(assignment.disciplina_id),
+                    className + ' · ' + disciplineName);
+            });
+            return {
+                turma: isCampusExit ? 'Todas as turmas' :
+                    nameById(KEYS.turmas, record.turma_id, record.turma_nome || 'Turma removida'),
+                disciplina: isCampusExit ? 'Todas as disciplinas' :
+                    nameById(KEYS.disciplinas, record.disciplina_id, record.disciplina_nome || 'Disciplina removida'),
+                titular: nameById(KEYS.professores, record.professor_original_id, record.professor_original_nome || 'Professor removido'),
+                substituto: nameById(KEYS.professores, record.professor_substituto_id, record.professor_substituto_nome || 'Professor removido'),
+                vigencia: formatSubstitutionDate(record.data_inicio) + ' até ' +
+                    (record.data_fim ? formatSubstitutionDate(record.data_fim) : 'sem data final'),
+                motivo: record.motivo || 'Substituição por turma(s)',
+                abrangencia: isCampusExit
+                    ? 'Todas as aulas do professor · cadastro desativado para futuras grades'
+                    : 'Turmas selecionadas',
+                contextos: Array.from(contexts.values()).join('\n') || 'Nenhuma aula transferida.',
+                aulas: affectedAssignments.length,
+                bloqueadas: blockedAssignments.length,
+                detalhesBloqueios: blockedAssignments.map(function (assignment) {
+                    const slot = findById(KEYS.horarios, assignment.horario_id);
+                    const period = slot ? slot.hora_inicio + '–' + slot.hora_fim : 'horário removido';
+                    return nameById(KEYS.turmas, assignment.turma_id, 'Turma removida') + ' · ' +
+                        nameById(KEYS.disciplinas, assignment.disciplina_id, 'Disciplina removida') + ' · ' +
+                        (assignment.dia_semana || 'Dia não informado') + ' · ' + period + ': ' +
+                        (assignment.motivos || []).join('; ');
+                })
+            };
+        });
+        content.push({
+            columns: [
+                {
+                    stack: [
+                        { text: 'HISTÓRICO DE ALOCAÇÃO', style: 'substitutionEyebrow' },
+                        { text: 'Vigências e substituições', style: 'substitutionTitle' }
+                    ]
+                },
+                {
+                    text: substitutionItems.length + (substitutionItems.length === 1 ? ' registro' : ' registros'),
+                    style: 'substitutionCount',
+                    alignment: 'right',
+                    margin: [0, 10, 0, 0]
+                }
+            ],
+            margin: [0, 8, 0, 4]
+        });
+        content.push({
+            text: 'O histórico registra substituições por turma ou a saída do campus com as aulas, turmas, disciplinas e impactos correspondentes, sem acumular períodos distintos como carga simultânea.',
+            style: 'substitutionIntro',
+            margin: [0, 0, 0, 8]
+        });
+        if (substitutionItems.length) {
+            substitutionItems.forEach(function (item, index) {
+                const historyRows = [
+                    [{
+                        text: 'SUBSTITUIÇÃO ' + String(index + 1).padStart(2, '0'),
+                        style: 'substitutionIndex',
+                        colSpan: 2
+                    }, {}],
+                    [
+                        {
+                            stack: [
+                                { text: 'TURMA(S)', style: 'substitutionLabel' },
+                                { text: item.turma, style: 'substitutionContext' }
+                            ]
+                        },
+                        {
+                            stack: [
+                                { text: 'DISCIPLINA(S)', style: 'substitutionLabel' },
+                                { text: item.disciplina, style: 'substitutionContext' }
+                            ]
+                        }
+                    ],
+                    [
+                        {
+                            stack: [
+                                { text: 'PROFESSOR TITULAR', style: 'substitutionLabel' },
+                                { text: item.titular, style: 'substitutionTeacher' }
+                            ],
+                            fillColor: '#f1f5f9'
+                        },
+                        {
+                            stack: [
+                                { text: 'PROFESSOR SUBSTITUTO', style: 'substitutionLabel' },
+                                { text: item.substituto, style: 'substitutionReplacement' }
+                            ],
+                            fillColor: '#eaf5ee'
+                        }
+                    ],
+                    [
+                        {
+                            stack: [
+                                { text: 'PERÍODO DE VIGÊNCIA', style: 'substitutionLabel' },
+                                { text: item.vigencia, style: 'substitutionValue' }
+                            ]
+                        },
+                        {
+                            stack: [
+                                { text: 'AULAS TRANSFERIDAS / BLOQUEADAS', style: 'substitutionLabel' },
+                                { text: item.aulas + ' transferida(s) · ' + item.bloqueadas + ' bloqueada(s)', style: 'substitutionLessons' }
+                            ]
+                        }
+                    ],
+                    [{
+                        stack: [
+                            { text: 'MOTIVO E ABRANGÊNCIA', style: 'substitutionLabel' },
+                            { text: item.motivo + ' · ' + item.abrangencia, style: 'substitutionValue' }
+                        ],
+                        colSpan: 2
+                    }, {}],
+                    [{
+                        stack: [
+                            { text: 'TURMAS E DISCIPLINAS ALCANÇADAS', style: 'substitutionLabel' },
+                            { text: item.contextos, style: 'substitutionValue' }
+                        ],
+                        colSpan: 2
+                    }, {}]
+                ];
+                if (item.bloqueadas) {
+                    historyRows.push([{
+                        stack: [
+                            { text: 'AULAS NÃO TRANSFERIDAS E MOTIVOS', style: 'substitutionLabel' },
+                            { text: item.detalhesBloqueios.join('\n'), style: 'substitutionBlocked' }
+                        ],
+                        colSpan: 2
+                    }, {}]);
+                }
+                const lastHistoryRow = historyRows.length;
+                content.push({
+                    table: {
+                        widths: ['*', '*'],
+                        body: historyRows
+                    },
+                    layout: {
+                        hLineWidth: function (rowIndex) { return rowIndex === 0 || rowIndex === lastHistoryRow ? 0 : 0.7; },
+                        vLineWidth: function () { return 0; },
+                        hLineColor: function () { return '#dbe4ed'; },
+                        paddingLeft: function (index) { return index === 0 ? 8 : 10; },
+                        paddingRight: function (index) { return index === 0 ? 8 : 10; },
+                        paddingTop: function (index) { return index === 0 ? 5 : 6; },
+                        paddingBottom: function (index) { return index === 0 ? 4 : 7; }
+                    },
+                    margin: [0, 0, 0, 10]
+                });
+            });
+        } else {
+            content.push({
+                text: 'Nenhuma substituição registrada para este semestre.',
+                style: 'substitutionEmpty',
+                margin: [0, 2, 0, 8]
+            });
+        }
+        content.push({
+            text: 'A comparação utiliza aulas semanais (não horas-relógio) e o campo “Carga semanal (aulas)” do cadastro docente. Os totais individuais representam a situação vigente na data de geração; períodos distintos de substituição não são acumulados como carga simultânea.',
+            style: 'note',
+            margin: [0, 12, 0, 18]
+        });
+        content.push({
+            columns: [
+                { text: '__________________________________\nResponsável pela conferência', style: 'signature' },
+                { text: '__________________________________\nDireção / Coordenação', style: 'signature', alignment: 'right' }
+            ],
+            margin: [0, 20, 0, 0]
+        });
+        return {
+            pageSize: 'A4',
+            pageOrientation: 'portrait',
+            pageMargins: [38, 48, 38, 48],
+            content: content,
+            defaultStyle: { font: 'Roboto', fontSize: 8.5, color: '#25364a' },
+            header: function () {
+                return {
+                    canvas: [{ type: 'line', x1: 38, y1: 34, x2: 557, y2: 34, lineWidth: 1.5, lineColor: '#1d4e89' }],
+                    margin: [0, 0, 0, 0]
+                };
+            },
+            footer: function (currentPage, pageCount) {
+                return {
+                    columns: [
+                        { text: institution + ' · Semestre ' + semester, margin: [38, 0, 0, 0], style: 'footer' },
+                        { text: currentPage + ' / ' + pageCount, alignment: 'right', margin: [0, 0, 38, 0], style: 'footer' }
+                    ],
+                    margin: [0, 18, 0, 0]
+                };
+            },
+            styles: {
+                institution: { fontSize: 11, bold: true, color: '#1d4e89', alignment: 'center', characterSpacing: 0.6, margin: [0, 0, 0, 8] },
+                title: { fontSize: 15, bold: true, color: '#183653', alignment: 'center', margin: [0, 0, 0, 10] },
+                meta: { fontSize: 8, color: '#617286' },
+                intro: { fontSize: 8.5, color: '#42556b', alignment: 'justify', lineHeight: 1.2 },
+                teacherName: { fontSize: 10, bold: true, color: '#1d4e89' },
+                tableHeader: { bold: true, fontSize: 7.5, color: '#23486f', fillColor: '#eaf1f8', alignment: 'center' },
+                comparisonCorrect: { bold: true, color: '#176b42', fillColor: '#e8f5ed', fontSize: 8.5, margin: [6, 5, 6, 5] },
+                comparisonMismatch: { bold: true, color: '#a33131', fillColor: '#fdecec', fontSize: 8.5, margin: [6, 5, 6, 5] },
+                comparisonUnknown: { bold: true, color: '#765b13', fillColor: '#fff7df', fontSize: 8.5, margin: [6, 5, 6, 5] },
+                sectionTitle: { fontSize: 10, bold: true, color: '#1d4e89' },
+                substitutionEyebrow: { fontSize: 7, bold: true, color: '#5380a8', characterSpacing: 1.1 },
+                substitutionTitle: { fontSize: 11, bold: true, color: '#1d4167', margin: [0, 2, 0, 0] },
+                substitutionCount: { fontSize: 7.5, bold: true, color: '#355a7d', fillColor: '#edf4fa', margin: [7, 5, 7, 5] },
+                substitutionIntro: { fontSize: 7.5, color: '#617286', lineHeight: 1.15 },
+                substitutionIndex: { fontSize: 7, bold: true, color: '#5380a8', characterSpacing: 0.8, fillColor: '#f6f9fc' },
+                substitutionLabel: { fontSize: 6.5, bold: true, color: '#75869a', characterSpacing: 0.5, margin: [0, 0, 0, 3] },
+                substitutionContext: { fontSize: 8.5, bold: true, color: '#294765' },
+                substitutionTeacher: { fontSize: 9, bold: true, color: '#344b63' },
+                substitutionReplacement: { fontSize: 9, bold: true, color: '#176b42' },
+                substitutionValue: { fontSize: 8, color: '#344b63' },
+                substitutionLessons: { fontSize: 8, bold: true, color: '#1d4e89' },
+                substitutionBlocked: { fontSize: 7.5, color: '#8a3c18', lineHeight: 1.15 },
+                substitutionNoLessons: { fontSize: 8, color: '#9a6b16', italics: true },
+                substitutionEmpty: { fontSize: 8, color: '#617286', fillColor: '#f6f9fc', margin: [8, 7, 8, 7] },
+                note: { fontSize: 7.5, color: '#617286', italics: true, alignment: 'justify' },
+                signature: { fontSize: 8, color: '#42556b', alignment: 'center', lineHeight: 1.3 },
+                footer: { fontSize: 7, color: '#718096' }
+            }
+        };
+    }
+
+    async function downloadTeacherDeclaration() {
+        const institution = String(document.getElementById('declaration-institution').value || '').trim();
+        if (!institution) throw new Error('Informe o nome da instituição antes de gerar a declaração.');
+        const semester = getSemester();
+        const generatedAt = new Date();
+        const state = readSimulation(semester);
+        if (!state.assignments.length) throw new Error('Não há aulas na grade deste semestre para declarar.');
+        localStorage.setItem(DECLARATION_INSTITUTION_KEY, institution);
+        const substitutions = readRecords(KEYS.substituicoes).filter(function (record) {
+            return String(record.semestre_letivo || '') === semester;
+        });
+        const referenceDate = declarationDateValue(generatedAt);
+        const effectiveAssignments = getDeclarationAssignments(state.assignments, semester, substitutions, referenceDate);
+        const teachers = buildTeacherDeclarationData(effectiveAssignments);
+        const documentDefinition = teacherDeclarationPdfDocument(
+            institution, semester, generatedAt, teachers, substitutions, state.assignments
+        );
+        const blob = await createPdfBlob(documentDefinition);
+        const safeInstitution = institution.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || 'instituicao';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'declaracao_carga_horaria_' + safeInstitution + '_' + semester.replace('/', '-') + '.pdf';
+        link.click();
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        notify('Declaração docente gerada em PDF.', 'success');
+    }
+
+    async function getCompleteSchedulePdfBlob() {
+        const turmas = activeRecords(KEYS.turmas, ['ativa', 'ativo']);
+        if (!turmas.length) throw new Error('Não há turmas ativas para compartilhar.');
+        const schedules = turmas.map(function (turma) {
+            return getIndividualSchedule('turma', turma.id);
+        });
+        return createPdfBlob(completeSchedulePdfDocument(schedules));
+    }
+
+    function individualSchedulePdfFilename(schedule) {
+        const safeName = String(schedule.entity.nome || schedule.type).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || schedule.type;
+        return 'owltime_grade_' + schedule.type + '_' + safeName + '_' + schedule.semester.replace('/', '-') + '.pdf';
+    }
+
+    async function downloadIndividualSchedulePdf() {
+        const schedule = getIndividualSchedule(pdfExportType, pdfExportId);
+        const blob = await getIndividualSchedulePdfBlob(schedule);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = individualSchedulePdfFilename(schedule);
+        link.click();
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        notify('PDF individual de ' + schedule.entity.nome + ' gerado.', 'success');
+    }
+
+    async function shareIndividualSchedulePdf() {
+        const schedule = getIndividualSchedule(pdfExportType, pdfExportId);
+        const blob = await getIndividualSchedulePdfBlob(schedule);
+        const file = new File([blob], individualSchedulePdfFilename(schedule), { type: 'application/pdf' });
+        const heading = (schedule.type === 'turma' ? 'Grade da turma ' : 'Horários de ') + schedule.entity.nome;
+        if (typeof navigator.share === 'function' && typeof navigator.canShare === 'function' &&
+            navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                title: heading + ' · ' + schedule.semester,
+                text: 'Segue a grade de horários de ' + schedule.entity.nome + ' para o semestre ' + schedule.semester + '.',
+                files: [file]
+            });
+            notify('PDF compartilhado.', 'success');
+            return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        notify('Este navegador não oferece compartilhamento direto de arquivos. O PDF foi baixado para você anexá-lo no WhatsApp ou em outro aplicativo.', 'info');
+    }
+
+    async function shareCompleteSchedulePdf() {
+        const blob = await getCompleteSchedulePdfBlob();
+        const file = new File([blob], 'owltime_grade_todas_as_turmas_' + getSemester().replace('/', '-') + '.pdf', {
+            type: 'application/pdf'
+        });
+        const title = 'Grade completa das turmas · ' + getSemester();
+        if (typeof navigator.share === 'function' && typeof navigator.canShare === 'function' &&
+            navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                title: title,
+                text: 'Segue a grade completa de horários das turmas para o semestre ' + getSemester() + '.',
+                files: [file]
+            });
+            notify('PDF com a grade completa compartilhado.', 'success');
+            return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        notify('Este navegador não oferece compartilhamento direto de arquivos. O PDF completo foi baixado para você anexá-lo no WhatsApp ou em outro aplicativo.', 'info');
+    }
+
+    function shareIndividualSchedule() {
+        const schedule = getIndividualSchedule(pdfExportType, pdfExportId);
+        const heading = (schedule.type === 'turma' ? 'Grade da turma ' : 'Horários de ') + schedule.entity.nome;
+        const lines = schedule.assignments.map(function (assignment) {
+            const slot = schedule.slots[String(assignment.horario_id)] || {};
+            return (assignment.dia_semana || 'Dia não informado') + ' · ' +
+                (slot.hora_inicio || assignment.hora_inicio || '--:--') + '–' +
+                (slot.hora_fim || assignment.hora_fim || '--:--') + ' · ' +
+                (assignment.disciplina_nome || nameById(KEYS.disciplinas, assignment.disciplina_id, 'Disciplina')) +
+                (schedule.type === 'turma'
+                    ? ' · ' + nameById(KEYS.professores, assignment.professor_id, 'Professor')
+                    : ' · ' + nameById(KEYS.turmas, assignment.turma_id, 'Turma'));
+        });
+        const text = heading + '\nSemestre ' + schedule.semester + '\n\n' +
+            (lines.length ? lines.join('\n') : 'Nenhuma aula alocada neste semestre.') +
+            '\n\nGrade compartilhada pelo Owltime. Confirme se esta é a versão atual antes de usar.';
+        if (typeof navigator.share === 'function') {
+            return navigator.share({ title: heading + ' · ' + schedule.semester, text: text })
+                .then(function () { notify('Resumo compartilhado.', 'success'); });
+        }
+        return copyTextToClipboard(text).then(function () {
+            notify('Resumo copiado. Compartilhe-o pelo aplicativo desejado.', 'success');
+        });
+    }
+
+    function printSchedulePdf() {
+        const type = pdfExportType;
+        const entityId = pdfExportId;
+        const allClasses = type === 'turma' && entityId === 'todas';
+        const collection = type === 'turma' ? KEYS.turmas : KEYS.professores;
+        const entity = allClasses ? null : findById(collection, entityId);
+        if (!allClasses && !entity) throw new Error('Selecione uma turma ou professor válido para gerar o PDF.');
+        const semester = getSemester();
+        const state = readSimulation(semester);
+        const slots = readRecords(KEYS.horarios).filter(function (slot) {
+            return String(slot.tipo || 'Aula').toLowerCase() === 'aula';
+        });
+        const entities = allClasses
+            ? activeRecords(KEYS.turmas, ['ativa', 'ativo'])
+            : [entity];
+        if (!entities.length) throw new Error('Não há turmas ativas para incluir no PDF.');
+        const effectiveAssignments = getCurrentGradeAssignments(state.assignments || [], semester);
+        const sections = entities.map(function (item) {
+            const assignments = effectiveAssignments.filter(function (assignment) {
+                return type === 'turma'
+                    ? String(assignment.turma_id) === String(item.id)
+                    : String(assignment.professor_id) === String(item.id);
+            });
+            const grid = renderWeeklyGrid(
+                slots, assignments, type === 'turma' ? item.id : null, false,
+                type === 'turma' ? getGradeProtections(semester) : []
+            );
+            const sectionTitle = type === 'turma' ? item.nome : item.nome;
+            return '<section class="pdf-schedule-section"><h2>' + h(sectionTitle) + '</h2>' + grid +
+                '<footer class="pdf-footer">' + assignments.length + ' aula(s) na grade</footer></section>';
+        }).join('');
+        const heading = type === 'turma'
+            ? (allClasses ? 'Grades semanais das turmas' : 'Grade semanal da turma')
+            : 'Horários do professor';
+        const titleName = allClasses ? 'Todas as turmas' : entity.nome;
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) throw new Error('O navegador bloqueou a janela do PDF. Permita pop-ups para este site e tente novamente.');
+        printWindow.addEventListener('load', function () {
+            printWindow.focus();
+            printWindow.print();
+        }, { once: true });
+        printWindow.document.open();
+        printWindow.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>' +
+            h(heading + ' - ' + titleName + ' - ' + semester) + '</title><style>' +
+            '@page{size:A4 landscape;margin:14mm}*{box-sizing:border-box}body{margin:0;color:#172b4d;font:14px Arial,sans-serif}' +
+            '.pdf-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1d4e89;padding-bottom:14px;margin-bottom:20px}' +
+            '.pdf-brand{font-size:12px;font-weight:700;letter-spacing:.12em;color:#1d4e89;text-transform:uppercase}.pdf-header h1{margin:8px 0 4px;font-size:25px}' +
+            '.pdf-header p{margin:0;color:#64748b}.pdf-meta{text-align:right;color:#64748b;font-size:12px;line-height:1.7}.pdf-schedule-section{break-after:page;page-break-after:always}.pdf-schedule-section:last-child{break-after:auto;page-break-after:auto}.pdf-schedule-section h2{margin:0 0 12px;color:#23486f;font-size:20px}.empty-state{padding:24px;color:#64748b;text-align:center}' +
+            '.table-responsive{width:100%}.grade-table{width:100%;border-collapse:collapse;table-layout:fixed}.grade-table th,.grade-table td{border:1px solid #cbd5e1;padding:8px;text-align:center;vertical-align:middle}' +
+            '.grade-table thead th{background:#edf4fc;color:#23486f;font-size:11px;text-transform:uppercase}.grade-table tbody th{width:70px;background:#f7f9fc;font-size:12px;white-space:nowrap}' +
+            '.grade-table td{height:76px}.grade-cell-entries{display:grid;gap:4px}.grade-entry{display:block;width:100%;padding:8px;border:0;border-radius:6px;color:#20436b;background:var(--grade-subject-color,#eaf3fc);font-size:12px;line-height:1.35;text-align:left;break-inside:avoid}.grade-protection-entry{display:grid;gap:3px;padding:8px;border:1px solid #e6a3a8;border-left:4px solid #c74750;border-radius:6px;color:#8f2933;background:#fdeced;font-size:12px;line-height:1.35}.grade-protection-entry small{color:#a34a52;font-size:10px}' +
+            '.grade-entry strong{display:block}.grade-entry small{display:block;margin-top:3px;color:#58718e;font-size:10px}.pdf-footer{margin-top:16px;padding-top:8px;border-top:1px solid #dbe3ec;color:#7b8797;font-size:10px;text-align:right}' +
+            '</style></head><body><header class="pdf-header"><div><div class="pdf-brand">Owltime · Planejamento escolar</div><h1>' +
+            h(heading) + '</h1><p>' + h(titleName) + '</p></div><div class="pdf-meta">Semestre: ' + h(semester) + '<br>Gerado em: ' +
+            h(new Date().toLocaleDateString('pt-BR')) + '</div></header>' + sections +
+            '<footer class="pdf-footer">Documento gerado pelo Owltime</footer></body></html>');
+        printWindow.document.close();
+    }
+
+    function applySemesterFrom(inputId) {
+        const semester = String(document.getElementById(inputId).value || '').trim();
+        if (!/^\d{4}\/[12]$/.test(semester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+        if (semester !== getSemester()) {
+            openSemesterCopyDialog(semester);
+            return;
+        }
+        applySemesterSelection(semester);
+        notify('Semestre ' + semester + ' selecionado.', 'success');
+    }
+
+    function submitSemesterCopy(form) {
+        const target = String(form.elements.namedItem('target_semester').value || '').trim();
+        const source = String(form.elements.namedItem('source_semester').value || '').trim();
+        if (!/^\d{4}\/[12]$/.test(target) ||
+            (source && (!/^\d{4}\/[12]$/.test(source) || source === target || !getStoredSemesters().includes(source)))) {
+            throw new Error('A origem ou o destino da cópia de semestre é inválido. Abra a janela novamente.');
+        }
+        const modules = Array.from(form.querySelectorAll('input[name="copy_module"]:checked')).map(function (input) {
+            return input.value;
+        });
+        if (!source && modules.length) {
+            throw new Error('Selecione um semestre de origem ou desmarque os módulos para continuar sem copiar.');
+        }
+        const copied = source ? copySemesterModules(source, target, modules) : {};
+        if (!source) setSemester(target);
+        const dialog = document.getElementById('semester-copy-dialog');
+        if (dialog && dialog.open) dialog.close();
+        availabilitySemester = target;
+        editing = null;
+        gradeEditingId = null;
+        teacherSubstitutionEditingId = '';
+        gradeFocusDay = '';
+        gradeFocusSlotId = '';
+        render();
+        const summary = [
+            copied.grupos ? copied.grupos + ' grupo(s)' : '',
+            copied.demandas ? copied.demandas + ' demanda(s)' : '',
+            copied.vinculos ? copied.vinculos + ' vínculo(s)' : '',
+            copied.disponibilidade ? copied.disponibilidade + ' registro(s) de PRD/disponibilidade' : '',
+            copied.eventos ? copied.eventos + ' marcação(ões) de evento' : ''
+        ].filter(Boolean);
+        const existingGroups = copied.gruposExistentes
+            ? ' ' + copied.gruposExistentes + ' grupo(s) equivalente(s) do destino foram reaproveitados.'
+            : '';
+        const skippedEvents = copied.eventosIgnorados
+            ? ' ' + copied.eventosIgnorados + ' marcação(ões) de evento foram ignoradas por conflito no destino.'
+            : '';
+        notify(summary.length
+            ? 'Semestre ' + target + ' selecionado. Copiados: ' + summary.join(', ') + '.' + existingGroups + skippedEvents
+            : 'Semestre ' + target + ' selecionado. Nenhum registro novo foi copiado; os registros existentes foram preservados.' + existingGroups + skippedEvents,
+            'success');
+    }
+
+    function handleClick(event) {
+        const selectedSideLink = event.target.closest('.side-link');
+        if (selectedSideLink && getMenuMode() === 'hover' && event.detail > 0 &&
+            window.matchMedia('(min-width: 701px)').matches) {
+            const sidebar = document.getElementById('main-sidebar');
+            if (sidebar) {
+                sidebar.classList.add('sidebar-selection-collapsed');
+                selectedSideLink.blur();
+            }
+        }
+        const injectionCell = event.target.closest('td[data-injection-class-id]');
+        if (injectionCell && window.location.hash.replace(/^#\/?/, '').split('/')[0] === 'grade') {
+            try {
+                openPreGenerationInjectionDialog(injectionCell);
+            } catch (error) {
+                console.error('Falha ao abrir a injeção manual:', error);
+                notify(error.message || 'Não foi possível abrir a injeção manual.', 'warning');
+            }
+            return;
+        }
+        if (event.target.id === 'ninho-lightbox' || event.target.id === 'ninho-guide-dialog') {
+            event.target.close();
+            return;
+        }
+        const button = event.target.closest('[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        try {
+            if (action === 'dismiss-notification') {
+                window.clearTimeout(alertTimer);
+                alertBox.classList.add('d-none');
+            } else if (action === 'filter-tutorial-category') {
+                tutorialCategoryFilter = button.dataset.category || 'Todos';
+                document.querySelectorAll('[data-action="filter-tutorial-category"]').forEach(function (filterButton) {
+                    const isActive = filterButton.dataset.category === tutorialCategoryFilter;
+                    filterButton.classList.toggle('is-active', isActive);
+                    filterButton.setAttribute('aria-pressed', String(isActive));
+                });
+                applyTutorialFilters();
+            } else if (action === 'play-tutorial') {
+                playTutorial(button);
+            } else if (action === 'close-tutorial') {
+                closeTutorial(button);
+            } else if (action === 'open-global-search') {
+                const dialog = document.getElementById('global-search-dialog');
+                const input = document.getElementById('global-search-input');
+                if (!dialog || !input) throw new Error('A busca global não está disponível.');
+                input.value = '';
+                renderGlobalSearchResults('');
+                if (!dialog.open) dialog.showModal();
+                input.focus();
+            } else if (action === 'open-notes') {
+                const dialog = document.getElementById('notes-dialog');
+                if (!dialog) throw new Error('O bloco de notas não está disponível.');
+                if (editing && editing.route === 'notas') {
+                    editing = null;
+                    render();
+                }
+                dialog.innerHTML = renderNotes(true);
+                if (!dialog.open) dialog.showModal();
+                const titleInput = dialog.querySelector('#notes-popup-field-titulo');
+                if (titleInput) titleInput.focus();
+            } else if (action === 'close-notes') {
+                const dialog = document.getElementById('notes-dialog');
+                if (dialog && dialog.open) dialog.close();
+                if (editing && editing.route === 'notas') editing = null;
+            } else if (action === 'close-global-search') {
+                const dialog = document.getElementById('global-search-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-global-search-result') {
+                openGlobalSearchResult(button);
+            } else if (action === 'open-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                if (!dialog) throw new Error('O guia rápido da Owlly não está disponível.');
+                updateNinhoGuide(0);
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'previous-ninho-guide' || action === 'next-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                if (!dialog || !dialog.open) throw new Error('O guia rápido da Owlly não está aberto.');
+                const step = Number(dialog.dataset.guideStep) || 0;
+                updateNinhoGuide(step + (action === 'next-ninho-guide' ? 1 : -1));
+            } else if (action === 'finish-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                const gallery = document.getElementById('ninho-wallpapers-title');
+                if (!dialog || !gallery) throw new Error('Não foi possível abrir a galeria do Ninho.');
+                dialog.close();
+                gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (action === 'close-ninho-guide') {
+                const dialog = document.getElementById('ninho-guide-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-ninho-image') {
+                const dialog = document.getElementById('ninho-lightbox');
+                const image = document.getElementById('ninho-lightbox-image');
+                const caption = document.getElementById('ninho-lightbox-caption');
+                const source = button.dataset.imageSrc || '';
+                if (!dialog || !image || !caption ||
+                    (!/^assets\/img\/(?:logo|coruja)\.png$/.test(source) &&
+                        !/^assets\/img\/galeria\/[a-z0-9_-]+\.png$/i.test(source))) {
+                    throw new Error('Não foi possível abrir esta imagem do Ninho.');
+                }
+                image.src = source;
+                image.alt = button.dataset.imageAlt || '';
+                caption.textContent = button.dataset.imageCaption || image.alt;
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'close-ninho-lightbox') {
+                const dialog = document.getElementById('ninho-lightbox');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-module-help') {
+                const dialog = document.getElementById('module-help-dialog');
+                if (!dialog) throw new Error('A ajuda deste módulo não está disponível.');
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'close-module-help') {
+                const dialog = document.getElementById('module-help-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-entity-schedule') {
+                openEntitySchedule(button.dataset.entityType, button.dataset.entityId);
+            } else if (action === 'toggle-data-section') {
+                const section = button.dataset.section;
+                if (!section) throw new Error('Não foi possível identificar a seção de dados.');
+                collapsedDataSections[section] = !collapsedDataSections[section];
+                render();
+            } else if (action === 'toggle-grade-schedule') {
+                gradeScheduleCollapsed = !gradeScheduleCollapsed;
+                render();
+            } else if (action === 'toggle-teacher-workload') {
+                workloadPanelCollapsed = !workloadPanelCollapsed;
+                render();
+            } else if (action === 'toggle-grade-legend') {
+                if (isLaboratoryRoute()) manualLegendCollapsed = !manualLegendCollapsed;
+                else gradeLegendCollapsed = !gradeLegendCollapsed;
+                render();
+            } else if (action === 'toggle-report-teacher-ranking') {
+                reportTeacherRankingCollapsed = !reportTeacherRankingCollapsed;
+                render();
+            } else if (action === 'open-semester-copy') {
+                openSemesterCopyDialog(button.dataset.targetSemester || getSemester());
+            } else if (action === 'select-semester-dashboard') {
+                openSemesterCopyDialog(button.dataset.semester || '');
+            } else if (action === 'delete-semester') {
+                const semester = button.dataset.semester || '';
+                if (deleteSemesterData(semester)) {
+                    render();
+                    notify('Semestre ' + semester + ' e seus dados associados foram excluídos. Os catálogos globais foram mantidos.', 'success');
+                }
+            } else if (action === 'close-semester-copy') {
+                const dialog = document.getElementById('semester-copy-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'open-sort-dialog') {
+                const dialog = document.getElementById('sort-apply-dialog');
+                if (!dialog) throw new Error('O formulário de Sort não está disponível.');
+                if (!dialog.open) dialog.showModal();
+            } else if (action === 'close-sort-dialog') {
+                const dialog = document.getElementById('sort-apply-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'remove-applied-sort') {
+                removeAppliedSort(button.dataset.sortApplicationId);
+            } else if (action === 'close-slot-protection') {
+                const dialog = document.getElementById('slot-protection-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'close-pre-generation-injection') {
+                const dialog = document.getElementById('pre-generation-injection-dialog');
+                if (dialog && dialog.open) dialog.close();
+            } else if (action === 'toggle-sidebar') {
+                const sidebar = document.getElementById('main-sidebar');
+                const toggle = document.getElementById('sidebar-toggle');
+                if (getMenuMode() === 'hover') {
+                    const activeLink = sidebar.querySelector('.side-link.active') || sidebar.querySelector('.side-link');
+                    if (activeLink) activeLink.focus();
+                    return;
+                }
+                const collapsed = sidebar.hidden;
+                sidebar.hidden = !collapsed;
+                document.querySelector('.app-layout').classList.toggle('sidebar-collapsed', !collapsed);
+                toggle.setAttribute('aria-expanded', String(collapsed));
+                toggle.setAttribute('aria-label', collapsed ? 'Fechar menu' : 'Abrir menu');
+                toggle.innerHTML = '<i class="bi ' + (collapsed ? 'bi-x-lg' : 'bi-list') + '" aria-hidden="true"></i>';
+            } else if (action === 'select-theme') {
+                const color = String(button.dataset.color || '').toUpperCase();
+                if (!/^#[0-9A-F]{6}$/.test(color)) throw new Error('Selecione uma cor válida para o sistema.');
+                localStorage.setItem(THEME_PREFERENCE_KEY, color);
+                applyUserPreferences();
+                render();
+            } else if (action === 'select-menu-mode') {
+                const mode = button.dataset.mode;
+                if (mode !== 'click' && mode !== 'hover') throw new Error('Selecione um modo de menu válido.');
+                localStorage.setItem(MENU_PREFERENCE_KEY, mode);
+                applyUserPreferences();
+                render();
+            } else if (action === 'select-density') {
+                const density = button.dataset.density;
+                if (density !== 'compact' && density !== 'comfortable') throw new Error('Selecione uma densidade válida.');
+                localStorage.setItem(DENSITY_PREFERENCE_KEY, density);
+                applyUserPreferences();
+                render();
+            } else if (action === 'select-cursor-mode') {
+                const mode = button.dataset.mode;
+                if (mode !== 'owl' && mode !== 'classic') throw new Error('Selecione um ponteiro válido.');
+                localStorage.setItem(CURSOR_PREFERENCE_KEY, mode);
+                applyUserPreferences();
+                render();
+            } else if (action === 'restore-default-settings') {
+                localStorage.removeItem(THEME_PREFERENCE_KEY);
+                localStorage.removeItem(MENU_PREFERENCE_KEY);
+                localStorage.removeItem(DENSITY_PREFERENCE_KEY);
+                localStorage.removeItem(CURSOR_PREFERENCE_KEY);
+                applyUserPreferences();
+                render();
+                notify('Padrões restaurados: roxo Owltime, menu por mouse, densidade confortável e ponteiro Owlly.', 'success');
+            } else if (action === 'download-repository-data') {
+                const route = button.dataset.route || '';
+                if (!specs[route]) throw new Error('Este módulo não possui planilha para baixar.');
+                downloadCurrentSpreadsheet(route).catch(function (error) {
+                    console.error('Falha ao gerar planilha do Repositório:', error);
+                    notify(error.message || 'Não foi possível gerar a planilha.', 'danger');
+                });
+            } else if (action === 'download-repository-pdf') {
+                const route = button.dataset.route || '';
+                if (!specs[route]) throw new Error('Este módulo não possui dados para exportar.');
+                downloadRepositoryPdf(route).catch(function (error) {
+                    console.error('Falha ao gerar PDF do Repositório:', error);
+                    notify(error.message || 'Não foi possível gerar o PDF.', 'danger');
+                });
+            } else if (action === 'download-repository-template') {
+                const route = button.dataset.route || '';
+                if (!catalogImportSchemas[route]) throw new Error('Este módulo não possui modelo de importação.');
+                downloadCatalogTemplate(route, button.dataset.format).catch(function (error) {
+                    console.error('Falha ao gerar modelo do Repositório:', error);
+                    notify(error.message || 'Não foi possível gerar o modelo.', 'danger');
+                });
+            } else if (action === 'export-backup') exportBackup();
+            else if (action === 'pick-backup') document.getElementById('backup-file').click();
+            else if (action === 'download-catalog-template') {
+                const route = window.location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+                if (!catalogImportSchemas[route]) throw new Error('Este cadastro não possui modelo de importação.');
+                downloadCatalogTemplate(route, button.dataset.format).catch(function (error) {
+                    console.error('Falha ao gerar modelo de planilha:', error);
+                    notify(error.message || 'Não foi possível gerar o modelo.', 'danger');
+                });
+            } else if (action === 'download-current-spreadsheet') {
+                const route = window.location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+                downloadCurrentSpreadsheet(route).catch(function (error) {
+                    console.error('Falha ao gerar planilha preenchida:', error);
+                    notify(error.message || 'Não foi possível gerar a planilha.', 'danger');
+                });
+            } else if (action === 'pick-current-spreadsheet') {
+                document.getElementById('current-spreadsheet-file').click();
+            } else if (action === 'cancel-current-spreadsheet') {
+                spreadsheetImport = null;
+                render();
+            } else if (action === 'confirm-current-spreadsheet') {
+                confirmCurrentSpreadsheet();
+            } else if (action === 'pick-catalog-import') document.getElementById('catalog-import-file').click();
+            else if (action === 'cancel-catalog-import') {
+                catalogImport = null;
+                render();
+            } else if (action === 'confirm-catalog-import') confirmCatalogImport();
+            else if (action === 'toggle-demand-classes') {
+                const checkboxes = Array.from(document.querySelectorAll('#bulk-demand-form input[name="turma_ids"]'));
+                const shouldCheck = checkboxes.some(function (checkbox) { return !checkbox.checked; });
+                checkboxes.forEach(function (checkbox) { checkbox.checked = shouldCheck; });
+            } else if (action === 'add-sort-subgroup') {
+                const editor = document.getElementById('field-subgrupos');
+                const list = editor && editor.querySelector('.sort-subgroup-list');
+                if (!list) throw new Error('Não foi possível localizar os subgrupos deste sort.');
+                const index = list.querySelectorAll('[data-sort-subgroup]').length;
+                list.insertAdjacentHTML('beforeend', renderSortSubgroupRow({
+                    nome: 'Subgrupo ' + (index + 1),
+                    turma_ids: []
+                }, index));
+            } else if (action === 'remove-sort-subgroup') {
+                const row = button.closest('[data-sort-subgroup]');
+                const editor = document.getElementById('field-subgrupos');
+                if (!row || !editor) throw new Error('Não foi possível localizar o subgrupo para remover.');
+                row.remove();
+                editor.querySelectorAll('[data-sort-subgroup]').forEach(function (subgroup, index) {
+                    const heading = subgroup.querySelector('strong');
+                    if (heading) heading.textContent = 'Subgrupo ' + (index + 1);
+                });
+            } else if (action === 'clear-record-filters') {
+                document.querySelectorAll('.record-filter-control').forEach(function (control) { control.value = ''; });
+                const search = document.getElementById('table-search');
+                if (search) search.value = '';
+                applyRecordFilters();
+            } else if (action === 'note-star') {
+                const record = findById(KEYS.notas, button.dataset.id);
+                if (!record) throw new Error('A anotação não foi encontrada.');
+                const isFavorite = record.favorita === true || record.favorita === 1 || record.favorita === 'true';
+                const updated = Object.assign({}, record, {
+                    favorita: !isFavorite,
+                    updated_at: new Date().toISOString()
+                });
+                saveRecords(KEYS.notas, readRecords(KEYS.notas).map(function (note) {
+                    return String(note.id) === String(updated.id) ? updated : note;
+                }), specs.notas.module);
+                renderNotesAfterMutation();
+            } else if (action === 'availability-apply') {
+                const requestedSemester = String(document.getElementById('availability-semester').value || '').trim();
+                if (!/^\d{4}\/[12]$/.test(requestedSemester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+                if (requestedSemester !== getSemester()) {
+                    openSemesterCopyDialog(requestedSemester);
+                    return;
+                }
+                availabilitySemester = setSemester(requestedSemester);
+                editing = null;
+                render();
+                notify('Consulta de disponibilidade atualizada para ' + availabilitySemester + '.', 'success');
+            } else if (action === 'edit') {
+                const route = button.dataset.route || (window.location.hash.replace(/^#\/?/, '').split('/')[0] || '');
+                const record = findById(specs[route].key, button.dataset.id);
+                if (!record) throw new Error('O registro não foi encontrado.');
+                editing = { route: route, id: record.id, record: record };
+                if (route === 'notas' && document.getElementById('notes-dialog').open) refreshNotesDialog();
+                else render();
+                const editField = route === 'notas' && document.getElementById('notes-dialog').open
+                    ? document.getElementById('notes-dialog').querySelector('#notes-popup-field-' + specs[route].fields[0].name)
+                    : document.getElementById('field-' + specs[route].fields[0].name);
+                if (editField) editField.focus();
+            } else if (action === 'delete') {
+                const route = button.dataset.route || (window.location.hash.replace(/^#\/?/, '').split('/')[0] || '');
+                deleteRecord(route, button.dataset.id);
+            } else if (action === 'cancel-edit') {
+                editing = null;
+                if (document.getElementById('notes-dialog').open) refreshNotesDialog();
+                else render();
+            } else if (action === 'generate-grade') generateGrade();
+            else if (action === 'apply-laboratory') applyLaboratory();
+            else if (action === 'cancel-laboratory') cancelLaboratory();
+            else if (action === 'laboratory-filter-class') {
+                gradeTurmaFilter = button.dataset.classId || '';
+                gradeCourseFilter = '';
+                gradeDisciplineFilter = '';
+                gradeTeacherFilter = '';
+                gradeProtectionFilter = '';
+                render();
+            }
+            else if (action === 'laboratory-clear-class-filter') {
+                gradeTurmaFilter = '';
+                render();
+            }
+            else if (action === 'toggle-laboratory-pending-panel') {
+                laboratoryPendingCollapsed = !laboratoryPendingCollapsed;
+                render();
+            }
+            else if (action === 'clear-laboratory-pending-filter') {
+                const tab = button.dataset.tab;
+                if (!Object.prototype.hasOwnProperty.call(laboratoryPendingFilters, tab)) {
+                    throw new Error('Não foi possível identificar o filtro do Laboratório.');
+                }
+                laboratoryPendingFilters[tab] = '';
+                render();
+            }
+            else if (action === 'select-laboratory-pending-tab') {
+                if (!['professores', 'turmas', 'disciplinas'].includes(button.dataset.tab)) {
+                    throw new Error('Selecione uma aba válida para consultar a situação da grade.');
+                }
+                laboratoryPendingTab = button.dataset.tab;
+                render();
+            }
+            else if (action === 'restore-laboratory-assignment') {
+                restoreLaboratoryAssignment(button.dataset.assignmentId);
+            }
+            else if (action === 'select-slot') {
+                gradeEditingId = null;
+                gradeFocusDay = button.dataset.day;
+                gradeFocusSlotId = button.dataset.slotId;
+                updateSimulation(function (state) { state.activeTurmaId = Number(button.dataset.classId || 0); });
+                openAssignmentDialog();
+            } else if (action === 'edit-assignment') {
+                const assignment = readEditableSimulation(getSemester()).assignments.find(function (item) { return String(item.id) === String(button.dataset.id); });
+                if (!assignment) throw new Error('A aula não foi encontrada.');
+                gradeEditingId = assignment.id;
+                gradeFocusDay = '';
+                gradeFocusSlotId = '';
+                updateSimulation(function (state) { state.activeTurmaId = Number(assignment.turma_id); });
+                openAssignmentDialog();
+            } else if (action === 'cancel-assignment-edit') {
+                const dialog = document.getElementById('manual-assignment-dialog');
+                gradeEditingId = null;
+                gradeFocusDay = '';
+                gradeFocusSlotId = '';
+                if (dialog && dialog.open) dialog.close();
+                render();
+            } else if (action === 'delete-assignment') {
+                if (window.confirm('Remover esta aula da grade?')) removeAssignment(button.dataset.id);
+            } else if (action === 'edit-teacher-substitution') {
+                const substitution = readRecords(KEYS.substituicoes).find(function (record) {
+                    return String(record.id) === String(button.dataset.id) &&
+                        String(record.semestre_letivo || '') === getSemester();
+                });
+                if (!substitution) throw new Error('A substituição não foi encontrada para o semestre atual.');
+                teacherSubstitutionEditingId = String(substitution.id);
+                render();
+                document.getElementById('teacher-substitution-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (action === 'cancel-teacher-substitution-edit') {
+                teacherSubstitutionEditingId = '';
+                render();
+            } else if (action === 'delete-teacher-substitution') {
+                deleteTeacherSubstitution(button.dataset.id);
+            } else if (action === 'generate-teacher-declaration') {
+                downloadTeacherDeclaration().catch(function (error) {
+                    console.error('Falha ao gerar declaração docente:', error);
+                    notify(error.message || 'Não foi possível gerar a declaração docente.', 'danger');
+                });
+            } else if (action === 'clear-grade') {
+                if (window.confirm('Limpar todos os dados da grade deste semestre? Aulas, relatório, proteções, eventos e substituições serão removidos.')) {
+                    const semester = getSemester();
+                    gradeEditingId = null;
+                    gradeFocusDay = '';
+                    gradeFocusSlotId = '';
+                    saveSimulation(semester, { activeTurmaId: '', assignments: [], lastGenerationReport: null, qdpInfo: null, metodo: null });
+                    saveRecords(KEYS.protecoesGrade, readRecords(KEYS.protecoesGrade).filter(function (record) {
+                        return String(record.semestre_letivo || '') !== semester;
+                    }), 'ProtecoesGrade');
+                    saveRecords(KEYS.eventosGrade, readRecords(KEYS.eventosGrade).filter(function (record) {
+                        return String(record.semestre_letivo || '') !== semester;
+                    }), 'EventosGrade');
+                    saveRecords(KEYS.substituicoes, readRecords(KEYS.substituicoes).filter(function (record) {
+                        return String(record.semestre_letivo || '') !== semester;
+                    }), 'SubstituicoesDocentes');
+                    render();
+                    notify('Grade do semestre limpa.', 'success');
+                }
+            } else if (action === 'export-grade') {
+                exportJson('owltime_grade_' + getSemester().replace('/', '-') + '.json', readSimulation(getSemester()));
+            } else if (action === 'print-module-pdf') {
+                printModulePdf(button.dataset.printScope || 'page', button.dataset.printTitle || '');
+            } else if (action === 'print') window.print();
+            else if (action === 'apply-report-filters') {
+                reportSearchQuery = document.getElementById('report-search').value.trim();
+                reportCourseFilter = document.getElementById('report-course-filter').value;
+                reportTeacherFilter = document.getElementById('report-teacher-filter').value;
+                reportTurmaFilter = document.getElementById('report-class-filter').value;
+                reportDisciplineFilter = document.getElementById('report-discipline-filter').value;
+                reportMinimumLessons = document.getElementById('report-min-lessons').value;
+                reportMaximumLessons = document.getElementById('report-max-lessons').value;
+                if (reportMinimumLessons !== '' && reportMaximumLessons !== '' &&
+                    Number(reportMinimumLessons) > Number(reportMaximumLessons)) {
+                    throw new Error('A quantidade mínima de aulas não pode ser maior que a máxima.');
+                }
+                render();
+            } else if (action === 'clear-report-filters') {
+                reportSearchQuery = '';
+                reportCourseFilter = '';
+                reportTeacherFilter = '';
+                reportTurmaFilter = '';
+                reportDisciplineFilter = '';
+                reportMinimumLessons = '';
+                reportMaximumLessons = '';
+                render();
+            }
+            else if (action === 'report-apply') {
+                const requestedSemester = String(document.getElementById('report-semester').value || '').trim();
+                if (!/^\d{4}\/[12]$/.test(requestedSemester)) throw new Error('Informe o semestre no formato AAAA/1 ou AAAA/2.');
+                if (requestedSemester !== getSemester()) {
+                    openSemesterCopyDialog(requestedSemester);
+                    return;
+                }
+                setSemester(requestedSemester);
+                render();
+            } else if (action === 'export-csv') exportGradeCsv();
+            else if (action === 'print-schedule-pdf') printSchedulePdf();
+            else if (action === 'export-individual-schedule-csv') exportIndividualScheduleCsv();
+            else if (action === 'download-individual-schedule-pdf') {
+                downloadIndividualSchedulePdf().catch(function (error) {
+                    console.error('Falha ao gerar PDF individual:', error);
+                    notify(error.message || 'Não foi possível gerar o PDF individual.', 'danger');
+                });
+            } else if (action === 'share-individual-schedule-pdf') {
+                shareIndividualSchedulePdf().catch(function (error) {
+                    if (error && error.name === 'AbortError') return;
+                    console.error('Falha ao compartilhar PDF individual:', error);
+                    notify(error.message || 'Não foi possível compartilhar o PDF.', 'danger');
+                });
+            } else if (action === 'share-complete-schedule-pdf') {
+                shareCompleteSchedulePdf().catch(function (error) {
+                    if (error && error.name === 'AbortError') return;
+                    console.error('Falha ao compartilhar PDF completo:', error);
+                    notify(error.message || 'Não foi possível compartilhar a grade completa.', 'danger');
+                });
+            }
+            else if (action === 'share-individual-schedule') {
+                shareIndividualSchedule().catch(function (error) {
+                    if (error && error.name === 'AbortError') return;
+                    console.error('Falha ao compartilhar grade individual:', error);
+                    notify(error.message || 'Não foi possível compartilhar o resumo.', 'danger');
+                });
+            } else if (action === 'delete-storage-key') {
+                const key = button.dataset.key;
+                if (!key || !key.startsWith('owltime_')) throw new Error('Chave inválida.');
+                if (window.confirm('Excluir a chave ' + key + '?')) {
+                    localStorage.removeItem(key);
+                    render();
+                    notify('Chave removida.', 'success');
+                }
+            } else if (action === 'delete-selected-storage') {
+                const selected = Array.from(document.querySelectorAll('.storage-check:checked')).map(function (input) { return input.value; });
+                if (!selected.length) throw new Error('Selecione pelo menos uma chave.');
+                if (window.confirm('Excluir ' + selected.length + ' chave(s) local(is)?')) {
+                    selected.forEach(function (key) { if (key.startsWith('owltime_')) localStorage.removeItem(key); });
+                    render();
+                    notify(selected.length + ' chave(s) removida(s).', 'success');
+                }
+            } else if (action === 'clear-storage') {
+                const keys = [];
+                for (let index = 0; index < localStorage.length; index += 1) {
+                    const key = localStorage.key(index);
+                    if (key && key.startsWith('owltime_')) keys.push(key);
+                }
+                if (!keys.length) throw new Error('Não há dados Owltime para limpar.');
+                if (window.confirm('Excluir permanentemente todas as ' + keys.length + ' chave(s) Owltime deste navegador? Exporte um backup antes, se necessário.')) {
+                    keys.forEach(function (key) { localStorage.removeItem(key); });
+                    render();
+                    notify('Dados locais do Owltime removidos.', 'success');
+                }
+            } else if (action === 'toggle-storage-checks') {
+                const checks = Array.from(document.querySelectorAll('.storage-check'));
+                const shouldCheck = checks.some(function (check) { return !check.checked; });
+                checks.forEach(function (check) { check.checked = shouldCheck; });
+            }
+        } catch (error) {
+            console.error('Falha ao executar ação:', error);
+            notify(error.message || 'A ação não foi concluída.', 'danger');
+        }
+    }
+
+    function handleSubmit(event) {
+        const form = event.target;
+        try {
+            if (form.id === 'record-form' || form.id === 'notes-popup-record-form') {
+                event.preventDefault();
+                submitRecord(form);
+            } else if (form.id === 'prd-form') {
+                event.preventDefault();
+                submitPrd(form);
+            } else if (form.id === 'bulk-demand-form') {
+                event.preventDefault();
+                submitBulkDemand(form);
+            } else if (form.id === 'copy-schedule-form') {
+                event.preventDefault();
+                copySchedule(form);
+            } else if (form.id === 'manual-assignment-form') {
+                event.preventDefault();
+                addManualAssignment(form);
+            } else if (form.id === 'pre-generation-injection-form') {
+                event.preventDefault();
+                savePreGenerationInjection(form);
+            } else if (form.id === 'teacher-substitution-form') {
+                event.preventDefault();
+                saveTeacherSubstitution(form);
+            } else if (form.id === 'slot-protection-form') {
+                event.preventDefault();
+                saveSlotProtection(form);
+            } else if (form.id === 'sort-apply-form') {
+                event.preventDefault();
+                applySortFromForm(form);
+            } else if (form.id === 'semester-copy-form') {
+                event.preventDefault();
+                submitSemesterCopy(form);
+            } else if (form.id === 'semester-form') {
+                event.preventDefault();
+                applySemesterFrom('semester-input');
+            }
+        } catch (error) {
+            event.preventDefault();
+            console.error('Falha ao salvar formulário:', error);
+            notify(error.message || 'Os dados não foram salvos.', 'danger');
+        }
+    }
+
+    function handleChange(event) {
+        if (event.target.dataset.setting === 'theme') {
+            const color = String(event.target.value || '').toUpperCase();
+            if (!/^#[0-9A-F]{6}$/.test(color)) {
+                notify('Selecione uma cor hexadecimal válida.', 'warning');
+                return;
+            }
+            try {
+                localStorage.setItem(THEME_PREFERENCE_KEY, color);
+                applyUserPreferences();
+                render();
+            } catch (error) {
+                console.error('Falha ao salvar a cor do sistema:', error);
+                notify(error.message || 'Não foi possível salvar a cor escolhida.', 'danger');
+            }
+        } else if (event.target.id === 'injection-discipline' && event.target.form &&
+            event.target.form.id === 'pre-generation-injection-form') {
+            updatePreGenerationInjectionOptions(event.target.form);
+        } else if (event.target.classList.contains('record-filter-control')) {
+            applyRecordFilters();
+        } else if (event.target.id === 'laboratory-pending-filter') {
+            const tab = event.target.dataset.tab;
+            if (!Object.prototype.hasOwnProperty.call(laboratoryPendingFilters, tab)) {
+                console.error('Aba inválida para o filtro do Laboratório:', tab);
+                return;
+            }
+            laboratoryPendingFilters[tab] = event.target.value;
+            render();
+        } else if (event.target.form && event.target.form.id === 'teacher-substitution-form' &&
+            ['substitution-scope', 'substitution-class', 'substitution-discipline',
+                'substitution-original-teacher', 'substitution-start'].includes(event.target.id)) {
+            if (event.target.id === 'substitution-scope') {
+                Array.from(event.target.form.elements.namedItem('turma_ids').options).forEach(function (option) {
+                    option.selected = false;
+                });
+                event.target.form.elements.namedItem('disciplina_id').value = '';
+                event.target.form.elements.namedItem('professor_original_id').value = '';
+                event.target.form.elements.namedItem('professor_substituto_id').value = '';
+            } else if (event.target.id === 'substitution-class') {
+                event.target.form.elements.namedItem('disciplina_id').value = '';
+                event.target.form.elements.namedItem('professor_original_id').value = '';
+            } else if (event.target.id === 'substitution-discipline') {
+                event.target.form.elements.namedItem('professor_original_id').value = '';
+            }
+            updateTeacherSubstitutionFields(event.target.form);
+        } else if (event.target.id === 'coverage-course') {
+            coverageCourseId = event.target.value;
+            render();
+        } else if (event.target.id === 'availability-course') {
+            availabilityCourseId = event.target.value;
+            render();
+        } else if ((event.target.name === 'tipo' || event.target.name === 'dia_semana') && event.target.form && event.target.form.id === 'record-form' &&
+            event.target.form.dataset.route === 'disponibilidade') {
+            syncAvailabilityForm(event.target.form);
+        } else if (event.target.id === 'current-spreadsheet-file' && event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            const route = window.location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+            event.target.value = '';
+            if (!specs[route]) {
+                notify('Abra uma tela de cadastro compatível antes de importar uma planilha.', 'warning');
+                return;
+            }
+            if (!/\.xlsx$/i.test(file.name)) {
+                notify('Selecione um arquivo .xlsx.', 'warning');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                notify('O arquivo excede o limite de 5 MB.', 'danger');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async function () {
+                try {
+                    if ((window.location.hash.replace(/^#\/?/, '').split('/')[0] || '') !== route) return;
+                    await readCurrentSpreadsheet(reader.result, route);
+                } catch (error) {
+                    console.error('Falha ao validar planilha preenchida:', error);
+                    notify(error.message || 'A planilha não pôde ser validada.', 'danger');
+                }
+            };
+            reader.onerror = function () {
+                notify('Não foi possível ler o arquivo selecionado.', 'danger');
+            };
+            reader.readAsArrayBuffer(file);
+        } else if (event.target.id === 'catalog-import-file' && event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            const route = window.location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+            event.target.value = '';
+            if (!catalogImportSchemas[route]) {
+                notify('Abra um cadastro compatível antes de importar uma planilha.', 'warning');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                notify('O arquivo excede o limite de 5 MB.', 'danger');
+                return;
+            }
+            const isXlsx = /\.xlsx$/i.test(file.name);
+            if (!isXlsx && !/\.csv$/i.test(file.name)) {
+                notify('Selecione um arquivo .csv ou .xlsx.', 'warning');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async function () {
+                try {
+                    if ((window.location.hash.replace(/^#\/?/, '').split('/')[0] || '') !== route) return;
+                    const rows = isXlsx
+                        ? await catalogXlsxRows(reader.result, catalogImportSchemas[route])
+                        : catalogCsvRows(String(reader.result || ''), catalogImportSchemas[route]);
+                    prepareCatalogImport(route, file.name, rows);
+                } catch (error) {
+                    console.error('Falha ao validar planilha:', error);
+                    notify(error.message || 'A planilha não pôde ser validada.', 'danger');
+                }
+            };
+            reader.onerror = function () {
+                notify('Não foi possível ler o arquivo selecionado.', 'danger');
+            };
+            if (isXlsx) reader.readAsArrayBuffer(file);
+            else reader.readAsText(file, 'UTF-8');
+        } else if (event.target.id === 'pdf-export-type') {
+            pdfExportType = event.target.value === 'professor' ? 'professor' : 'turma';
+            pdfExportId = '';
+            render();
+        } else if (event.target.id === 'pdf-export-entity') {
+            pdfExportId = event.target.value;
+            render();
+        } else if (event.target.id === 'grade-course-filter') {
+            gradeCourseFilter = event.target.value;
+            gradeTurmaFilter = '';
+            render();
+        } else if (event.target.id === 'grade-turma-filter') {
+            gradeTurmaFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'grade-discipline-filter') {
+            gradeDisciplineFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'grade-teacher-filter') {
+            gradeTeacherFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'grade-protection-filter') {
+            gradeProtectionFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'grade-completion-filter') {
+            gradeCompletionFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-teacher-filter') {
+            workloadTeacherFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-course-filter') {
+            workloadCourseFilter = event.target.value;
+            workloadTurmaFilter = '';
+            render();
+        } else if (event.target.id === 'workload-class-filter') {
+            workloadTurmaFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-discipline-filter') {
+            workloadDisciplineFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'workload-status-filter') {
+            workloadStatusFilter = event.target.value;
+            render();
+        } else if (event.target.id === 'manual-day') {
+            const form = event.target.form;
+            const slot = document.getElementById('manual-slot');
+            const matching = Array.from(slot.options).find(function (option) { return option.dataset.day === event.target.value; });
+            if (matching) {
+                matching.selected = true;
+                gradeFocusDay = event.target.value;
+                gradeFocusSlotId = matching.value;
+            }
+            if (form) renderAssignmentGuidance(form);
+        } else if (event.target.id === 'manual-slot') {
+            const form = event.target.form;
+            const selected = event.target.options[event.target.selectedIndex];
+            const day = document.getElementById('manual-day');
+            if (selected && selected.dataset.day) {
+                day.value = selected.dataset.day;
+                gradeFocusDay = selected.dataset.day;
+                gradeFocusSlotId = selected.value;
+            }
+            if (form) renderAssignmentGuidance(form);
+        } else if (event.target.id === 'manual-subject') {
+            const form = event.target.form;
+            const previousTeacher = form.elements.namedItem('professor_id');
+            const teacherField = document.getElementById('manual-teacher-field');
+            if (teacherField) teacherField.innerHTML = '<label class="form-label">Professor</label>' +
+                renderManualTeacherField(
+                    event.target.value,
+                    previousTeacher ? previousTeacher.value : '',
+                    form.dataset.originalDisciplineId === event.target.value ? form.dataset.originalProfessorId : ''
+                );
+            if (teacherField) sortSelectOptions(teacherField);
+            if (form) renderAssignmentGuidance(form);
+        } else if (event.target.id === 'manual-teacher') {
+            if (event.target.form) renderAssignmentGuidance(event.target.form);
+        } else if (event.target.id === 'backup-file' && event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function () {
+                try {
+                    restoreBackup(JSON.parse(String(reader.result)));
+                } catch (error) {
+                    console.error('Falha ao importar backup:', error);
+                    notify(error.message || 'O arquivo não pôde ser importado.', 'danger');
+                }
+                event.target.value = '';
+            };
+            reader.onerror = function () {
+                notify('Não foi possível ler o arquivo selecionado.', 'danger');
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+    }
+
+    function handleInput(event) {
+        if (event.target.id === 'tutorial-search') {
+            applyTutorialFilters();
+            return;
+        }
+        if (event.target.id === 'global-search-input') {
+            try {
+                renderGlobalSearchResults(event.target.value);
+            } catch (error) {
+                console.error('Falha ao pesquisar registros:', error);
+                const resultsElement = document.getElementById('global-search-results');
+                if (resultsElement) resultsElement.innerHTML =
+                    '<p class="global-search-empty">Não foi possível pesquisar: ' + h(error.message || 'erro inesperado') + '</p>';
+            }
+            return;
+        }
+        if (event.target.id === 'notes-search' || event.target.id === 'notes-popup-search') {
+            const query = event.target.value.trim().toLocaleLowerCase('pt-BR');
+            const scope = event.target.closest('.notes-dialog') || document;
+            scope.querySelectorAll('.note-card').forEach(function (card) {
+                card.hidden = query && !card.dataset.noteSearch.includes(query);
+            });
+            scope.querySelectorAll('.notes-column').forEach(function (column) {
+                const cards = Array.from(column.querySelectorAll('.note-card'));
+                const visible = cards.filter(function (card) { return !card.hidden; }).length;
+                const count = column.querySelector('header > span');
+                if (count) count.textContent = String(visible);
+            });
+            return;
+        }
+
+        if (event.target.id === 'table-search' || event.target.classList.contains('record-filter-control')) {
+            const route = window.location.hash.replace(/^#\/?/, '').split('/')[0];
+            if (specs[route]) {
+                applyRecordFilters();
+                return;
+            }
+            const query = event.target.value.trim().toLocaleLowerCase('pt-BR');
+            document.querySelectorAll('#view tbody tr').forEach(function (row) {
+                row.hidden = query && !row.textContent.toLocaleLowerCase('pt-BR').includes(query);
+            });
+        }
+    }
+
+    function handleContextMenu(event) {
+        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'grade') return;
+        const cell = event.target.closest('td[data-protection-class-id]');
+        if (!cell) return;
+        event.preventDefault();
+        try {
+            openSlotProtectionDialog(cell);
+        } catch (error) {
+            console.error('Falha ao abrir a marcação do horário:', error);
+            notify(error.message || 'Não foi possível abrir a marcação do horário.', 'warning');
+        }
+    }
+
+    function handleDragStart(event) {
+        const note = event.target.closest('.note-card');
+        if (note) {
+            event.dataTransfer.setData('text/plain', note.dataset.noteId || '');
+            event.dataTransfer.effectAllowed = 'move';
+            note.classList.add('is-dragging');
+            return;
+        }
+        const assignment = event.target.closest('[data-drag-assignment-id]');
+        if (!assignment || window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
+        event.dataTransfer.setData('text/plain', assignment.dataset.dragAssignmentId);
+        event.dataTransfer.effectAllowed = 'move';
+        assignment.classList.add('is-dragging');
+    }
+
+    function handleDragEnd(event) {
+        const note = event.target.closest('.note-card');
+        if (note) note.classList.remove('is-dragging');
+        document.querySelectorAll('.notes-column-body.is-drop-target').forEach(function (target) {
+            target.classList.remove('is-drop-target');
+        });
+        const assignment = event.target.closest('[data-drag-assignment-id]');
+        if (assignment) assignment.classList.remove('is-dragging');
+        document.querySelectorAll('.grade-drop-target').forEach(function (target) { target.classList.remove('grade-drop-target'); });
+    }
+
+    function handleDragOver(event) {
+        const noteTarget = event.target.closest('.notes-column-body[data-note-status]');
+        if (noteTarget && Array.from(event.dataTransfer.types).includes('text/plain')) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            noteTarget.classList.add('is-drop-target');
+            return;
+        }
+        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
+        const target = event.target.closest('td[data-drop-class-id]');
+        if (!target || !Array.from(event.dataTransfer.types).includes('text/plain')) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        target.classList.add('grade-drop-target');
+    }
+
+    function handleDragLeave(event) {
+        const noteTarget = event.target.closest('.notes-column-body[data-note-status]');
+        if (noteTarget && !noteTarget.contains(event.relatedTarget)) noteTarget.classList.remove('is-drop-target');
+        const target = event.target.closest('td[data-drop-class-id]');
+        if (target && !target.contains(event.relatedTarget)) target.classList.remove('grade-drop-target');
+    }
+
+    function handleDrop(event) {
+        const noteTarget = event.target.closest('.notes-column-body[data-note-status]');
+        if (noteTarget) {
+            event.preventDefault();
+            noteTarget.classList.remove('is-drop-target');
+            const noteId = event.dataTransfer.getData('text/plain');
+            const record = findById(KEYS.notas, noteId);
+            const allowedStatuses = ['standby', 'andamento', 'concluido'];
+            const nextStatus = noteTarget.dataset.noteStatus;
+            if (!record || !allowedStatuses.includes(nextStatus)) {
+                notify('Não foi possível mover esta anotação.', 'warning');
+                return;
+            }
+            if ((record.status || 'standby') === nextStatus) return;
+            const updated = Object.assign({}, record, {
+                status: nextStatus,
+                updated_at: new Date().toISOString()
+            });
+            saveRecords(KEYS.notas, readRecords(KEYS.notas).map(function (note) {
+                return String(note.id) === String(updated.id) ? updated : note;
+            }), specs.notas.module);
+            renderNotesAfterMutation();
+            return;
+        }
+        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] !== 'laboratorio') return;
+        const target = event.target.closest('td[data-drop-class-id]');
+        if (!target) return;
+        event.preventDefault();
+        target.classList.remove('grade-drop-target');
+        try {
+            moveAssignment(
+                event.dataTransfer.getData('text/plain'),
+                target.dataset.dropClassId,
+                target.dataset.dropDay,
+                target.dataset.dropSlotId
+            );
+        } catch (error) {
+            console.error('Falha ao mover aula:', error);
+            notify(error.message || 'Não foi possível mover a aula.', 'warning');
+        }
+    }
+
+    const backToTopButton = document.getElementById('back-to-top');
+    const mainSidebar = document.getElementById('main-sidebar');
+    if (mainSidebar) {
+        mainSidebar.addEventListener('pointerleave', function () {
+            mainSidebar.classList.remove('sidebar-selection-collapsed');
+        });
+    }
+
+    function updateBackToTopVisibility() {
+        if (backToTopButton) backToTopButton.hidden = window.scrollY < 320;
+    }
+
+    function showPointerClickRipple(event) {
+        if ((event.button !== 0 && event.button !== 2) || event.isPrimary === false) return;
+        const ripple = document.createElement('span');
+        ripple.className = 'pointer-click-ripple';
+        ripple.setAttribute('aria-hidden', 'true');
+        const owlCursor = document.documentElement.dataset.cursorMode === 'owl';
+        ripple.style.left = event.clientX + (owlCursor ? 6 : 0) + 'px';
+        ripple.style.top = event.clientY + (owlCursor ? 30 : 0) + 'px';
+        const layer = event.target.closest('dialog[open]') || document.body;
+        layer.appendChild(ripple);
+        ripple.addEventListener('animationend', function () {
+            ripple.remove();
+        }, { once: true });
+    }
+
+    if (backToTopButton) {
+        backToTopButton.addEventListener('click', function () {
+            const prefersReducedMotion = window.matchMedia &&
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        });
+        window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
+        window.addEventListener('resize', updateBackToTopVisibility);
+        updateBackToTopVisibility();
+    }
+    const globalSearchDialog = document.getElementById('global-search-dialog');
+    if (globalSearchDialog) {
+        globalSearchDialog.addEventListener('click', function (event) {
+            if (event.target === globalSearchDialog) globalSearchDialog.close();
+        });
+    }
+    const notesDialog = document.getElementById('notes-dialog');
+    if (notesDialog) {
+        notesDialog.addEventListener('click', function (event) {
+            if (event.target === notesDialog) notesDialog.close();
+        });
+        notesDialog.addEventListener('close', function () {
+            if (editing && editing.route === 'notas') editing = null;
+        });
+    }
+
+    document.addEventListener('pointerdown', showPointerClickRipple, { passive: true });
+    document.addEventListener('click', handleClick);
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        const dialog = document.querySelector('#ninho-lightbox[open], #ninho-guide-dialog[open]');
+        if (dialog) {
+            event.preventDefault();
+            dialog.close();
+        }
+    });
+    document.addEventListener('submit', handleSubmit);
+    document.addEventListener('change', handleChange);
+    document.addEventListener('input', handleInput);
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('dragend', handleDragEnd);
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('dragleave', handleDragLeave);
+    document.addEventListener('drop', handleDrop);
+    window.addEventListener('hashchange', function () {
+        editing = null;
+        catalogImport = null;
+        if (window.location.hash.replace(/^#\/?/, '').split('/')[0] === 'disponibilidade') {
+            availabilitySemester = getSemester();
+        }
+        render();
+    });
+    if (!window.location.hash) window.location.hash = '#/dashboard';
+    render();
+})();
